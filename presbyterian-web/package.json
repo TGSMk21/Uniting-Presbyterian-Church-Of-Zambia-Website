@@ -1,0 +1,32 @@
+{
+  "name": "presbyterian-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@icons-pack/react-simple-icons": "^13.8.0",
+    "@react-email/components": "1.0.6",
+    "@react-email/render": "^2.0.4",
+    "@sanity/image-url": "^2.0.3",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.1",
+    "googleapis": "^170.1.0",
+    "next": "16.1.2",
+    "next-sanity": "^12.0.14",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "resend": "^6.9.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.2",
+    "tailwindcss": "^4"
+  }
+}
