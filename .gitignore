@@ -14,6 +14,12 @@ dist/
 # Environment files
 .env*
 .env.local
+!.env.example
+
+# Stray local artifacts
+/query
+/stop
+.playwright-mcp/
 
 # Logs
 logs/
@@ -33,3 +39,24 @@ coverage/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+*.egg
+.venv/
+venv/
+env/
+
+# Django
+backend/staticfiles/
+backend/media/
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
