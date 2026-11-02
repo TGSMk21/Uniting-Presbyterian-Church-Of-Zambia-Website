@@ -23,6 +23,7 @@ class VerseTextTests(APITestCase):
         self.assertEqual(row["verse_text"], "Your word is a lamp to my feet.")
         self.assertEqual(row["reference_verse"], "Psalm 119:105")
         self.assertEqual(row["message"], "Devotion body")
+        self.assertEqual(row["minister_name"], "Rev A")
 
     def test_verse_is_optional(self):
         staff = User.objects.create_user("ed", is_staff=True, branch=self.branch)

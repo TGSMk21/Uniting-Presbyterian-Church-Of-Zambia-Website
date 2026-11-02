@@ -93,7 +93,7 @@ export default async function ProjectsAndActivities({ params }) {
                   className="section-title"
                   style={{ fontFamily: "var(--font-playfair)" }}
                 >
-                  What's <em>happening</em>
+                  What&apos;s <em>happening</em>
                 </h2>
               </div>
             </div>

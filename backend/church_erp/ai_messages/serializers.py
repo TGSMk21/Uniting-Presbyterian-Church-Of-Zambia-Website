@@ -10,6 +10,8 @@ class SermonEmbeddingSerializer(serializers.ModelSerializer):
 
 
 class DailyMessageSerializer(serializers.ModelSerializer):
+    minister_name = serializers.CharField(source='minister.name', read_only=True)
+
     class Meta:
         model = DailyMessage
         fields = '__all__'

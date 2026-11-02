@@ -1,11 +1,16 @@
 from django.contrib import admin
 
 from .admin_mixins import BranchScopedAdmin
-from .models import Branch, Minister
+from .models import Branch, Minister, ServiceTime
 
 
 class MinisterInline(admin.TabularInline):
     model = Minister
+    extra = 1
+
+
+class ServiceTimeInline(admin.TabularInline):
+    model = ServiceTime
     extra = 1
 
 
@@ -17,7 +22,7 @@ class BranchAdmin(BranchScopedAdmin):
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ('name', 'contact_email')
     list_filter = ('is_active',)
-    inlines = [MinisterInline]
+    inlines = [ServiceTimeInline, MinisterInline]
 
     def has_add_permission(self, request):
         return request.user.is_superuser

@@ -3,9 +3,10 @@ import { getSermons } from "@/Services/api";
 
 export const revalidate = 3600;
 
-export default async function Sermons({ params }) {
+export default async function Sermons({ params, searchParams }) {
   const { branch } = await params;
-  const data = await getSermons(branch);
+  const page = Math.max(1, parseInt((await searchParams)?.page, 10) || 1);
+  const data = await getSermons(branch, page);
   const archives = data?.results || [];
   return (
     <div className="container mx-auto max-w-full overflow-hidden min-w-full min-h-screen w-full">
@@ -67,7 +68,7 @@ export default async function Sermons({ params }) {
             })()}
           </ScrollReveal>
 
-          <div className="section-header">
+          <div className="section-header" id="archive">
             <div>
               <span className="section-label">Archive</span>
               <h2 className="section-title">Past Sermons</h2>
@@ -100,6 +101,13 @@ export default async function Sermons({ params }) {
               </ScrollReveal>
             ))}
           </div>
+
+          {(data?.previous || data?.next) && (
+            <nav className="archive-pager" style={{ display: "flex", justifyContent: "space-between", marginTop: "2.5rem" }}>
+              {data.previous ? <a className="btn-ghost" href={`/${branch}/sermons?page=${page - 1}#archive`}>← Newer sermons</a> : <span />}
+              {data.next && <a className="btn-ghost" href={`/${branch}/sermons?page=${page + 1}#archive`}>Older sermons →</a>}
+            </nav>
+          )}
         </div>
       </section>
     </div>

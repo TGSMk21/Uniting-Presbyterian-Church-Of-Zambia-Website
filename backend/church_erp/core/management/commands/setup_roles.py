@@ -14,7 +14,7 @@ CONTENT_EDITOR = {
 
 BRANCH_ADMIN = {
     **CONTENT_EDITOR,
-    'core': {'branch': ('change', 'view'), 'minister': ALL},
+    'core': {'branch': ('change', 'view'), 'minister': ALL, 'servicetime': ALL},
     'accounts': {'user': ('add', 'change', 'view')},
 }
 

@@ -9,6 +9,13 @@ class Branch(models.Model):
     contact_phone = models.CharField(max_length=20)
     address = models.TextField()
     youtube_channel_id = models.CharField(max_length=100, blank=True)
+    # Home page content
+    tagline = models.CharField(max_length=200, blank=True, help_text="Hero headline, e.g. 'A place of grace, belonging & purpose.'")
+    welcome_text = models.TextField(blank=True, help_text="Short welcome paragraph under the headline")
+    year_theme_title = models.CharField(max_length=200, blank=True, help_text="This year's church theme")
+    year_theme_text = models.TextField(blank=True)
+    hero_image = models.ImageField(upload_to='branch_hero/', blank=True)
+    hero_image_secondary = models.ImageField(upload_to='branch_hero/', blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -32,3 +39,21 @@ class Minister(models.Model):
 
     def __str__(self):
         return f"{self.name} — {self.branch.name}"
+
+
+class ServiceTime(models.Model):
+    """A recurring service shown on the branch home page."""
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='service_times')
+    day = models.CharField(max_length=50, help_text="e.g. 'Every Sunday'")
+    title = models.CharField(max_length=200)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    location = models.CharField(max_length=200, blank=True)
+    details = models.CharField(max_length=200, blank=True, help_text="e.g. 'Worship · Word · Communion'")
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'start_time']
+
+    def __str__(self):
+        return f"{self.day}: {self.title}"
