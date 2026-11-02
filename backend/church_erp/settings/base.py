@@ -25,7 +25,6 @@ INSTALLED_APPS = [
     "corsheaders",
     "django_filters",
     "import_export",
-    "ckeditor",
     # Local
     "church_erp.core",
     "church_erp.accounts",

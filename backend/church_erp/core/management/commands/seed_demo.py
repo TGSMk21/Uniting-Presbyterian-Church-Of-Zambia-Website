@@ -1,31 +1,27 @@
 from datetime import date, datetime, time, timedelta
 
-from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from church_erp.core.models import Branch, Minister
-from church_erp.content.models import Activity, Page, Project, Sermon
-
-User = get_user_model()
+from church_erp.content.models import Activity, Project, Sermon
 
 
 class Command(BaseCommand):
-    help = "Seed the Chilanga branch with a superuser, minister, sermons, projects and activities."
+    help = (
+        "Seed a demo Chilanga branch with a minister and placeholder sermons, "
+        "projects and activities. Development only: the sermons point at "
+        "unrelated public YouTube videos. Create users with createsuperuser."
+    )
 
     def handle(self, *args, **options):
-        self.stdout.write("Seeding Chilanga Presbyterian Church...")
-
-        # --- Superuser ---
-        if not User.objects.filter(username="admin").exists():
-            User.objects.create_superuser(
-                username="admin",
-                email="admin@chilangapresbyterian.org",
-                password="admin123",
+        if not settings.DEBUG:
+            raise CommandError(
+                "seed_demo only runs with DEBUG=True; it creates placeholder "
+                "content that must never reach production."
             )
-            self.stdout.write(self.style.SUCCESS("Created superuser admin / admin123"))
-        else:
-            self.stdout.write("Superuser admin already exists")
+        self.stdout.write("Seeding demo data for Chilanga Presbyterian Church...")
 
         # --- Branch ---
         branch, branch_created = Branch.objects.get_or_create(

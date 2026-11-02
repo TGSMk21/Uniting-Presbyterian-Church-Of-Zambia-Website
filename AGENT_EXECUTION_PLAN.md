@@ -214,13 +214,19 @@ The admin fix in 0.2 does nothing for `/api/*`. Write once, apply everywhere.
 
 ### Task 0.7 — [rev] Backend dev-setup hygiene
 - [x] **[rev]** Add `Pillow` to `requirements.txt` — `Branch.logo`/`Minister.photo` are `ImageField`s, and without Pillow `manage.py check` fails (`fields.E210`) on a fresh install. Done early (right after Task 0.1) because every later test depends on it.
-- [ ] Add `django-extensions` to `requirements.txt` (or a `requirements-dev.txt`, and only add the app in `local.py` when importable).
-- [ ] Add `from .celery import app as celery_app` / `__all__ = ("celery_app",)` to `church_erp/__init__.py` so Celery loads with Django.
-- [ ] Remove `ckeditor` from `INSTALLED_APPS` and `django-ckeditor` from `requirements.txt` (unused, EOL). If rich text is needed for `Page.content` later, pick a maintained editor and sanitize HTML server-side (e.g. `nh3`) before the frontend renders it.
-- [ ] Split `seed_chilanga` into two commands: `seed_demo` (current placeholder sermons/projects/activities — dev only, refuses to run when `DEBUG` is False) and the real onboarding path (Task 2.1's `create_branch`). Remove the hardcoded `admin/admin123` superuser — use `createsuperuser` instead.
-- [ ] Make `Branch.logo` `blank=True` (the seed already writes `""` into it) and add a migration.
-- [ ] Add a `backend/README.md` with local setup: venv, `pip install -r requirements.txt`, copy `.env.example` to `.env`, `migrate`, `createsuperuser`, `seed_demo`, `runserver`.
-- [ ] Commit: `"Fix backend dev setup: dependencies, Celery loading, demo seed"`
+- [x] Add `django-extensions` to `requirements.txt` (or a `requirements-dev.txt`, and only add the app in `local.py` when importable).
+- [x] Add `from .celery import app as celery_app` / `__all__ = ("celery_app",)` to `church_erp/__init__.py` so Celery loads with Django.
+- [x] Remove `ckeditor` from `INSTALLED_APPS` and `django-ckeditor` from `requirements.txt` (unused, EOL). If rich text is needed for `Page.content` later, pick a maintained editor and sanitize HTML server-side (e.g. `nh3`) before the frontend renders it.
+- [x] Split `seed_chilanga` into two commands: `seed_demo` (current placeholder sermons/projects/activities — dev only, refuses to run when `DEBUG` is False) and the real onboarding path (Task 2.1's `create_branch`). Remove the hardcoded `admin/admin123` superuser — use `createsuperuser` instead.
+- [x] Make `Branch.logo` `blank=True` (the seed already writes `""` into it) and add a migration.
+- [x] Add a `backend/README.md` with local setup: venv, `pip install -r requirements.txt`, copy `.env.example` to `.env`, `migrate`, `createsuperuser`, `seed_demo`, `runserver`.
+- [x] Commit: `"Fix backend dev setup: dependencies, Celery loading, demo seed"`
+- **[rev] Done notes (2026-11-02):**
+  - `django-extensions` lives in `requirements-dev.txt`; `settings/local.py` only adds it when importable.
+  - `seed_chilanga` is now `seed_demo`: refuses to run unless `DEBUG=True`, creates no users (use `createsuperuser`). The real onboarding command (`create_branch`) is still Task 2.1.
+  - `Branch.logo` is optional (migration `core/0003_branch_logo_optional`).
+  - Verified: a fresh venv from `requirements.txt` alone passes `manage.py check` with no issues and all 64 tests; the README flow (`migrate` → `setup_roles` → `seed_demo` → `runserver`) works end to end against a throwaway SQLite DB, and the live API returns public data while anonymous writes, `/api/media/` and `/api/giving-records/` return 401.
+  - Not done here: `django-cleanup` is in `requirements.txt` but not in `INSTALLED_APPS`, so it does nothing. Decide in Phase 3 (media) whether to enable it — it deletes old files when a `FileField` changes, which is wanted for `MediaAsset` but should be tested against object storage first.
 
 **Phase 0 Definition of Done:** `git status` is clean on a pushed branch; a branch-scoped admin user sees only their branch's data for every model including a negative test on finance, and cannot assign records to another branch; the API tests from Task 0.5 pass; the frontend has exactly one data-fetching layer (`Services/api.js` against Django) and zero remaining Sanity imports; a clean `npm ci && npm run build` inside `presbyterian-web/` succeeds; a fresh backend checkout runs from `backend/README.md` alone; sermons display using each branch's own YouTube channel.
 
@@ -293,7 +299,7 @@ Every branch currently renders Chilanga's home page.
 **Goal:** All remaining UPCZ branches (fewer than 10 total) live, each with a working branch-admin login.
 
 ### Task 2.1 — Generalize the onboarding flow
-- [ ] **[rev]** (Needed for Task 1.4 — do this before the first deploy.) Generalize `core/management/commands/seed_chilanga.py` into a reusable `create_branch` command taking `--name`, `--slug`, `--contact-email`, `--youtube-channel-id`, and creating one `branch_admin`-role `User` for it with a generated temporary password printed to stdout (never emailed in plaintext without being told to).
+- [ ] **[rev]** (Needed for Task 1.4 — do this before the first deploy.) Add a reusable `create_branch` command (Task 0.7 already turned `seed_chilanga` into the dev-only `seed_demo`; reuse its structure) taking `--name`, `--slug`, `--contact-email`, `--youtube-channel-id`, and creating one `branch_admin`-role `User` for it with a generated temporary password printed to stdout (never emailed in plaintext without being told to).
 - [ ] Document the command's usage in `backend/README.md` (created in Task 0.7; Phase 6's "Documentation rewrite" covers the root README).
 - [ ] Commit: `"Add general-purpose branch onboarding command"`
 

@@ -4,7 +4,7 @@ from django.db import models
 class Branch(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
-    logo = models.ImageField(upload_to='branch_logos/')
+    logo = models.ImageField(upload_to='branch_logos/', blank=True)
     contact_email = models.EmailField()
     contact_phone = models.CharField(max_length=20)
     address = models.TextField()

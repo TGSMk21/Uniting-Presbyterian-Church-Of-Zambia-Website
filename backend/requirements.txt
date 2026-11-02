@@ -26,6 +26,5 @@ django-storages[s3]>=1.14,<2.0
 boto3>=1.37,<2.0
 
 # Utilities
-django-ckeditor>=6.7,<7.0
 django-import-export>=4.3,<5.0
 django-cleanup>=9.0,<10.0
