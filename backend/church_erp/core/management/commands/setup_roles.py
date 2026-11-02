@@ -1,6 +1,9 @@
 from django.contrib.auth.models import Group, Permission
 from django.core.management.base import BaseCommand
 
+from church_erp.accounts.models import User
+from church_erp.accounts.roles import ROLE_GROUP_NAMES, sync_role_group
+
 ALL = ('add', 'change', 'delete', 'view')
 
 CONTENT_EDITOR = {
@@ -20,9 +23,9 @@ FINANCE_ADMIN = {
 }
 
 ROLE_GROUPS = {
-    'Content Editor': CONTENT_EDITOR,
-    'Branch Admin': BRANCH_ADMIN,
-    'Finance Admin': FINANCE_ADMIN,
+    ROLE_GROUP_NAMES['content_editor']: CONTENT_EDITOR,
+    ROLE_GROUP_NAMES['branch_admin']: BRANCH_ADMIN,
+    ROLE_GROUP_NAMES['finance_admin']: FINANCE_ADMIN,
 }
 
 
@@ -44,3 +47,9 @@ class Command(BaseCommand):
             ]
             group.permissions.set(permissions)
             self.stdout.write(self.style.SUCCESS(f"{name}: {len(permissions)} permissions"))
+
+        # Users saved before the groups existed couldn't be placed in them.
+        users = User.objects.all()
+        for user in users:
+            sync_role_group(user)
+        self.stdout.write(f"Synced role groups for {users.count()} users")

@@ -72,7 +72,7 @@ python manage.py test --settings=church_erp.settings.test
 
 ## Staff roles
 
-Each staff user has a `role` and a `branch`. Run `setup_roles` to create the matching permission groups, then add each staff user to their group and tick **Staff status**.
+Each staff user has a `role` and a `branch`. Run `setup_roles` once to create the permission groups. After that, a user's role decides their group automatically, and anyone added through the admin gets staff access straight away. A superuser can untick **Staff status** to suspend someone. Groups that aren't role groups are left alone.
 
 | Role | Group | Can manage |
 |---|---|---|
