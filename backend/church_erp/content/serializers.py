@@ -1,0 +1,27 @@
+from rest_framework import serializers
+
+from .models import Sermon, Project, Activity, Page
+
+
+class SermonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sermon
+        fields = '__all__'
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = '__all__'
+
+
+class ActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Activity
+        fields = '__all__'
+
+
+class PageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Page
+        fields = '__all__'
