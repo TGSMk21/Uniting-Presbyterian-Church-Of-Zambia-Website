@@ -27,12 +27,12 @@ export async function getBranches() {
 }
 
 export async function getBranch(slug) {
-  return fetchAPI(`/branches/${slug}/`)
+  return fetchAPI(`/branches/${encodeURIComponent(slug)}/`)
 }
 
 // --- Branch-scoped content ---
-export async function getSermons(branch) {
-  return fetchAPI(`/sermons/?branch=${branch}`)
+export async function getSermons(branch, page = 1) {
+  return fetchAPI(`/sermons/?branch=${branch}&page=${page}`)
 }
 
 // video_id is only unique within a branch, so the branch is required.
@@ -46,6 +46,12 @@ export async function getProjects(branch) {
 
 export async function getActivities(branch) {
   return fetchAPI(`/activities/?branch=${branch}`)
+}
+
+// Every active branch's activities from today on, soonest first.
+export async function getUpcomingActivities() {
+  const today = new Date().toISOString().slice(0, 10)
+  return fetchAPI(`/activities/?date__gte=${today}`)
 }
 
 export async function getMinisters(branch) {

@@ -10,7 +10,7 @@ from church_erp.ai_messages.serializers import DailyMessageSerializer
 
 
 class DailyMessageViewSet(MinisterBranchMixin, BranchScopedViewSetMixin, viewsets.ModelViewSet):
-    queryset = DailyMessage.objects.all()
+    queryset = DailyMessage.objects.select_related('minister')
     serializer_class = DailyMessageSerializer
     permission_classes = [IsBranchStaffOrReadOnly]
 

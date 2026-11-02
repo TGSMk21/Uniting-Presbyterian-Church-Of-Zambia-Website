@@ -6,7 +6,8 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "insecure-dev-key-change-in-production")
+INSECURE_DEV_SECRET_KEY = "insecure-dev-key-change-in-production"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", INSECURE_DEV_SECRET_KEY)
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 

@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
-import { getBranches } from "@/Services/api";
+import { getBranches, getUpcomingActivities } from "@/Services/api";
 
 export const revalidate = 3600;
+
+const EVENTS_SHOWN = 6;
 
 const fellowships = [
   { id: "1", title: "Youth Fellowship", img: "/youthMin.png", ref: "1 Timothy 4:12", desc: "Empowering young hearts to live boldly for Christ through worship, discipleship, and fellowship that transforms lives." },
@@ -11,16 +13,23 @@ const fellowships = [
   { id: "4", title: "Women's Fellowship", img: "/wm.png", ref: "Proverbs 31:25", desc: "Nurturing women of faith to discover their God-given purpose through prayer, study, and authentic community." },
 ];
 
-const events = [
-  { month: "Jun", day: "14", year: "2026", title: "National Youth Conference", location: "Lusaka" },
-  { month: "Aug", day: "02", year: "2026", title: "General Assembly", location: "Kabwe" },
-  { month: "Sep", day: "20", year: "2026", title: "Women's Convention", location: "Ndola" },
-  { month: "Dec", day: "06", year: "2026", title: "Christmas Carol Service", location: "Nationwide" },
-];
+// "2026-12-06" → { day: "06", month: "Dec", year: "2026" }, without timezone shifts.
+function eventDate(isoDate) {
+  const [year, month, day] = isoDate.split("-");
+  const monthName = new Date(Date.UTC(year, month - 1, 1))
+    .toLocaleString("en-US", { month: "short", timeZone: "UTC" });
+  return { day, month: monthName, year };
+}
 
 export default async function NationalLanding() {
-  const data = await getBranches();
+  const [data, activities] = await Promise.all([getBranches(), getUpcomingActivities()]);
   const branches = data?.results || [];
+  const events = (activities?.results || []).slice(0, EVENTS_SHOWN).map((a) => ({
+    id: a.id,
+    title: a.title,
+    location: [a.location, a.branch_name].filter(Boolean).join(" · "),
+    ...eventDate(a.date),
+  }));
 
   return (
     <main>
@@ -158,7 +167,8 @@ export default async function NationalLanding() {
         </div>
       </section>
 
-      {/* ===== NATIONWIDE EVENTS ===== */}
+      {/* ===== NATIONWIDE EVENTS (upcoming activities of every branch) ===== */}
+      {events.length > 0 && (
       <section className="nat-events" id="events">
         <div className="nat-events-inner">
           <div className="nat-events-head">
@@ -174,7 +184,7 @@ export default async function NationalLanding() {
 
           <div className="nat-event-list">
             {events.map((e, i) => (
-              <ScrollReveal key={e.title} delay={(i % 3) + 1}>
+              <ScrollReveal key={e.id} delay={(i % 3) + 1}>
                 <div className="nat-event-row">
                   <div className="nat-event-date">
                     <span className="nat-event-day">{e.day}</span>
@@ -191,6 +201,7 @@ export default async function NationalLanding() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ===== CLOSING ===== */}
       <section className="nat-closing">

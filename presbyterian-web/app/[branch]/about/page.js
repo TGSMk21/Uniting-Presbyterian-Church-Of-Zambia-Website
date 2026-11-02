@@ -1,5 +1,6 @@
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
 import { getBranch, getMinisters } from "@/Services/api";
+import { formatTime } from "@/Utilities/timeFormat";
 
 export const revalidate = 3600;
 
@@ -11,6 +12,11 @@ export default async function About({ params }) {
   ]);
   const ministers = ministersData?.results || [];
   const reverend = ministers[0];
+  const bioParagraphs = (reverend?.bio || "").split(/\n\s*\n/).filter(Boolean);
+  const services = branch?.service_times || [];
+  const mapUrl = branch?.address
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branch.address)}`
+    : null;
   return (
     <div className="container mx-auto max-w-full overflow-hidden min-w-full min-h-screen w-full">
       {/* Page Banner */}
@@ -26,9 +32,8 @@ export default async function About({ params }) {
           </ScrollReveal>
           <ScrollReveal delay={2}>
             <p className="page-banner-desc">
-              Founded on faith and sustained by grace, we are a community
-              dedicated to worship, discipleship, and service in the heart of
-              Lusaka.
+              Founded on faith and sustained by grace, {branch?.name || "our church"} is a
+              community dedicated to worship, discipleship, and service.
             </p>
           </ScrollReveal>
         </div>
@@ -67,6 +72,7 @@ export default async function About({ params }) {
             </ScrollReveal>
 
             {/* Reverend Section */}
+            {reverend && (
             <ScrollReveal>
               <div className="reverend-section">
                 <div className="section-header">
@@ -85,14 +91,10 @@ export default async function About({ params }) {
                   <div className="reverend-portrait">
                     <div className="reverend-portrait-card">
                       <div className="reverend-portrait-img">
-                        {reverend?.photo ? (
-                          <img src={reverend.photo} alt={reverend.name} />
-                        ) : (
-                          <img src="https://image.qwenlm.ai/public_source/e3258763-8dd2-46cd-885c-0b3ea5625da5/161c29b4b-9d82-407c-b9f2-c95a6d7a8506.png" alt="Rev. Thomson Mkandawire" />
-                        )}
+                        {reverend.photo && <img src={reverend.photo} alt={reverend.name} />}
                       </div>
                       <h3 className="reverend-portrait-name" style={{ fontFamily: "var(--font-playfair)" }}>
-                        {reverend ? `Rev. ${reverend.name}` : 'Rev. Thomson Mkandawire'}
+                        Rev. {reverend.name}
                       </h3>
                       <p className="reverend-portrait-role">Lead Pastor</p>
                     </div>
@@ -100,23 +102,16 @@ export default async function About({ params }) {
 
                   <div className="reverend-content">
                     <h3 style={{ fontFamily: "var(--font-playfair)" }}>
-                      {reverend ? `Reverend ${reverend.name}` : 'Reverend Thomson Mkandawire'}
+                      Reverend {reverend.name}
                     </h3>
-                    <p>{reverend?.bio || 'Reverend Thomson Mkandawire is a dedicated servant of God whose pastoral journey began over fifteen years ago. He was called to ministry with a deep conviction to preach the Word, disciple believers, and extend the love of Christ to the lost and the hurting.'}</p>
-                    <p>After completing his theological training, he served in several congregations across Lusaka before being appointed as Lead Pastor at Freedom Presbyterian Church. His leadership is marked by a heart for worship, expository preaching, and community transformation.</p>
-                    <p>Reverend Mkandawire is married and is passionate about youth mentorship, theological education, and building bridges between the church and the wider community. He continues to serve with humility, wisdom, and an unwavering commitment to the gospel.</p>
-
-                    <div className="credentials">
-                      <h4 style={{ fontFamily: "var(--font-playfair)" }}>Ministry Credentials &amp; Achievements</h4>
-                      <div className="credential-item"><div className="credential-check">✓</div><span className="credential-text">Master of Divinity — University of Zambia</span></div>
-                      <div className="credential-item"><div className="credential-check">✓</div><span className="credential-text">15+ years of pastoral leadership</span></div>
-                      <div className="credential-item"><div className="credential-check">✓</div><span className="credential-text">Founded the Youth Education Fund initiative</span></div>
-                      <div className="credential-item"><div className="credential-check">✓</div><span className="credential-text">CCAP Ordained Minister · Presbytery of Lusaka</span></div>
-                    </div>
+                    {bioParagraphs.map((paragraph, i) => (
+                      <p key={i}>{paragraph}</p>
+                    ))}
                   </div>
                 </div>
               </div>
             </ScrollReveal>
+            )}
 
             {/* Find Us Section */}
             <ScrollReveal>
@@ -135,24 +130,32 @@ export default async function About({ params }) {
 
                 <div className="find-us-grid">
                   <div className="map-placeholder">
-                    <span>Map placeholder</span>
+                    {mapUrl && (
+                      <a href={mapUrl} target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+                    )}
                   </div>
 
                   <div className="contact-cards">
                     <div className="contact-info-card">
                       <p className="contact-info-label">📍 Address</p>
-                      <p className="contact-info-value">{branch?.address || 'Freedom Compound, Chilanga, Lusaka, Zambia'}</p>
+                      <p className="contact-info-value">{branch?.address}</p>
                     </div>
-                    <div className="contact-info-card">
-                      <p className="contact-info-label">🕐 Service Times</p>
-                      <p className="contact-info-value">Sunday · 9:00 AM / Wednesday · 4:30 PM</p>
-                    </div>
+                    {services.length > 0 && (
+                      <div className="contact-info-card">
+                        <p className="contact-info-label">🕐 Service Times</p>
+                        <p className="contact-info-value">
+                          {services.map((s) => `${s.day} · ${formatTime(s.start_time)}`).join(" / ")}
+                        </p>
+                      </div>
+                    )}
                     <div className="contact-info-card">
                       <p className="contact-info-label">📞 Contact</p>
                       <p className="contact-info-value">
-                        <a href={`tel:${branch?.contact_phone || '+260211234567'}`}>{branch?.contact_phone || '+260 21 123 4567'}</a>
+                        {branch?.contact_phone && (
+                          <a href={`tel:${branch.contact_phone.replace(/\s/g, "")}`}>{branch.contact_phone}</a>
+                        )}
                         <br />
-                        <a href={`mailto:${branch?.contact_email || 'info@freedompresbyterian.org'}`}>{branch?.contact_email || 'info@freedompresbyterian.org'}</a>
+                        {branch?.contact_email && <a href={`mailto:${branch.contact_email}`}>{branch.contact_email}</a>}
                       </p>
                     </div>
                   </div>

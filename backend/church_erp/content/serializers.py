@@ -16,6 +16,9 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class ActivitySerializer(serializers.ModelSerializer):
+    branch_name = serializers.CharField(source='branch.name', read_only=True)
+    branch_slug = serializers.CharField(source='branch.slug', read_only=True)
+
     class Meta:
         model = Activity
         fields = '__all__'
