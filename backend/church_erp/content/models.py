@@ -9,6 +9,7 @@ class Sermon(models.Model):
     series = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
     video_id = models.CharField("YouTube Video ID", max_length=50, blank=True)
+    duration = models.CharField(max_length=20, blank=True, help_text="ISO 8601, set by the YouTube sync")
     transcript = models.TextField(blank=True, help_text="Full sermon text for embedding/search")
     reference_verse = models.CharField(max_length=100, blank=True)
     preached_at = models.DateTimeField()

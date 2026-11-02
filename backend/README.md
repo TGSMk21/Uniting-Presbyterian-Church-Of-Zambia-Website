@@ -48,6 +48,18 @@ Start the server; the API is at http://localhost:8000/api/ and the admin at http
 python manage.py runserver
 ```
 
+## YouTube sermon sync
+
+Sermons are imported from each branch's YouTube channel (`Branch.youtube_channel_id`), and `Sermon.is_live` follows YouTube's live status. It needs `YOUTUBE_API_KEY` in `.env`. Run it by hand or from cron:
+
+```bash
+python manage.py sync_youtube
+```
+
+Add `--branch <slug>` to sync a single branch. In production, Celery beat runs the same sync every 5 minutes (`CELERY_BEAT_SCHEDULE` in `settings/base.py`). Each run costs about 2 YouTube API quota units per branch. New videos are added, but titles, series and verses edited by staff are never overwritten.
+
+## Settings
+
 `manage.py` defaults to `church_erp.settings.local`. Production uses `DJANGO_SETTINGS_MODULE=church_erp.settings.production`.
 
 ## Tests

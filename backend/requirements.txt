@@ -25,6 +25,9 @@ tiktoken>=0.9,<1.0
 django-storages[s3]>=1.14,<2.0
 boto3>=1.37,<2.0
 
+# HTTP client (YouTube Data API)
+httpx>=0.27,<1.0
+
 # Utilities
 django-import-export>=4.3,<5.0
 django-cleanup>=9.0,<10.0

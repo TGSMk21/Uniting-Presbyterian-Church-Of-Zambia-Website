@@ -127,6 +127,15 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Africa/Lusaka"
+CELERY_BEAT_SCHEDULE = {
+    "sync-youtube-sermons": {
+        "task": "church_erp.content.tasks.sync_youtube_sermons",
+        "schedule": 300.0,  # every 5 minutes; ~2 quota units per branch per run
+    },
+}
+
+# --- External APIs ---
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 
 # --- Security ---
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
