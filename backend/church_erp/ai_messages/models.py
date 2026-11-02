@@ -22,6 +22,7 @@ class DailyMessage(models.Model):
     title = models.CharField(max_length=300)
     message = models.TextField()
     reference_verse = models.CharField(max_length=100, blank=True)
+    verse_text = models.TextField(blank=True, help_text="Today's scripture, shown above the devotion")
     date = models.DateField()
     status = models.CharField(max_length=20, choices=[
         ('pending_review', 'Pending Review'),

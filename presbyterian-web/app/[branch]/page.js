@@ -23,7 +23,8 @@ export default function Home() {
       if (data?.results?.length) {
         const m = data.results[0];
         setMsg(m);
-        setVerse({ scripture: m.message, verse: m.reference_verse });
+        // Without its own verse text, keep the default verse rather than repeating the devotion.
+        if (m.verse_text) setVerse({ scripture: m.verse_text, verse: m.reference_verse });
       }
     });
   }, [branch]);
@@ -100,7 +101,7 @@ export default function Home() {
               {verse ? verse.scripture : "The Lord is my shepherd; I shall not want."}
             </p>
             <p className="daily-verse-ref">
-              {verse ? verse.verse : "— Psalm 23:1"}
+              {verse ? (verse.verse && `— ${verse.verse}`) : "— Psalm 23:1"}
             </p>
           </div>
         </section>
@@ -125,7 +126,7 @@ export default function Home() {
                     {msg ? msg.title : "Walking in His Light"}
                   </h3>
                   <p className="devotion-ref">
-                    {msg ? msg.referenceVerse : "— Psalm 119:105"}
+                    {msg ? (msg.reference_verse && `— ${msg.reference_verse}`) : "— Psalm 119:105"}
                   </p>
                 </div>
                 {formattedDate && (
