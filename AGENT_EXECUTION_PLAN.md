@@ -158,14 +158,15 @@ class FinanceRoleRequired:
 ### Task 0.3 — Finish retiring Sanity on the frontend
 **[rev]** This is mostly a *deletion* task: the new routes already use `Services/api.js` exclusively, and every Sanity-backed component is orphaned (see Section 1). The original grep (`"Services/client\|next-sanity"`) would miss them, because components import e.g. `@/Services/Home/HomeService` and services import `../client`.
 
-- [ ] Confirm the orphan list is still accurate: for each file under `components/` and `Services/`, check that nothing under `app/` imports it directly or transitively (e.g. `grep -rn "<basename>" presbyterian-web/app presbyterian-web/components presbyterian-web/Services`). As of this audit the only legacy files reachable from `app/` are `components/SermonsComponents/VideoPlayerComponents/player.js`, `components/HomeComponents/ContactComponets/send-email.js`, `react-email-starter/emails/email-template.jsx`, `Services/Sermons/youtube.js`, and `Utilities/{DateFormatter,durationFomar,ratelimit}.js`.
-- [ ] Before deleting, check whether any orphaned component holds real content worth keeping that has no Django home yet — in particular `constants/DUMMY_DATA.js` (about/history/vision text, reverend bio) and `components/AboutComponents/*`. If it's real church copy, move it into `Page` records for Chilanga (via admin) rather than losing it.
+- [x] Confirm the orphan list is still accurate: for each file under `components/` and `Services/`, check that nothing under `app/` imports it directly or transitively (e.g. `grep -rn "<basename>" presbyterian-web/app presbyterian-web/components presbyterian-web/Services`). As of this audit the only legacy files reachable from `app/` are `components/SermonsComponents/VideoPlayerComponents/player.js`, `components/HomeComponents/ContactComponets/send-email.js`, `react-email-starter/emails/email-template.jsx`, `Services/Sermons/youtube.js`, and `Utilities/{DateFormatter,durationFomar,ratelimit}.js`.
+- [x] Before deleting, check whether any orphaned component holds real content worth keeping that has no Django home yet — in particular `constants/DUMMY_DATA.js` (about/history/vision text, reverend bio) and `components/AboutComponents/*`. If it's real church copy, move it into `Page` records for Chilanga (via admin) rather than losing it.
+  - **Done (2026-11-02):** an import-graph scan from every file under `app/` confirmed the 32 orphans exactly. `DUMMY_DATA.js` and `AboutComponents/*` hold template copy ("Grace Community Church", a Tennessee pastor bio, example.com sermons) — nothing real to migrate; still recoverable from git history if needed. The only real-looking details were the minister's name ("Rev. Thomson Mkandawire") and "Chilanga, Lusaka", which already live in Django (`Minister`, `Branch.address`).
 - [ ] **[rev]** Feature parity decision: the old site had a "daily verse" separate from the daily message. `[branch]/page.js` currently fakes it by reusing `DailyMessage.message` as the verse text. Either drop the separate verse block, or add a `verse_text` field to `DailyMessage`. Record the decision here.
-- [ ] Delete the orphaned files: `Services/client.js`, `Services/Home/`, `Services/Projects & Activities/`, `Services/Sermons/{ArchiveVidsServicee,UpcomingStreamService}.js`, the orphaned components listed in Section 1, `constants/DUMMY_DATA.js`, `Utilities/dataMerge.js`.
-- [ ] Delete `app/api/revalidate/route.js` (Sanity webhook, unauthenticated). If on-demand revalidation is wanted later, re-add it with a shared-secret check, called from a Django `post_save` signal.
-- [ ] Remove `next-sanity` and `@sanity/image-url` from `presbyterian-web/package.json`; run `npm install` to update the lockfile; run `npm run build` to confirm nothing still imports them.
-- [ ] Leave `PresbyterianSanity/` in place for now (do not delete) but stop running or deploying it — it is fully superseded. Note this explicitly in the root README (Phase 6, "Documentation rewrite").
-- [ ] Commit: `"Retire Sanity CMS from the frontend; all content now served from the Django API"`
+- [x] Delete the orphaned files: `Services/client.js`, `Services/Home/`, `Services/Projects & Activities/`, `Services/Sermons/{ArchiveVidsServicee,UpcomingStreamService}.js`, the orphaned components listed in Section 1, `constants/DUMMY_DATA.js`, `Utilities/dataMerge.js`.
+- [x] Delete `app/api/revalidate/route.js` (Sanity webhook, unauthenticated). If on-demand revalidation is wanted later, re-add it with a shared-secret check, called from a Django `post_save` signal.
+- [x] Remove `next-sanity` and `@sanity/image-url` from `presbyterian-web/package.json`; run `npm install` to update the lockfile; run `npm run build` to confirm nothing still imports them.
+- [x] Leave `PresbyterianSanity/` in place for now (do not delete) but stop running or deploying it — it is fully superseded. Note this explicitly in the root README (Phase 6, "Documentation rewrite"). **[rev]** Left in place; the README note happens in Phase 6's documentation rewrite.
+- [x] Commit: `"Retire Sanity CMS from the frontend; all content now served from the Django API"`
 
 ### Task 0.4 — Make YouTube per-branch
 **[rev]** Smaller than originally scoped: the only live YouTube call is `getVideos(process.env.YOUTUBE_CHANNEL_ID)` in `player.js`.
@@ -191,10 +192,17 @@ The admin fix in 0.2 does nothing for `/api/*`. Write once, apply everywhere.
 - [ ] Commit: `"Enforce branch scoping on all API viewsets"`
 
 ### Task 0.6 — [rev] Make the frontend build self-contained
-- [ ] Move `lucide-react` and `clsx` (and `embla-carousel-*`/`react-youtube` only if still imported after Task 0.3) into `presbyterian-web/package.json` with `npm install --prefix presbyterian-web <pkg>`.
-- [ ] Delete the repo-root `package.json`, `package-lock.json` and `node_modules/` (they exist only because packages were once installed from the wrong directory, and ship a second copy of `react`).
-- [ ] Verify with a clean install the way Vercel will build: `rm -rf presbyterian-web/node_modules && cd presbyterian-web && npm ci && npm run build`.
-- [ ] Commit: `"Declare all frontend dependencies in presbyterian-web/package.json"`
+- [x] Move `lucide-react` and `clsx` (and `embla-carousel-*`/`react-youtube` only if still imported after Task 0.3) into `presbyterian-web/package.json` with `npm install --prefix presbyterian-web <pkg>`.
+- [x] Delete the repo-root `package.json`, `package-lock.json` and `node_modules/` (they exist only because packages were once installed from the wrong directory, and ship a second copy of `react`).
+- [x] Verify with a clean install the way Vercel will build: `rm -rf presbyterian-web/node_modules && cd presbyterian-web && npm ci && npm run build`.
+- [x] Commit: `"Declare all frontend dependencies in presbyterian-web/package.json"`
+- **[rev] Done notes (2026-11-02):**
+  - After Task 0.3 only `lucide-react` is still imported (by `player.js`); `clsx`, `embla-carousel-*` and `react-youtube` were only used by deleted components, so they were dropped rather than moved.
+  - The root `package.json`/`package-lock.json` are deleted from git. The root `node_modules/` folder is untracked and still sits in the main checkout — delete it by hand there (`PresbyterianWeb/node_modules`).
+  - Verified with `npm ci && npm run build` in a copy **outside the repo** (inside the repo, Node still resolves the stray root `node_modules`, which hides the bug). Build passes; routes: `/`, `/branches`, `/contact` static (ISR 1h), all `[branch]` routes dynamic.
+  - Found and fixed while verifying: `Services/api.js` `fetchAPI` didn't catch network errors, so the build (and any request) crashed whenever the Django API was unreachable — on Vercel the deploy itself would fail. It now has a 10s timeout and returns `null` on any failure (Rule 6). Smoke test with no backend: `/`, `/branches`, `/contact` → 200; `/chilanga/*` → 404; no 500s.
+  - Local-only quirk: this machine's TLS inspection breaks `next/font` downloads; build locally with `NEXT_TURBOPACK_EXPERIMENTAL_USE_SYSTEM_TLS_CERTS=1`. Vercel doesn't need it.
+  - Pre-existing lint findings left for Task 1.2b (those pages get reworked there): 1 error (`react/no-unescaped-entities` in `[branch]/projects-and-activities/page.js`) and 8 `@next/next/no-img-element` warnings.
 
 ### Task 0.7 — [rev] Backend dev-setup hygiene
 - [x] **[rev]** Add `Pillow` to `requirements.txt` — `Branch.logo`/`Minister.photo` are `ImageField`s, and without Pillow `manage.py check` fails (`fields.E210`) on a fresh install. Done early (right after Task 0.1) because every later test depends on it.
