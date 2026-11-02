@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from .admin_mixins import BranchScopedAdmin
 from .models import Branch, Minister
 
 
@@ -9,28 +10,24 @@ class MinisterInline(admin.TabularInline):
 
 
 @admin.register(Branch)
-class BranchAdmin(admin.ModelAdmin):
+class BranchAdmin(BranchScopedAdmin):
+    branch_lookup = 'id'
+    branch_field = None
     list_display = ('name', 'slug', 'contact_email', 'is_active', 'created_at')
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ('name', 'contact_email')
     list_filter = ('is_active',)
     inlines = [MinisterInline]
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        return qs.filter(id__in=request.user.branch_set.values_list('id', flat=True) if hasattr(request.user, 'branch_set') else [])
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
 
 
 @admin.register(Minister)
-class MinisterAdmin(admin.ModelAdmin):
+class MinisterAdmin(BranchScopedAdmin):
     list_display = ('name', 'branch', 'created_at')
     search_fields = ('name', 'branch__name')
     list_filter = ('branch',)
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        return qs.filter(branch_id__in=request.user.branch_set.values_list('id', flat=True) if hasattr(request.user, 'branch_set') else [])

@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from church_erp.core.admin_mixins import BranchScopedAdmin
+
 from .models import MediaTag, MediaAsset
 
 
@@ -15,13 +17,13 @@ class MediaTagAdmin(admin.ModelAdmin):
 
 
 @admin.register(MediaAsset)
-class MediaAssetAdmin(admin.ModelAdmin):
+class MediaAssetAdmin(BranchScopedAdmin):
     list_display = ('title', 'file_type', 'branch', 'uploaded_by', 'uploaded_at')
     search_fields = ('title', 'description')
     list_filter = ('file_type', 'branch')
+    readonly_fields = ('uploaded_by',)
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        return qs.filter(branch_id__in=request.user.branch_set.values_list('id', flat=True) if hasattr(request.user, 'branch_set') else [])
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.uploaded_by = request.user
+        super().save_model(request, obj, form, change)
