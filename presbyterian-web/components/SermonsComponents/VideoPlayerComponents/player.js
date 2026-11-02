@@ -1,29 +1,31 @@
 import { formatYouTubeDuration } from "@/Utilities/durationFomar";
-import { getVideos } from "@/Services/Sermons/youtube";
 import { BookOpenText, Calendar, Clock, ArrowLeft } from "lucide-react";
-import { getSermonByVideoId } from "@/Services/api";
+import { getSermonByVideoId, getSermons } from "@/Services/api";
 import { dateFormat } from "@/Utilities/DateFormatter";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+
+const RELATED_LIMIT = 10;
 
 export const revalidate = 3600;
 
 export default async function VidPlayerPage({ id, branch }) {
   const videoId = await id;
 
-  const [sermonDb, videos] = await Promise.all([
+  // Sermons (and their YouTube details) are synced into Django by the
+  // backend's sync_youtube job, so the page needs no YouTube API calls.
+  const [sermon, sermonList] = await Promise.all([
     getSermonByVideoId(branch, videoId),
-    getVideos(process.env.YOUTUBE_CHANNEL_ID),
+    getSermons(branch),
   ]);
+  // Only play videos that belong to this branch.
+  if (!sermon) notFound();
 
-  const ytVideo = videos?.find((v) => v.id === videoId);
-  const related = videos?.filter((v) => v.id !== videoId) || [];
+  const related = (sermonList?.results || [])
+    .filter((s) => s.video_id && s.video_id !== videoId)
+    .slice(0, RELATED_LIMIT);
 
-  const title = sermonDb?.title || ytVideo?.snippet?.title || "Sermon";
-  const series = sermonDb?.series || "";
-  const refVerse = sermonDb?.reference_verse || "";
-  const description = sermonDb?.description || ytVideo?.snippet?.description || "";
-  const publishedAt = ytVideo?.snippet?.publishedAt;
-  const duration = ytVideo?.contentDetails?.duration;
+  const { title, series, reference_verse: refVerse, description, preached_at: publishedAt, duration } = sermon;
 
   return (
     <div className="sermon-player">
@@ -75,29 +77,26 @@ export default async function VidPlayerPage({ id, branch }) {
           <aside className="sermon-related">
             <h2 className="sermon-related-title">More Sermons</h2>
             <div className="sermon-related-list">
-              {related.map((item) => {
-                const thumb = item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.medium?.url;
-                return (
-                  <Link
-                    key={item.id}
-                    href={`/${branch}/sermons/${item.id}`}
-                    className="sermon-related-item"
+              {related.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/${branch}/sermons/${item.video_id}`}
+                  className="sermon-related-item"
+                >
+                  <div
+                    className="sermon-related-thumb"
+                    style={{ backgroundImage: `url(https://img.youtube.com/vi/${item.video_id}/hqdefault.jpg)` }}
                   >
-                    <div
-                      className="sermon-related-thumb"
-                      style={thumb ? { backgroundImage: `url(${thumb})` } : undefined}
-                    >
-                      <span>{formatYouTubeDuration(item.contentDetails.duration)}</span>
-                    </div>
-                    <div className="sermon-related-info">
-                      <h3>{item.snippet.title}</h3>
-                      <span className="sermon-related-date">
-                        <Calendar size={13} /> {dateFormat(item.snippet.publishedAt).fullDate}
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
+                    {item.duration && <span>{formatYouTubeDuration(item.duration)}</span>}
+                  </div>
+                  <div className="sermon-related-info">
+                    <h3>{item.title}</h3>
+                    <span className="sermon-related-date">
+                      <Calendar size={13} /> {dateFormat(item.preached_at).fullDate}
+                    </span>
+                  </div>
+                </Link>
+              ))}
             </div>
           </aside>
         </div>

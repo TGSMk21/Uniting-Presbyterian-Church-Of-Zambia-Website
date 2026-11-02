@@ -171,12 +171,17 @@ class FinanceRoleRequired:
 ### Task 0.4 — Make YouTube per-branch
 **[rev]** Smaller than originally scoped: the only live YouTube call is `getVideos(process.env.YOUTUBE_CHANNEL_ID)` in `player.js`.
 
-- [ ] **STOP — human decision required:** where should sermon listings come from? (a) Django `Sermon` rows only, entered by branch admins (current behaviour of `[branch]/sermons`); or (b) a periodic sync (Celery task, Phase 4.4 infrastructure) that imports each branch's YouTube uploads into `Sermon` rows and sets `is_live` from the YouTube live-search API; or (c) fetch YouTube live in the page as the old site did. Recommendation: (b), so the page stays DB-backed and admins can still add series/verse metadata. Until decided, keep (a).
-- [ ] In `player.js`, call `getBranch(branch)` and pass `branch.youtube_channel_id` to `getVideos()`; when the branch has no channel ID, render the sidebar from `getSermons(branch)` instead.
+- [x] **STOP — human decision required:** where should sermon listings come from? (a) Django `Sermon` rows only, entered by branch admins (current behaviour of `[branch]/sermons`); or (b) a periodic sync (Celery task, Phase 4.4 infrastructure) that imports each branch's YouTube uploads into `Sermon` rows and sets `is_live` from the YouTube live-search API; or (c) fetch YouTube live in the page as the old site did. Recommendation: (b), so the page stays DB-backed and admins can still add series/verse metadata. Until decided, keep (a). **Decision (2026-11-02): (b) YouTube sync.**
+- [x] In `player.js`, call `getBranch(branch)` and pass `branch.youtube_channel_id` to `getVideos()`; when the branch has no channel ID, render the sidebar from `getSermons(branch)` instead. **[rev] Superseded by (b):** `player.js` now reads the sermon and the "More Sermons" list from Django only; an unknown video for the branch is a 404.
 - [x] Pass the branch to the sermon lookup too: the detail page currently calls `getSermonByVideoId(videoId)` with no branch, so `/branchB/sermons/<branchA video>` shows branch A's sermon (see the lookup fix in Task 0.5).
-- [ ] Delete `getLive()` from `youtube.js` unless option (c) was chosen; give the YouTube client a request timeout (Rule 6).
-- [ ] Remove `YOUTUBE_CHANNEL_ID` from `.env.local` once no longer read (keep `YOUTUBE_API_KEY`, which is still a shared credential).
-- [ ] Commit: `"Resolve YouTube channel per branch instead of a single static channel ID"`
+- [x] Delete `getLive()` from `youtube.js` unless option (c) was chosen; give the YouTube client a request timeout (Rule 6). **[rev]** Deleted `Services/Sermons/youtube.js` entirely and the `googleapis` package; the backend sync uses `httpx` with a 20s timeout.
+- [x] Remove `YOUTUBE_CHANNEL_ID` from `.env.local` once no longer read (keep `YOUTUBE_API_KEY`, which is still a shared credential). **[rev]** No frontend code reads `YOUTUBE_CHANNEL_ID` or `YOUTUBE_API_KEY` any more. `.env.local` lives only in your main checkout: remove `YOUTUBE_CHANNEL_ID`, `PROJECT_ID` and `YOUTUBE_API_KEY` from it, and put `YOUTUBE_API_KEY` in `backend/.env` instead.
+- [x] Commit: `"Resolve YouTube channel per branch instead of a single static channel ID"`
+- **[rev] Done notes (2026-11-02):**
+  - `backend/church_erp/content/youtube_sync.py`: per branch, reads the channel's uploads playlist + `videos.list` (2 quota units per run; `search.list` at 100 units is avoided). Creates a `Sermon` per new public video (title, description, date, new `duration` field), never overwrites staff edits to title/series/etc., skips scheduled (`upcoming`) streams, and makes YouTube the source of truth for `is_live` on branches with a channel. API failures are logged and change nothing.
+  - Entry points: Celery task `church_erp.content.tasks.sync_youtube_sermons` (scheduled every 5 min in `CELERY_BEAT_SCHEDULE`) and `python manage.py sync_youtube [--branch <slug>]`. Until Celery beat runs in production (Task 4.4), schedule the command with the host's cron instead.
+  - 13 tests with a fake YouTube at the HTTP layer; 8 deliberate breakages all caught. Also run once against the real API for Chilanga's channel: 49 sermons imported, re-run created none.
+  - Verified end to end: Django with demo data + a production build of the frontend pointed at it → all branch pages 200, sermon page shows Django data with 5 related sermons, unknown video → 404.
 
 ### Task 0.5 — [rev] Branch-scope the REST API
 The admin fix in 0.2 does nothing for `/api/*`. Write once, apply everywhere.
@@ -279,12 +284,14 @@ Every branch currently renders Chilanga's home page.
 - [ ] Run `python manage.py migrate` against the production database (via the platform's one-off command feature).
 - [ ] **[rev]** Do NOT run the demo seed in production (it creates placeholder sermons with random YouTube videos and a weak superuser). Instead: `python manage.py createsuperuser` with a strong password, then create the Chilanga branch with `create_branch` (pull Task 2.1 forward) or via Django Admin, and enter its real sermons/projects/activities.
 - [ ] Run `python manage.py collectstatic --noinput` as part of the build/release step.
+- [ ] **[rev]** Run `python manage.py setup_roles` once after `migrate`.
+- [ ] **[rev]** Schedule the YouTube sync: either a Celery worker + beat (Task 4.4) or a cron job running `python manage.py sync_youtube` every 5–15 minutes. Run it once by hand after creating the Chilanga branch to import its sermons.
 - [ ] Confirm `/api/branches/` responds correctly from the deployed URL.
 - [ ] Commit any deploy-config files added (e.g. `Procfile`, `railway.json`, `nixpacks.toml`) : `"Add backend deployment configuration"`
 
 ### Task 1.5 — Deploy frontend
 - [ ] Set `NEXT_PUBLIC_API_URL` in Vercel's project env vars to the deployed backend URL (not `localhost:8000`).
-- [ ] Set all other required frontend env vars in Vercel (Resend, Upstash, YouTube — see Appendix A).
+- [ ] Set all other required frontend env vars in Vercel (Resend, Upstash — see Appendix A; **[rev]** YouTube now lives on the backend).
 - [ ] Connect the Vercel project to the GitHub repo, root directory `presbyterian-web/`.
 - [ ] **[rev]** Remove `PROJECT_ID` (Sanity) and `YOUTUBE_CHANNEL_ID` from the Vercel env vars if they were ever set there.
 - [ ] Deploy and smoke-test the full flow: national landing loads branches → `/chilanga` loads real sermons/projects/activities/daily message → contact form delivers an email to Chilanga's `contact_email` → sermons page shows Chilanga's sermons (from whichever source was chosen in Task 0.4) and a sermon detail page shows "More Sermons" from Chilanga's own channel → an unknown slug (e.g. `/does-not-exist`) shows the 404 page.
@@ -356,7 +363,7 @@ Every branch currently renders Chilanga's home page.
 - [ ] Add `backend/church_erp/ai_messages/tasks.py` with a Celery task `generate_daily_messages()` that runs the generation service for every active `Minister` with at least one embedded sermon.
 - [ ] Confirm Task 0.7's Celery wiring is in place (`church_erp/__init__.py` imports the app). `celery.py` defaults to `settings.local`, so set `DJANGO_SETTINGS_MODULE=church_erp.settings.production` explicitly on the worker and beat processes in production.
 - [ ] Configure `CELERY_BEAT_SCHEDULE` in `settings/base.py` to run this once daily (early morning, in a sensible timezone for Zambia — `Africa/Lusaka`, confirm `TIME_ZONE` setting matches).
-- [ ] Confirm a Celery worker and Celery beat process both run in production (two separate processes on Railway/Render — add both as explicit services/process types).
+- [ ] Confirm a Celery worker and Celery beat process both run in production (**[rev]** beat already schedules the YouTube sync from Task 0.4) (two separate processes on Railway/Render — add both as explicit services/process types).
 - [ ] Commit: `"Schedule daily AI message generation via Celery beat"`
 
 ### Task 4.5 — Review workflow
@@ -421,8 +428,8 @@ Every branch currently renders Chilanga's home page.
 `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_SETTINGS_MODULE` (production host only), `DATABASE_URL` (or discrete `DB_NAME`/`DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT`/`DB_SSLMODE` as currently used in `settings/local.py`), `REDIS_URL`, `AI_API_KEY`, `AI_API_MODEL`, `OPENAI_API_KEY`, `YOUTUBE_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_ENDPOINT_URL`, `FLUTTERWAVE_SECRET_KEY`, `MTN_MOMO_API_KEY`, `MTN_MOMO_ENVIRONMENT`, `FRONTEND_URL`.
 
 **Frontend (`presbyterian-web/.env.local`):**
-`NEXT_PUBLIC_API_URL` (Django backend URL, including the `/api` suffix — `Services/api.js` appends paths like `/branches/` directly), `YOUTUBE_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` **[rev]** (address on the verified domain, Task 1.1), `NATIONAL_CONTACT_EMAIL` **[rev]**, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`.
-Remove once Phase 0 is done: `PROJECT_ID` (Sanity), `YOUTUBE_CHANNEL_ID` (now per-branch, from the API). **[rev]** `.env.local` also contains `APP_ENV`, which no code reads — remove it or document its purpose.
+`NEXT_PUBLIC_API_URL` (Django backend URL, including the `/api` suffix — `Services/api.js` appends paths like `/branches/` directly), `RESEND_API_KEY`, `RESEND_FROM_EMAIL` **[rev]** (address on the verified domain, Task 1.1), `NATIONAL_CONTACT_EMAIL` **[rev]**, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`.
+Remove once Phase 0 is done: `PROJECT_ID` (Sanity), `YOUTUBE_CHANNEL_ID` (now per-branch, from the API), `YOUTUBE_API_KEY` (**[rev]** moved to the backend — the YouTube sync runs there). **[rev]** `.env.local` also contains `APP_ENV`, which no code reads — remove it or document its purpose.
 
 ---
 
