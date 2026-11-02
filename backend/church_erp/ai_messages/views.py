@@ -1,27 +1,27 @@
-from rest_framework import viewsets, permissions
+from django.db.models import Q
+from rest_framework import viewsets
+from church_erp.core.api_mixins import (
+    BranchScopedViewSetMixin,
+    IsBranchStaffOrReadOnly,
+    MinisterBranchMixin,
+)
 from church_erp.ai_messages.models import DailyMessage
 from church_erp.ai_messages.serializers import DailyMessageSerializer
 
 
-class IsStaffOrReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user and request.user.is_staff
-
-
-class DailyMessageViewSet(viewsets.ModelViewSet):
+class DailyMessageViewSet(MinisterBranchMixin, BranchScopedViewSetMixin, viewsets.ModelViewSet):
     queryset = DailyMessage.objects.all()
     serializer_class = DailyMessageSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsStaffOrReadOnly]
+    permission_classes = [IsBranchStaffOrReadOnly]
 
     def get_queryset(self):
+        # The public only ever sees published messages; staff also see their
+        # own branch's drafts and rejected messages.
+        qs = super().get_queryset()
         user = self.request.user
-        if user.is_staff:
-            qs = DailyMessage.objects.all()
-        else:
-            qs = DailyMessage.objects.filter(status='published')
-        branch_slug = self.request.query_params.get('branch')
-        if branch_slug:
-            qs = qs.filter(minister__branch__slug=branch_slug)
-        return qs
+        if user.is_superuser:
+            return qs
+        visible = Q(status='published')
+        if user.is_staff and user.branch_id:
+            visible |= Q(minister__branch_id=user.branch_id)
+        return qs.filter(visible)

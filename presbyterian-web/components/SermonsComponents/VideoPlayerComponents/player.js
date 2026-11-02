@@ -11,7 +11,7 @@ export default async function VidPlayerPage({ id, branch }) {
   const videoId = await id;
 
   const [sermonDb, videos] = await Promise.all([
-    getSermonByVideoId(videoId).catch(() => null),
+    getSermonByVideoId(branch, videoId),
     getVideos(process.env.YOUTUBE_CHANNEL_ID),
   ]);
 

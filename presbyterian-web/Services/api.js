@@ -35,8 +35,9 @@ export async function getSermons(branch) {
   return fetchAPI(`/sermons/?branch=${branch}`)
 }
 
-export async function getSermonByVideoId(videoId) {
-  return fetchAPI(`/sermons/${videoId}/`)
+// video_id is only unique within a branch, so the branch is required.
+export async function getSermonByVideoId(branch, videoId) {
+  return fetchAPI(`/sermons/${encodeURIComponent(videoId)}/?branch=${encodeURIComponent(branch)}`)
 }
 
 export async function getProjects(branch) {

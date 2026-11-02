@@ -17,6 +17,13 @@ class Sermon(models.Model):
 
     class Meta:
         ordering = ['-preached_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['branch', 'video_id'],
+                condition=~models.Q(video_id=''),
+                name='unique_video_per_branch',
+            ),
+        ]
 
     def __str__(self):
         return self.title

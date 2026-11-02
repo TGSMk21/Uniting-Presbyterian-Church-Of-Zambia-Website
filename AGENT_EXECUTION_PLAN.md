@@ -173,7 +173,7 @@ class FinanceRoleRequired:
 
 - [ ] **STOP — human decision required:** where should sermon listings come from? (a) Django `Sermon` rows only, entered by branch admins (current behaviour of `[branch]/sermons`); or (b) a periodic sync (Celery task, Phase 4.4 infrastructure) that imports each branch's YouTube uploads into `Sermon` rows and sets `is_live` from the YouTube live-search API; or (c) fetch YouTube live in the page as the old site did. Recommendation: (b), so the page stays DB-backed and admins can still add series/verse metadata. Until decided, keep (a).
 - [ ] In `player.js`, call `getBranch(branch)` and pass `branch.youtube_channel_id` to `getVideos()`; when the branch has no channel ID, render the sidebar from `getSermons(branch)` instead.
-- [ ] Pass the branch to the sermon lookup too: the detail page currently calls `getSermonByVideoId(videoId)` with no branch, so `/branchB/sermons/<branchA video>` shows branch A's sermon (see the lookup fix in Task 0.5).
+- [x] Pass the branch to the sermon lookup too: the detail page currently calls `getSermonByVideoId(videoId)` with no branch, so `/branchB/sermons/<branchA video>` shows branch A's sermon (see the lookup fix in Task 0.5).
 - [ ] Delete `getLive()` from `youtube.js` unless option (c) was chosen; give the YouTube client a request timeout (Rule 6).
 - [ ] Remove `YOUTUBE_CHANNEL_ID` from `.env.local` once no longer read (keep `YOUTUBE_API_KEY`, which is still a shared credential).
 - [ ] Commit: `"Resolve YouTube channel per branch instead of a single static channel ID"`
@@ -181,15 +181,23 @@ class FinanceRoleRequired:
 ### Task 0.5 — [rev] Branch-scope the REST API
 The admin fix in 0.2 does nothing for `/api/*`. Write once, apply everywhere.
 
-- [ ] Create `backend/church_erp/core/api_mixins.py` with:
+- [x] Create `backend/church_erp/core/api_mixins.py` with:
   - `BranchScopedViewSetMixin` — `branch_lookup` like the admin mixin. `get_queryset()`: for unsafe methods (and for any non-public data), non-superusers only get rows where `branch_lookup == request.user.branch_id`; public `GET`s keep the existing `?branch=<slug>` filter. `perform_create()`/`perform_update()`: force `branch=request.user.branch` for non-superusers (reject a request body that names another branch).
   - `IsBranchStaffOrReadOnly` permission — safe methods open; writes require `is_authenticated`, `is_staff` and a non-null `branch_id` (or superuser).
-- [ ] Apply to `SermonViewSet`, `ProjectViewSet`, `ActivityViewSet`, `PageViewSet`, `MediaAssetViewSet`, `DailyMessageViewSet` (`branch_lookup='minister__branch_id'`), and `MinisterViewSet` (which currently lets *any* authenticated user write). Delete the duplicated per-app `IsStaffOrReadOnly` classes.
-- [ ] `GivingRecordViewSet`: scope to `request.user.branch_id` unless `role == 'super_admin'`/superuser; disable `DELETE` (records are voided, never deleted — matches `FinanceRoleRequired`).
-- [ ] `DailyMessageViewSet`: non-public statuses (`pending_review`, `rejected`) should only be visible to staff *of that branch*, not every staff user.
-- [ ] Sermon detail lookup: make `(branch, video_id)` unique where `video_id` is non-blank (`UniqueConstraint(..., condition=~Q(video_id=''))`), and change the lookup to require `?branch=<slug>` (or a nested route) so it can't 500 on duplicates. Update `getSermonByVideoId(branch, videoId)` in `Services/api.js`.
-- [ ] Add DRF API tests (`APITestCase`) for: anonymous read OK; branch-A staff cannot `POST`/`PATCH`/`DELETE` branch-B objects; `content_editor` gets 403 on `/api/giving-records/`. These are the regression net for Rule 3.
-- [ ] Commit: `"Enforce branch scoping on all API viewsets"`
+- [x] Apply to `SermonViewSet`, `ProjectViewSet`, `ActivityViewSet`, `PageViewSet`, `MediaAssetViewSet`, `DailyMessageViewSet` (`branch_lookup='minister__branch_id'`), and `MinisterViewSet` (which currently lets *any* authenticated user write). Delete the duplicated per-app `IsStaffOrReadOnly` classes.
+- [x] `GivingRecordViewSet`: scope to `request.user.branch_id` unless `role == 'super_admin'`/superuser; disable `DELETE` (records are voided, never deleted — matches `FinanceRoleRequired`).
+- [x] `DailyMessageViewSet`: non-public statuses (`pending_review`, `rejected`) should only be visible to staff *of that branch*, not every staff user.
+- [x] Sermon detail lookup: make `(branch, video_id)` unique where `video_id` is non-blank (`UniqueConstraint(..., condition=~Q(video_id=''))`), and change the lookup to require `?branch=<slug>` (or a nested route) so it can't 500 on duplicates. Update `getSermonByVideoId(branch, videoId)` in `Services/api.js`.
+- [x] Add DRF API tests (`APITestCase`) for: anonymous read OK; branch-A staff cannot `POST`/`PATCH`/`DELETE` branch-B objects; `content_editor` gets 403 on `/api/giving-records/`. These are the regression net for Rule 3.
+- [x] Commit: `"Enforce branch scoping on all API viewsets"`
+- **[rev] Done notes (2026-11-02):**
+  - `core/api_mixins.py`: `IsBranchStaffOrReadOnly`, `BranchScopedViewSetMixin` (unsafe methods only see own-branch rows → 404 for others; create/update into another branch → 403), `MinisterBranchMixin` for `DailyMessage`.
+  - National access in the API is `is_superuser`, same as the admin. A `role='super_admin'` user who isn't a superuser is treated like any other branch user — make national admins superusers.
+  - Media library is internal (branch staff only, own branch). Giving records: own branch for reads and writes, `DELETE` → 405.
+  - `recorded_by`, `uploaded_by` and `DailyMessage.reviewed_by` are read-only in the API and set server-side, so they can't be forged.
+  - Migration `content/0002_sermon_unique_video_per_branch` adds a conditional unique constraint. **Before running it on the real database**, check for duplicates: `Sermon.objects.exclude(video_id='').values('branch','video_id').annotate(n=Count('id')).filter(n__gt=1)`.
+  - Ambiguous `/api/sermons/<video_id>/` lookups now return 404 instead of 500; `getSermonByVideoId(branch, videoId)` passes `?branch=`. (This also covers Task 0.4's "pass the branch to the sermon lookup" item.)
+  - 26 API tests in `backend/church_erp/api/tests/`; mutation-checked (7 deliberate breakages, all caught).
 
 ### Task 0.6 — [rev] Make the frontend build self-contained
 - [x] Move `lucide-react` and `clsx` (and `embla-carousel-*`/`react-youtube` only if still imported after Task 0.3) into `presbyterian-web/package.json` with `npm install --prefix presbyterian-web <pkg>`.

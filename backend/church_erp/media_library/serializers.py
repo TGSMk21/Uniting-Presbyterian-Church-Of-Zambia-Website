@@ -13,3 +13,4 @@ class MediaAssetSerializer(serializers.ModelSerializer):
     class Meta:
         model = MediaAsset
         fields = '__all__'
+        read_only_fields = ('uploaded_by',)

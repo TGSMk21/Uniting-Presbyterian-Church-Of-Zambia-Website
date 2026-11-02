@@ -1,4 +1,7 @@
-from rest_framework import viewsets, permissions
+from django.db.models import Q
+from rest_framework import viewsets
+from rest_framework.exceptions import NotFound
+from church_erp.core.api_mixins import BranchScopedViewSetMixin, IsBranchStaffOrReadOnly
 from church_erp.content.models import Sermon, Project, Activity, Page
 from church_erp.content.serializers import (
     SermonSerializer,
@@ -8,64 +11,48 @@ from church_erp.content.serializers import (
 )
 
 
-class IsStaffOrReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user and request.user.is_staff
-
-
-class SermonViewSet(viewsets.ModelViewSet):
+class SermonViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
     queryset = Sermon.objects.all()
     serializer_class = SermonSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsStaffOrReadOnly]
+    permission_classes = [IsBranchStaffOrReadOnly]
     lookup_field = 'video_id'
 
-    def get_queryset(self):
-        qs = Sermon.objects.all()
-        branch_slug = self.request.query_params.get('branch')
-        if branch_slug:
-            qs = qs.filter(branch__slug=branch_slug)
-        return qs
+    def get_object(self):
+        # video_id is only unique per branch, so a lookup without ?branch=
+        # can match several sermons; treat that as not found rather than 500.
+        matches = list(
+            self.filter_queryset(self.get_queryset())
+            .filter(video_id=self.kwargs['video_id'])[:2]
+        )
+        if len(matches) != 1:
+            raise NotFound("No unique sermon with this video ID; pass ?branch=<slug>.")
+        self.check_object_permissions(self.request, matches[0])
+        return matches[0]
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjectViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsStaffOrReadOnly]
-
-    def get_queryset(self):
-        qs = Project.objects.all()
-        branch_slug = self.request.query_params.get('branch')
-        if branch_slug:
-            qs = qs.filter(branch__slug=branch_slug)
-        return qs
+    permission_classes = [IsBranchStaffOrReadOnly]
 
 
-class ActivityViewSet(viewsets.ModelViewSet):
+class ActivityViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsStaffOrReadOnly]
-
-    def get_queryset(self):
-        qs = Activity.objects.all()
-        branch_slug = self.request.query_params.get('branch')
-        if branch_slug:
-            qs = qs.filter(branch__slug=branch_slug)
-        return qs
+    permission_classes = [IsBranchStaffOrReadOnly]
 
 
-class PageViewSet(viewsets.ModelViewSet):
+class PageViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
     queryset = Page.objects.all()
     serializer_class = PageSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsStaffOrReadOnly]
+    permission_classes = [IsBranchStaffOrReadOnly]
 
     def get_queryset(self):
-        if self.request.user.is_staff:
-            qs = Page.objects.all()
-        else:
-            qs = Page.objects.filter(is_published=True)
-        branch_slug = self.request.query_params.get('branch')
-        if branch_slug:
-            qs = qs.filter(branch__slug=branch_slug)
-        return qs
+        qs = super().get_queryset()
+        user = self.request.user
+        if user.is_superuser:
+            return qs
+        visible = Q(is_published=True)
+        if user.is_staff and user.branch_id:
+            visible |= Q(branch_id=user.branch_id)
+        return qs.filter(visible)
