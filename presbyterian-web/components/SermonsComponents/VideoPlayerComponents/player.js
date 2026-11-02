@@ -1,107 +1,107 @@
 import { formatYouTubeDuration } from "@/Utilities/durationFomar";
 import { getVideos } from "@/Services/Sermons/youtube";
-import { BookOpenText, Calendar, Clock, Link } from "lucide-react";
-import YouTube from "react-youtube";
-import { getArchiveData } from "@/Services/Sermons/ArchiveVidsServicee";
+import { BookOpenText, Calendar, Clock, ArrowLeft } from "lucide-react";
+import { getSermonByVideoId } from "@/Services/api";
 import { dateFormat } from "@/Utilities/DateFormatter";
+import Link from "next/link";
 
 export const revalidate = 3600;
 
-export default async function VidPlayerPage({id}) {
+export default async function VidPlayerPage({ id, branch }) {
+  const videoId = await id;
 
-     const videos = await getVideos(process.env.YOUTUBE_CHANNEL_ID)
+  const [sermonDb, videos] = await Promise.all([
+    getSermonByVideoId(videoId).catch(() => null),
+    getVideos(process.env.YOUTUBE_CHANNEL_ID),
+  ]);
 
-     const videoData = await getArchiveData()
+  const ytVideo = videos?.find((v) => v.id === videoId);
+  const related = videos?.filter((v) => v.id !== videoId) || [];
 
-    const videoId = await id 
+  const title = sermonDb?.title || ytVideo?.snippet?.title || "Sermon";
+  const series = sermonDb?.series || "";
+  const refVerse = sermonDb?.reference_verse || "";
+  const description = sermonDb?.description || ytVideo?.snippet?.description || "";
+  const publishedAt = ytVideo?.snippet?.publishedAt;
+  const duration = ytVideo?.contentDetails?.duration;
 
-    const vidDetails = {...videos.find((v) => v.id === videoId), ...videoData.find((v) => v.id === videoId)}
+  return (
+    <div className="sermon-player">
+      <div className="sermon-player-inner">
+        <Link href={`/${branch}/sermons`} className="sermon-player-back">
+          <ArrowLeft size={16} /> Back to Sermons
+        </Link>
 
-    return(
-    <div className="container lg:grid lg:grid-cols-3 gap-5 mx-auto overflow-hidden min-w-full max-w-full">
-        <div className="flex flex-col col-span-2">
-            <div className="flex flex-col items-center justify-center rounded-2xl bg-blue-950 min-h-fit">
-
-                <iframe
-                    className="w-full  min-h-93"
-                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
-                    title="Hello"
-                    allow= "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;picture-in-picture; web-share"
-                    allowFullScreen/>
+        <div className="sermon-player-grid">
+          <div className="sermon-player-main">
+            <div className="sermon-video">
+              <iframe
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
+                title={title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
             </div>
-            <div className=' flex flex-col p-10 border-2 my-5 rounded-2xl  '>
 
-                <h2 className="text-red-500 bg-red-200 max-w-fit py-1 px-3 rounded-2xl ">{vidDetails.series}</h2>
+            <div className="sermon-info">
+              {series && <span className="sermon-series">{series}</span>}
+              <h1 className="sermon-title">{title}</h1>
 
-                <h1 className="text-blue-950 text-xl my-5 font-normal">{vidDetails.snippet.title}</h1>
+              <div className="sermon-meta">
+                {publishedAt && (
+                  <span className="sermon-meta-item">
+                    <Calendar size={15} /> {dateFormat(publishedAt).fullDate}
+                  </span>
+                )}
+                {duration && (
+                  <span className="sermon-meta-item">
+                    <Clock size={15} /> {formatYouTubeDuration(duration)}
+                  </span>
+                )}
+                {refVerse && (
+                  <span className="sermon-meta-item">
+                    <BookOpenText size={15} /> {refVerse}
+                  </span>
+                )}
+              </div>
 
-                <div className="flex flex-col md:flex-row items-start "> 
-                    <div className=" flex flex-row">
-                    <Calendar color="gray" size={15}/>
-                    <h3 className="text-gray-600 mb-3 md:mr-3 ml-1 text-sm leading-none font-semibold">{dateFormat(vidDetails.snippet.publishedAt).fullDate}</h3>
-                    </div>
-                    <div className=" flex flex-row  ">
-                    <Clock color="gray" size={15} />
-                    <h3 className="text-gray-600 mb-3 md:mr-3 ml-1 text-sm leading-none font-semibold">{formatYouTubeDuration(vidDetails.contentDetails.duration)}</h3>
-                    </div>
-                    <div className=" flex flex-row ">
-                    <BookOpenText color="gray" size={15} className=""/>
-                    <h3 className="text-gray-600 mb-3 md:mr-3 ">{vidDetails.refVerse}</h3>
-                    </div>
+              <hr className="sermon-divider" />
 
-                    
-                </div>
-
-                <hr className="mb-5"/>
-
-                <h2 className="text-blue-950 mb-5 font-semibold">About This Sermon</h2>
-                <p className="text-gray-600 text-wrap">{vidDetails.snippet.description}</p>
-
-
+              <h2 className="sermon-about-title">About This Sermon</h2>
+              <p className="sermon-desc">{description}</p>
             </div>
+          </div>
+
+          <aside className="sermon-related">
+            <h2 className="sermon-related-title">More Sermons</h2>
+            <div className="sermon-related-list">
+              {related.map((item) => {
+                const thumb = item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.medium?.url;
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/${branch}/sermons/${item.id}`}
+                    className="sermon-related-item"
+                  >
+                    <div
+                      className="sermon-related-thumb"
+                      style={thumb ? { backgroundImage: `url(${thumb})` } : undefined}
+                    >
+                      <span>{formatYouTubeDuration(item.contentDetails.duration)}</span>
+                    </div>
+                    <div className="sermon-related-info">
+                      <h3>{item.snippet.title}</h3>
+                      <span className="sermon-related-date">
+                        <Calendar size={13} /> {dateFormat(item.snippet.publishedAt).fullDate}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </aside>
         </div>
-        <div className="flex flex-col min-w-full">
-            <div className="flex flex-col justify-center items-center p-5 bg-blue-950 rounded-2xl">
-
-                <h2 className="text-gray-200 text-lg">Related Videos</h2>
-                
-
-            </div>
-
-           
-            <div className="flex flex-col p-10  rounded-2xl border-2 mt-5">
-            
-
-                {videos.filter((v) => v.id !== videoId).map((item) => {
-                    return(
-                    <div key={item.id} className="flex flex-col"
-                    
-                    > 
-                    <div className="flex flex-row mb-5 items-center">
-                    <a className="flex flex-col rounded-lg min-w-34 min-h-32 p-1 justify-end items-end mr-3 bg-center bg-cover"  style={{backgroundImage: `url(${item.snippet.thumbnails.high.url})`}} href={`/sermons/${item.id}`}>
-                        <span className=" rounded-lg px-1 py-1 text-sm text-white bg-black/35 self-end bottom-0 ">{formatYouTubeDuration(item.contentDetails.duration)}</span>
-                    </a>
-                    <div className="flex flex-col mb-3">
-                        <a className="text-blue-950 mb-3 text-md" href={`/sermons/${item.id}`}>{item.snippet.title}</a>
-                        <div className=" flex flex-row">
-                        <Calendar color="gray" size={15}/>
-                        <h3 className="text-gray-600 mb-3 md:mr-3 ml-1 text-sm leading-none font-semibold">{dateFormat(item.snippet.publishedAt).fullDate}</h3>
-                        </div>
-                        <a className="text-gray-600" href={`/sermons/${item.id}`}></a>
-                    </div>
-                    </div>
-                    <hr className="min-w-full mb-3"/>
-                </div>
-                        
-                    )
-                })}
-                
-
-
-            </div>
-
-
-        </div>
+      </div>
     </div>
-    )
+  );
 }
