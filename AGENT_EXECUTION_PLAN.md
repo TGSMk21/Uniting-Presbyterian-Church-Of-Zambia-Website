@@ -269,13 +269,14 @@ Every branch currently renders Chilanga's home page.
 
 ### Task 1.3 — Review and complete `settings/production.py`
 - [x] **[rev] Already done in the existing file / `base.py`:** `DEBUG = False`; `ALLOWED_HOSTS` from env; `SECURE_SSL_REDIRECT`; `SESSION_COOKIE_SECURE`; `CSRF_COOKIE_SECURE`; HSTS; `X_FRAME_OPTIONS='DENY'`; CORS limited to `FRONTEND_URL` (no `CORS_ALLOW_ALL_ORIGINS` outside `local.py`).
-- [ ] Make `CORS_ALLOWED_ORIGINS` accept a comma-separated list (production domain + `www` + Vercel preview URL) and set `CSRF_TRUSTED_ORIGINS` for the admin domain.
-- [ ] Fail fast in production if `DJANGO_SECRET_KEY` is unset (base.py currently falls back to `"insecure-dev-key-change-in-production"`) or `DJANGO_ALLOWED_HOSTS` is empty.
-- [ ] Static files via `whitenoise` (add to `requirements.txt`, add middleware right after `SecurityMiddleware`, set `STORAGES["staticfiles"]`). Add `gunicorn` to `requirements.txt`.
-- [ ] `DATABASE_URL` parsed from env (`dj-database-url`), with `conn_max_age` and `sslmode=require`. **[rev]** Supabase's pooler on port 6543 (transaction mode) needs `DISABLE_SERVER_SIDE_CURSORS = True`; port 5432 (session mode) does not — document which one is used.
-- [ ] Remove the Supabase username/host fallbacks from `settings/local.py` (the password is not hardcoded, but the project ref in the username shouldn't be in a public repo either) — read everything from `.env`.
-- [ ] Add a `LOGGING` config that sends errors to stdout so the host's log viewer captures them.
-- [ ] Commit: `"Complete production settings for deployment"`
+- [x] Make `CORS_ALLOWED_ORIGINS` accept a comma-separated list (production domain + `www` + Vercel preview URL) and set `CSRF_TRUSTED_ORIGINS` for the admin domain.
+- [x] Fail fast in production if `DJANGO_SECRET_KEY` is unset (base.py currently falls back to `"insecure-dev-key-change-in-production"`) or `DJANGO_ALLOWED_HOSTS` is empty.
+- [x] Static files via `whitenoise` (add to `requirements.txt`, add middleware right after `SecurityMiddleware`, set `STORAGES["staticfiles"]`). Add `gunicorn` to `requirements.txt`.
+- [x] `DATABASE_URL` parsed from env (`dj-database-url`), with `conn_max_age` and `sslmode=require`. **[rev]** Supabase's pooler on port 6543 (transaction mode) needs `DISABLE_SERVER_SIDE_CURSORS = True`; port 5432 (session mode) does not — document which one is used.
+- [x] Remove the Supabase username/host fallbacks from `settings/local.py` (the password is not hardcoded, but the project ref in the username shouldn't be in a public repo either) — read everything from `.env`.
+- [x] Add a `LOGGING` config that sends errors to stdout so the host's log viewer captures them.
+- [x] Commit: `"Complete production settings for deployment"`
+- **[rev] Done notes (2026-11-02):** `settings/production.py` refuses to start (ImproperlyConfigured naming the variable) without `DJANGO_SECRET_KEY` (or with the dev default), `DJANGO_ALLOWED_HOSTS`, `DATABASE_URL` or `FRONTEND_URL`. `DEBUG` is always False. Hosts/origins are comma-separated lists; `CSRF_TRUSTED_ORIGINS` is optional. `DATABASE_URL` is parsed with SSL required, `conn_max_age=600` and health checks; port 6543 (Supabase transaction pooler) disables server-side cursors automatically. Whitenoise serves hashed, immutable static files; logs go to stdout. 8 subprocess-based tests (including `check --deploy --fail-level WARNING`) plus a manual check that `collectstatic` works and the admin CSS is served with a 1-year cache.
 
 ### Task 1.4 — Deploy backend
 - [ ] Create a Railway (or Render) project, connect the GitHub repo, set the root to `backend/`.
