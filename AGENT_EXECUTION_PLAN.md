@@ -78,7 +78,7 @@
 ### Task 0.2 — Fix branch-scoped admin access
 Create a shared mixin so this logic exists once, not copy-pasted per app.
 
-- [ ] Create `backend/church_erp/core/admin_mixins.py`:
+- [x] Create `backend/church_erp/core/admin_mixins.py`:
 ```python
 from django.contrib import admin
 
@@ -138,15 +138,22 @@ class FinanceRoleRequired:
     def has_delete_permission(self, request, obj=None):
         return False  # financial records are never hard-deleted via admin
 ```
-- [ ] Update `core/admin.py`: `BranchAdmin` extends `BranchScopedAdmin` with `branch_lookup = 'id'`, `branch_field = None`, and `has_add_permission`/`has_delete_permission` returning `request.user.is_superuser` (only national admins create or remove branches); `MinisterAdmin` extends it with the defaults. Remove the old broken `get_queryset` overrides.
-- [ ] Update `content/admin.py`: `SermonAdmin`, `ProjectAdmin`, `ActivityAdmin`, `PageAdmin` all extend `BranchScopedAdmin` with the defaults. Remove the old broken overrides.
-- [ ] Update `media_library/admin.py`: `MediaAssetAdmin` extends `BranchScopedAdmin`. Also set `uploaded_by = request.user` in its `save_model` on create.
-- [ ] Update `finance/admin.py`: `class GivingRecordAdmin(FinanceRoleRequired, BranchScopedAdmin)` — **[rev] `FinanceRoleRequired` must come first** in the bases, since it is a plain mixin and must override `ModelAdmin`'s permission methods. Replace the `groups.filter(name='finance_admin')` check with the `role` field (one source of truth). Set `recorded_by = request.user` on create.
-- [ ] Update `ai_messages/admin.py`: `DailyMessageAdmin` extends `BranchScopedAdmin` with `branch_lookup = 'minister__branch_id'`, `branch_field = None` (the `formfield_for_foreignkey` override already limits the `minister` choices). `SermonEmbeddingAdmin` gets `branch_lookup = 'sermon__branch_id'`, `branch_field = None`, and should be read-only.
-- [ ] **[rev]** Update `accounts/admin.py`'s `UserAdmin`: for non-superusers, make `is_superuser`, `is_staff`, `groups`, `user_permissions` and `branch` read-only (via `get_readonly_fields`), restrict the `role` choices so a branch admin cannot grant `super_admin`/`finance_admin`, and fix its `get_queryset` to return `qs.none()` when `request.user.branch_id` is null (currently `filter(branch=None)` returns every branchless user).
-- [ ] **[rev]** Note for the manual test: admin users need `is_staff=True` *and* Django model permissions (or a group granting them) to see anything — `BranchScopedAdmin` only narrows what they can already see. Create a `Branch Admin` / `Content Editor` group with the right model permissions (a data migration or a `setup_roles` management command) so this isn't re-done by hand per user.
-- [ ] Manual test: create two branches and one branch-scoped admin user per branch via shell; confirm each sees only their own branch's records; confirm they cannot pick the other branch in any add/change form; confirm a `content_editor` role user cannot see `GivingRecord` at all (absent from the admin index, not just empty).
-- [ ] Commit: `"Fix branch-scoped admin access via shared BranchScopedAdmin mixin"`
+- [x] Update `core/admin.py`: `BranchAdmin` extends `BranchScopedAdmin` with `branch_lookup = 'id'`, `branch_field = None`, and `has_add_permission`/`has_delete_permission` returning `request.user.is_superuser` (only national admins create or remove branches); `MinisterAdmin` extends it with the defaults. Remove the old broken `get_queryset` overrides.
+- [x] Update `content/admin.py`: `SermonAdmin`, `ProjectAdmin`, `ActivityAdmin`, `PageAdmin` all extend `BranchScopedAdmin` with the defaults. Remove the old broken overrides.
+- [x] Update `media_library/admin.py`: `MediaAssetAdmin` extends `BranchScopedAdmin`. Also set `uploaded_by = request.user` in its `save_model` on create.
+- [x] Update `finance/admin.py`: `class GivingRecordAdmin(FinanceRoleRequired, BranchScopedAdmin)` — **[rev] `FinanceRoleRequired` must come first** in the bases, since it is a plain mixin and must override `ModelAdmin`'s permission methods. Replace the `groups.filter(name='finance_admin')` check with the `role` field (one source of truth). Set `recorded_by = request.user` on create.
+- [x] Update `ai_messages/admin.py`: `DailyMessageAdmin` extends `BranchScopedAdmin` with `branch_lookup = 'minister__branch_id'`, `branch_field = None` (the `formfield_for_foreignkey` override already limits the `minister` choices). `SermonEmbeddingAdmin` gets `branch_lookup = 'sermon__branch_id'`, `branch_field = None`, and should be read-only.
+- [x] **[rev]** Update `accounts/admin.py`'s `UserAdmin`: for non-superusers, make `is_superuser`, `is_staff`, `groups`, `user_permissions` and `branch` read-only (via `get_readonly_fields`), restrict the `role` choices so a branch admin cannot grant `super_admin`/`finance_admin`, and fix its `get_queryset` to return `qs.none()` when `request.user.branch_id` is null (currently `filter(branch=None)` returns every branchless user).
+- [x] **[rev]** Note for the manual test: admin users need `is_staff=True` *and* Django model permissions (or a group granting them) to see anything — `BranchScopedAdmin` only narrows what they can already see. Create a `Branch Admin` / `Content Editor` group with the right model permissions (a data migration or a `setup_roles` management command) so this isn't re-done by hand per user.
+- [x] Manual test: create two branches and one branch-scoped admin user per branch via shell; confirm each sees only their own branch's records; confirm they cannot pick the other branch in any add/change form; confirm a `content_editor` role user cannot see `GivingRecord` at all (absent from the admin index, not just empty).
+- [x] Commit: `"Fix branch-scoped admin access via shared BranchScopedAdmin mixin"`
+- **[rev] Done notes (2026-11-02):**
+  - The mixin's choice limiting is generic: any FK or M2M to `Branch` or to a model with a `branch` field is limited to the user's branch (covers `Minister` FKs and `DailyMessage.source_sermons`, which the original snippet missed).
+  - Extra hole found and fixed: a branch admin could see — and reset the password of — finance admins, national admins and superusers in their own branch. `UserAdmin` now hides any user who isn't a branch-role non-superuser.
+  - `GivingRecord.recorded_by` and `MediaAsset.uploaded_by` are read-only in the admin and set to the current user on create.
+  - The manual test is replaced by automated tests: `backend/church_erp/core/tests/` (run `python manage.py test --settings=church_erp.settings.test` from `backend/`). `settings/test.py` uses in-memory SQLite.
+  - Groups: `python manage.py setup_roles` creates/resets "Content Editor", "Branch Admin" and "Finance Admin" with the right model permissions (idempotent). Run it once per environment after `migrate`.
+- [ ] **[rev] STOP — human decision required (onboarding gap):** branch admins can now add users to their branch but cannot set `is_staff` or groups (both are privilege fields), so a new content editor can't log in until a superuser grants them. Options: (a) keep it — superuser finishes every onboarding; (b) derive `is_staff` and the role group automatically from `role` on save, so a branch admin's new `content_editor` works immediately. Recommendation: (b).
 
 ### Task 0.3 — Finish retiring Sanity on the frontend
 **[rev]** This is mostly a *deletion* task: the new routes already use `Services/api.js` exclusively, and every Sanity-backed component is orphaned (see Section 1). The original grep (`"Services/client\|next-sanity"`) would miss them, because components import e.g. `@/Services/Home/HomeService` and services import `../client`.
