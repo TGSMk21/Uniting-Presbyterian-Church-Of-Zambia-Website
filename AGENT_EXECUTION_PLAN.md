@@ -59,21 +59,21 @@
 **Goal:** Get the actual current work safely under version control, fix the branch-scoping bug that undermines the whole multi-tenant model, and remove the dual-data-layer risk on the frontend. Nothing in later phases is trustworthy until this phase is done.
 
 ### Task 0.1 — Commit the current state
-- [ ] **[rev] STOP — human decision required: reconcile `main` and `master` first.** On GitHub (public repo `TGSMk21/Uniting-Presbyterian-Church-Of-Zambia-Website`), the default branch `main` (`d42b108`, 3 README-only commits) and `master` (`351454b`, the full Sanity site — what the local checkout tracks) have **no common ancestor**, so a PR from any `master`-based branch into `main` is against unrelated history. Pick one:
+- [x] **[rev] STOP — human decision required: reconcile `main` and `master` first.** On GitHub (public repo `TGSMk21/Uniting-Presbyterian-Church-Of-Zambia-Website`), the default branch `main` (`d42b108`, 3 README-only commits) and `master` (`351454b`, the full Sanity site — what the local checkout tracks) have **no common ancestor**, so a PR from any `master`-based branch into `main` is against unrelated history. Pick one:
   - (a) Make `master` the default branch on GitHub, port the README changes from `main` into a commit on `master`, then delete `main`. Simplest — all local work is already based on `master`.
   - (b) Keep `main` as the default: `git fetch origin main && git switch master && git merge origin/main --allow-unrelated-histories`, resolve the `README.md` conflict, push `master`, then open a PR `master` → `main`. After that, base all work on `main` and retire `master`.
-  - Record the choice here. Every later "PR"/"merge" step in this file means "into the default branch chosen here".
-- [ ] **[rev]** Local git over HTTPS fails with an SSL certificate error under the OpenSSL backend (likely antivirus/proxy TLS inspection) but works with the Windows certificate store. If `git push`/`git fetch` fail, run `git config --global http.sslBackend schannel` (user's decision — it's a global setting). `gh` CLI calls are unaffected.
-- [ ] **[rev]** The repo is **public**: everything committed in this task is published immediately. Do the `settings/local.py` credential cleanup from Task 1.3 (remove the Supabase username/host fallbacks) *before* the first backend commit, not after.
-- [ ] **[rev]** Work on a feature branch, not directly on the default branch (e.g. `git switch -c stabilize/phase-0`); merge via PR.
-- [ ] Confirm `.gitignore` excludes `backend/.env`, `presbyterian-web/.env.local`, `__pycache__/`, `*.pyc`, `node_modules/`, `.next/`, `staticfiles/`, `media/`
-- [ ] **[rev]** The root `.gitignore`'s `.env*` rule (and the same rule in `presbyterian-web/.gitignore`) also ignores `backend/.env.example`. Add `!.env.example` / `!backend/.env.example` so the template is committed. Create a matching `presbyterian-web/.env.example` with the Appendix A frontend keys (placeholders only).
-- [ ] **[rev]** Add `query`, `stop` and `.playwright-mcp/` to `.gitignore` (or delete them — they are accidental artifacts). Never use `git add -A`/`git add .` in this task; add paths explicitly.
-- [ ] **[rev]** Before staging the backend, run `git add -n backend/` and confirm no `__pycache__/`, `.env` or `media/` paths appear.
-- [ ] `git add` the backend in full, commit as a standalone commit: `"Add Django backend: core, accounts, content, media_library, ai_messages, finance apps"`
-- [ ] `git add` the new frontend route structure (`app/[branch]/`, `app/(national)/`, `app/not-found.js`, `Services/api.js`, `components/UniversalComponents/{contact-form,nav-client,footer-client,scroll-reveal}.js`) as a separate commit: `"Add multi-branch Next.js routes and Django API service layer"`
-- [ ] Commit remaining modified files (`.gitignore`, fonts.js, globals.css, layout.js, player.js, next.config.mjs, logo.png, and the deletions of the old flat routes) with a descriptive message. **[rev]** Do NOT commit the modified `Services/client.js` (it adds a hardcoded Sanity `projectId` fallback) — `git restore` it; it is deleted in Task 0.3 anyway.
-- [ ] Push to the remote and confirm `git status` is clean
+  - **Decision (2026-11-02): (a) keep `master`.** README change ported in commit "Port README title change from main branch"; default branch switched to `master` on GitHub. `main` stays until the Phase 0 PR is merged, then delete it. Work happens on branch `claude/agent-execution-plan-review-77b045`, merged into `master` via PR.
+- [x] **[rev]** Local git over HTTPS fails with an SSL certificate error under the OpenSSL backend (likely antivirus/proxy TLS inspection) but works with the Windows certificate store. If `git push`/`git fetch` fail, run `git config --global http.sslBackend schannel` (user's decision — it's a global setting). `gh` CLI calls are unaffected.
+- [x] **[rev]** The repo is **public**: everything committed in this task is published immediately. Do the `settings/local.py` credential cleanup from Task 1.3 (remove the Supabase username/host fallbacks) *before* the first backend commit, not after.
+- [x] **[rev]** Work on a feature branch, not directly on the default branch (e.g. `git switch -c stabilize/phase-0`); merge via PR.
+- [x] Confirm `.gitignore` excludes `backend/.env`, `presbyterian-web/.env.local`, `__pycache__/`, `*.pyc`, `node_modules/`, `.next/`, `staticfiles/`, `media/`
+- [x] **[rev]** The root `.gitignore`'s `.env*` rule (and the same rule in `presbyterian-web/.gitignore`) also ignores `backend/.env.example`. Add `!.env.example` / `!backend/.env.example` so the template is committed. Create a matching `presbyterian-web/.env.example` with the Appendix A frontend keys (placeholders only).
+- [x] **[rev]** Add `query`, `stop` and `.playwright-mcp/` to `.gitignore` (or delete them — they are accidental artifacts). Never use `git add -A`/`git add .` in this task; add paths explicitly.
+- [x] **[rev]** Before staging the backend, run `git add -n backend/` and confirm no `__pycache__/`, `.env` or `media/` paths appear.
+- [x] `git add` the backend in full, commit as a standalone commit: `"Add Django backend: core, accounts, content, media_library, ai_messages, finance apps"`
+- [x] `git add` the new frontend route structure (`app/[branch]/`, `app/(national)/`, `app/not-found.js`, `Services/api.js`, `components/UniversalComponents/{contact-form,nav-client,footer-client,scroll-reveal}.js`) as a separate commit: `"Add multi-branch Next.js routes and Django API service layer"`
+- [x] Commit remaining modified files (`.gitignore`, fonts.js, globals.css, layout.js, player.js, next.config.mjs, logo.png, and the deletions of the old flat routes) with a descriptive message. **[rev]** Do NOT commit the modified `Services/client.js` (it adds a hardcoded Sanity `projectId` fallback) — `git restore` it; it is deleted in Task 0.3 anyway.
+- [x] Push to the remote and confirm `git status` is clean
 
 ### Task 0.2 — Fix branch-scoped admin access
 Create a shared mixin so this logic exists once, not copy-pasted per app.
@@ -190,6 +190,7 @@ The admin fix in 0.2 does nothing for `/api/*`. Write once, apply everywhere.
 - [ ] Commit: `"Declare all frontend dependencies in presbyterian-web/package.json"`
 
 ### Task 0.7 — [rev] Backend dev-setup hygiene
+- [x] **[rev]** Add `Pillow` to `requirements.txt` — `Branch.logo`/`Minister.photo` are `ImageField`s, and without Pillow `manage.py check` fails (`fields.E210`) on a fresh install. Done early (right after Task 0.1) because every later test depends on it.
 - [ ] Add `django-extensions` to `requirements.txt` (or a `requirements-dev.txt`, and only add the app in `local.py` when importable).
 - [ ] Add `from .celery import app as celery_app` / `__all__ = ("celery_app",)` to `church_erp/__init__.py` so Celery loads with Django.
 - [ ] Remove `ckeditor` from `INSTALLED_APPS` and `django-ckeditor` from `requirements.txt` (unused, EOL). If rich text is needed for `Page.content` later, pick a maintained editor and sanitize HTML server-side (e.g. `nh3`) before the frontend renders it.
