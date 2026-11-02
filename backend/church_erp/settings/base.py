@@ -137,6 +137,8 @@ CELERY_BEAT_SCHEDULE = {
 
 # --- External APIs ---
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
+# Shared secret for POST /api/tasks/sync-youtube/ (empty disables the endpoint)
+SYNC_TOKEN = os.environ.get("SYNC_TOKEN", "")
 
 # --- Security ---
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

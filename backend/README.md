@@ -58,6 +58,36 @@ python manage.py sync_youtube
 
 Add `--branch <slug>` to sync a single branch. In production, Celery beat runs the same sync every 5 minutes (`CELERY_BEAT_SCHEDULE` in `settings/base.py`). Each run costs about 2 YouTube API quota units per branch. New videos are added, but titles, series and verses edited by staff are never overwritten.
 
+## Deploying to Render
+
+`render.yaml` at the repository root is a Render Blueprint for this backend on Render's **free** plan. The frontend goes on Vercel.
+
+1. **Database URL.** In Supabase, open **Connect** and copy the **Session pooler** connection string (port 5432). Render can't reach Supabase's direct connection, which is IPv6-only. Put your database password into the string.
+2. **Create the service.** In Render, choose **New → Blueprint**, connect this GitHub repository, and enter the three values it asks for:
+   - `DATABASE_URL`: the string from step 1.
+   - `YOUTUBE_API_KEY`: the key the old frontend used.
+   - `FRONTEND_URL`: your Vercel URL. If you don't have it yet, enter `https://example.com` and update it after deploying the frontend.
+
+   Render generates `DJANGO_SECRET_KEY` and `SYNC_TOKEN` itself.
+3. **First deploy.** Render installs, collects static files, then runs `migrate` and `setup_roles` on start, so there are no one-off commands to run. When it's live, `https://<service>.onrender.com/api/branches/` should return JSON.
+4. **Superuser.** The free plan has no shell, so create it from your own machine against the same database:
+
+   ```bash
+   DJANGO_SETTINGS_MODULE=church_erp.settings.production DJANGO_SECRET_KEY=temp-not-used-for-users-0123456789abcdefghijklmnop DJANGO_ALLOWED_HOSTS=localhost FRONTEND_URL=http://localhost DATABASE_URL="<session pooler string>" python manage.py createsuperuser
+   ```
+
+   Run any other management command the same way, e.g. `sync_youtube`.
+5. **Schedule the YouTube sync.** The free plan has no cron jobs and sleeps after 15 minutes without traffic. Create a free job at [cron-job.org](https://cron-job.org):
+   - URL: `https://<service>.onrender.com/api/tasks/sync-youtube/`
+   - Method: **POST**
+   - Header: `X-Sync-Token` set to the `SYNC_TOKEN` value from the Render dashboard (Environment tab)
+   - Schedule: every **10 minutes**
+
+   This runs the sync and keeps the service awake. One always-awake service uses about 744 of Render's 750 free hours a month, so don't add a second free service to the same workspace.
+6. **Point the backend at the frontend.** After the Vercel deploy, set `FRONTEND_URL` to the real site URL(s), comma-separated, and redeploy.
+
+If the site later moves to a paid Render plan, replace step 5 with a Render cron job running `python manage.py sync_youtube`, and move `migrate`/`setup_roles` into a pre-deploy command.
+
 ## Settings
 
 `manage.py` defaults to `church_erp.settings.local`. Production uses `DJANGO_SETTINGS_MODULE=church_erp.settings.production`.

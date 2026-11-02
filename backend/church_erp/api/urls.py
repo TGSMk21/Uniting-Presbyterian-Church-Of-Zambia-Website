@@ -5,6 +5,7 @@ from church_erp.content.views import SermonViewSet, ProjectViewSet, ActivityView
 from church_erp.media_library.views import MediaAssetViewSet
 from church_erp.ai_messages.views import DailyMessageViewSet
 from church_erp.finance.views import GivingRecordViewSet
+from church_erp.api.views import sync_youtube
 
 router = DefaultRouter()
 router.register(r'branches', BranchViewSet)
@@ -20,4 +21,5 @@ router.register(r'giving-records', GivingRecordViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('auth/', include('church_erp.accounts.urls')),
+    path('tasks/sync-youtube/', sync_youtube, name='sync-youtube'),
 ]

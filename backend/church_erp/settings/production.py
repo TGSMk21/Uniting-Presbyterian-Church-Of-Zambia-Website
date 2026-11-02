@@ -20,7 +20,12 @@ DEBUG = False
 if not SECRET_KEY or SECRET_KEY == INSECURE_DEV_SECRET_KEY:
     raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set to a long random value in production.")
 
-ALLOWED_HOSTS = env_list(required_env("DJANGO_ALLOWED_HOSTS"))
+# Render provides the service's own hostname; other hosts come from the env.
+ALLOWED_HOSTS = env_list(os.environ.get("DJANGO_ALLOWED_HOSTS", ""))
+if os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
+    ALLOWED_HOSTS.append(os.environ["RENDER_EXTERNAL_HOSTNAME"])
+if not ALLOWED_HOSTS:
+    raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS must be set in production (or run on Render).")
 
 # FRONTEND_URL may list several origins: the domain, www., a Vercel preview URL.
 CORS_ALLOWED_ORIGINS = env_list(required_env("FRONTEND_URL"))

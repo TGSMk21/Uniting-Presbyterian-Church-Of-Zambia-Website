@@ -23,6 +23,7 @@ GOOD_ENV = {
     "FRONTEND_URL": "https://upcz.example.org, https://www.upcz.example.org",
     "CSRF_TRUSTED_ORIGINS": "https://api.example.org",
     "DJANGO_DEBUG": "",
+    "RENDER_EXTERNAL_HOSTNAME": "",
     "DB_NAME": "", "DB_USER": "", "DB_PASSWORD": "", "DB_HOST": "", "DB_PORT": "",
 }
 
@@ -98,6 +99,12 @@ class ProductionSettingsTests(SimpleTestCase):
 
     def test_logs_go_to_stdout(self):
         self.assertEqual(settings_with()["ROOT_LOG_HANDLERS"], ["console"])
+
+    def test_render_hostname_is_allowed_automatically(self):
+        hosts = settings_with(DJANGO_ALLOWED_HOSTS="", RENDER_EXTERNAL_HOSTNAME="upcz-api.onrender.com")
+        self.assertEqual(hosts["ALLOWED_HOSTS"], ["upcz-api.onrender.com"])
+        both = settings_with(RENDER_EXTERNAL_HOSTNAME="upcz-api.onrender.com")["ALLOWED_HOSTS"]
+        self.assertEqual(both, ["api.example.org", "admin.example.org", "upcz-api.onrender.com"])
 
     def test_refuses_to_start_without_required_settings(self):
         for name, bad in [

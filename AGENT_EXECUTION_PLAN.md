@@ -282,6 +282,12 @@ Every branch currently renders Chilanga's home page.
 - **[rev] Done notes (2026-11-02):** `settings/production.py` refuses to start (ImproperlyConfigured naming the variable) without `DJANGO_SECRET_KEY` (or with the dev default), `DJANGO_ALLOWED_HOSTS`, `DATABASE_URL` or `FRONTEND_URL`. `DEBUG` is always False. Hosts/origins are comma-separated lists; `CSRF_TRUSTED_ORIGINS` is optional. `DATABASE_URL` is parsed with SSL required, `conn_max_age=600` and health checks; port 6543 (Supabase transaction pooler) disables server-side cursors automatically. Whitenoise serves hashed, immutable static files; logs go to stdout. 8 subprocess-based tests (including `check --deploy --fail-level WARNING`) plus a manual check that `collectstatic` works and the admin CSS is served with a 1-year cache.
 
 ### Task 1.4 — Deploy backend
+- **[rev] Decision (2026-11-02): Render, free plan.** Prepared and pushed on branch `claude/render-deploy`:
+  - `render.yaml` Blueprint: the free plan has no pre-deploy commands, so `migrate` and `setup_roles` run in the start command.
+  - `RENDER_EXTERNAL_HOSTNAME` is added to `ALLOWED_HOSTS` automatically.
+  - `POST /api/tasks/sync-youtube/`, protected by an `X-Sync-Token` header, replaces cron (not available on the free plan). An external scheduler (cron-job.org) calls it every 10 minutes, which also keeps the service awake.
+  - Step-by-step guide: `backend/README.md`, "Deploying to Render".
+  - Known free-plan limits: no shell (run management commands locally against the Supabase session-pooler URL); 750 free hours/month covers exactly one always-awake service; uploaded media isn't persisted (Phase 3).
 - [ ] Create a Railway (or Render) project, connect the GitHub repo, set the root to `backend/`.
 - [ ] Set all required env vars (see Appendix A) in the hosting dashboard — never commit them.
 - [ ] Confirm `DJANGO_SETTINGS_MODULE=church_erp.settings.production` is set for the deployed service.

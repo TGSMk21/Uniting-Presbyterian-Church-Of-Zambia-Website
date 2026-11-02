@@ -1,0 +1,35 @@
+# Render Blueprint for the Django backend (the Next.js frontend is on Vercel).
+# Set-up steps: backend/README.md, "Deploying to Render".
+services:
+  - type: web
+    name: upcz-backend
+    runtime: python
+    plan: free
+    branch: master
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    # Pre-deploy commands are paid-only on Render, so migrations run at start.
+    # Both commands are safe to repeat on every start.
+    startCommand: >-
+      python manage.py migrate --noinput &&
+      python manage.py setup_roles &&
+      gunicorn church_erp.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 60
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13.7"
+      - key: DJANGO_SETTINGS_MODULE
+        value: church_erp.settings.production
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      # Shared secret for POST /api/tasks/sync-youtube/ (the free plan has no cron jobs).
+      - key: SYNC_TOKEN
+        generateValue: true
+      # Supabase "Session pooler" connection string: Render can't reach the
+      # IPv6-only direct connection.
+      - key: DATABASE_URL
+        sync: false
+      # The Vercel site's URL(s), comma-separated.
+      - key: FRONTEND_URL
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
