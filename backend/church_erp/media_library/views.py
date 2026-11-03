@@ -18,6 +18,7 @@ class MediaAssetViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
     queryset = MediaAsset.objects.all()
     serializer_class = MediaAssetSerializer
     permission_classes = [IsBranchStaff]
+    filterset_fields = ['file_type', 'tags']  # e.g. ?file_type=image&tags=3
 
     def get_queryset(self):
         qs = super().get_queryset()

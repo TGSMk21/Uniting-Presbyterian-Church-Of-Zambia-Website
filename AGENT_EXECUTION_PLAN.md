@@ -335,14 +335,15 @@ Every branch currently renders Chilanga's home page.
 ## Phase 3 — Media Library
 
 ### Task 3.1 — Wire real storage
-- [ ] Add the appropriate `STORAGES` setting (Django 5 syntax) to `settings/production.py` using `storages.backends.s3boto3.S3Boto3Storage`, pointed at Cloudflare R2 (or S3) via the existing `AWS_*` env vars already present in `.env.example`.
-- [ ] Keep local filesystem storage in `settings/local.py` for development — do not require R2/S3 credentials just to run locally.
-- [ ] Confirm `MediaAsset.file` uploads through Django Admin land in the bucket, not on local disk, when running under production settings.
-- [ ] Commit: `"Wire media uploads to object storage in production"`
+- [x] Add the appropriate `STORAGES` setting (Django 5 syntax) to `settings/production.py` using `storages.backends.s3boto3.S3Boto3Storage`, pointed at Cloudflare R2 (or S3) via the existing `AWS_*` env vars already present in `.env.example`.
+- [x] Keep local filesystem storage in `settings/local.py` for development — do not require R2/S3 credentials just to run locally.
+- [x] Confirm `MediaAsset.file` uploads through Django Admin land in the bucket, not on local disk, when running under production settings.
+- [x] Commit: `"Wire media uploads to object storage in production"`
 
 ### Task 3.2 — Round out media admin/API
-- [ ] Add `django-filter` filtering on `MediaAssetViewSet` for `file_type` and `tags` (the package is already in `requirements.txt`).
-- [ ] Confirm `MediaAssetAdmin` supports bulk tagging and shows file previews for images in the changelist.
+- [x] Add `django-filter` filtering on `MediaAssetViewSet` for `file_type` and `tags` (the package is already in `requirements.txt`).
+- [x] Confirm `MediaAssetAdmin` supports bulk tagging and shows file previews for images in the changelist.
+- **[rev] Done notes (2026-11-03):** two R2 buckets, because R2 makes a bucket public as a whole. `default` (public: branch images, minister photos) is served from the bucket's public domain with non-expiring links, since cached pages would break on expiring ones. `private` (media-library files) uses signed links that expire after 1 hour. Config is in `settings/storage.py`. Production switches to R2 when `AWS_STORAGE_BUCKET_NAME` is set and refuses to start if any companion variable is missing. Local dev and tests keep both on disk (`media/`, `media_private/`). Media API filters: `?file_type=`, `?tags=`. Admin: image thumbnails in the list, tag filter, horizontal tag picker, and an "Add tag to selected files" bulk action that creates the tag if needed and stays branch-scoped. Tested against moto's fake S3 (real uploads, bucket placement, link shape, no overwrites), plus 9 deliberate breakages, all caught. **Your side:** create the buckets, public domain and API token, then set the six variables in Render (README "Storing uploads").
 
 **Phase 3 Definition of Done:** A branch admin can upload and tag event photos/documents through Django Admin, durably stored off the app server.
 
