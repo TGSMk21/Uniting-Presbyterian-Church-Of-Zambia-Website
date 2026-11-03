@@ -24,6 +24,8 @@ GOOD_ENV = {
     "CSRF_TRUSTED_ORIGINS": "https://api.example.org",
     "DJANGO_DEBUG": "",
     "RENDER_EXTERNAL_HOSTNAME": "",
+    "AWS_STORAGE_BUCKET_NAME": "", "AWS_PRIVATE_BUCKET_NAME": "", "MEDIA_PUBLIC_DOMAIN": "",
+    "AWS_S3_ENDPOINT_URL": "", "AWS_ACCESS_KEY_ID": "", "AWS_SECRET_ACCESS_KEY": "",
     "DB_NAME": "", "DB_USER": "", "DB_PASSWORD": "", "DB_HOST": "", "DB_PORT": "",
 }
 
@@ -43,8 +45,9 @@ print(json.dumps({
     "DB_SSLMODE": db.get("OPTIONS", {}).get("sslmode"),
     "MIDDLEWARE": s.MIDDLEWARE,
     "STATICFILES_BACKEND": s.STORAGES["staticfiles"]["BACKEND"],
+    "STORAGES": {k: v for k, v in s.STORAGES.items() if k != "staticfiles"},
     "ROOT_LOG_HANDLERS": s.LOGGING["root"]["handlers"],
-}))
+}, default=str))
 """
 
 
@@ -96,6 +99,44 @@ class ProductionSettingsTests(SimpleTestCase):
             s["MIDDLEWARE"][security + 1], "whitenoise.middleware.WhiteNoiseMiddleware"
         )
         self.assertIn("whitenoise", s["STATICFILES_BACKEND"])
+
+    R2_ENV = {
+        "AWS_STORAGE_BUCKET_NAME": "upcz-public",
+        "AWS_PRIVATE_BUCKET_NAME": "upcz-private",
+        "MEDIA_PUBLIC_DOMAIN": "media.upcz.example.org",
+        "AWS_S3_ENDPOINT_URL": "https://acct.r2.cloudflarestorage.com",
+        "AWS_ACCESS_KEY_ID": "key-id",
+        "AWS_SECRET_ACCESS_KEY": "key-secret",
+    }
+
+    def test_uploads_use_object_storage_when_configured(self):
+        storages = settings_with(**self.R2_ENV)["STORAGES"]
+        public, private = storages["default"], storages["private"]
+        for storage in (public, private):
+            self.assertEqual(storage["BACKEND"], "storages.backends.s3.S3Storage")
+            self.assertEqual(storage["OPTIONS"]["endpoint_url"], "https://acct.r2.cloudflarestorage.com")
+            self.assertEqual(storage["OPTIONS"]["region_name"], "auto")
+            self.assertIsNone(storage["OPTIONS"]["default_acl"])
+            self.assertFalse(storage["OPTIONS"]["file_overwrite"])
+        self.assertEqual(public["OPTIONS"]["bucket_name"], "upcz-public")
+        self.assertEqual(public["OPTIONS"]["custom_domain"], "media.upcz.example.org")
+        self.assertFalse(public["OPTIONS"]["querystring_auth"])
+        self.assertEqual(private["OPTIONS"]["bucket_name"], "upcz-private")
+        self.assertTrue(private["OPTIONS"]["querystring_auth"])
+        self.assertNotIn("custom_domain", private["OPTIONS"])
+
+    def test_without_object_storage_uploads_stay_on_local_disk(self):
+        storages = settings_with()["STORAGES"]
+        self.assertEqual(storages["default"]["BACKEND"], "django.core.files.storage.FileSystemStorage")
+        self.assertEqual(storages["private"]["BACKEND"], "django.core.files.storage.FileSystemStorage")
+
+    def test_partial_object_storage_config_is_refused(self):
+        for missing in ("AWS_PRIVATE_BUCKET_NAME", "MEDIA_PUBLIC_DOMAIN", "AWS_S3_ENDPOINT_URL",
+                        "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"):
+            with self.subTest(missing=missing):
+                result = run(READ_SETTINGS, **{**self.R2_ENV, missing: ""})
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(missing, result.stderr)
 
     def test_logs_go_to_stdout(self):
         self.assertEqual(settings_with()["ROOT_LOG_HANDLERS"], ["console"])

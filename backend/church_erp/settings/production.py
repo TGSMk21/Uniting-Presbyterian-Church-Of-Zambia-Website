@@ -2,6 +2,7 @@ import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 
 from .base import *
+from .storage import object_storages
 
 
 def required_env(name):
@@ -47,10 +48,20 @@ MIDDLEWARE.insert(
     "whitenoise.middleware.WhiteNoiseMiddleware",
 )
 STORAGES = {
-    # Media stays on local disk until object storage is wired in Phase 3.
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    **STORAGES,
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
+# Uploads go to object storage once a bucket is configured; without it they
+# land on the server's disk, which Render wipes on every deploy.
+if os.environ.get("AWS_STORAGE_BUCKET_NAME", "").strip():
+    STORAGES.update(object_storages(
+        public_bucket=required_env("AWS_STORAGE_BUCKET_NAME"),
+        private_bucket=required_env("AWS_PRIVATE_BUCKET_NAME"),
+        public_domain=required_env("MEDIA_PUBLIC_DOMAIN"),
+        endpoint_url=required_env("AWS_S3_ENDPOINT_URL"),
+        access_key=required_env("AWS_ACCESS_KEY_ID"),
+        secret_key=required_env("AWS_SECRET_ACCESS_KEY"),
+    ))
 
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True

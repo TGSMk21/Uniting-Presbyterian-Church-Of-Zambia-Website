@@ -103,6 +103,34 @@ On Render's free plan there is no shell, so run it from your own machine against
 
 If the site later moves to a paid Render plan, replace step 5 with a Render cron job running `python manage.py sync_youtube`, and move `migrate`/`setup_roles` into a pre-deploy command.
 
+## Storing uploads (Cloudflare R2)
+
+Render's disk is wiped on every deploy, so production uploads go to Cloudflare R2. There are two buckets because R2 makes a bucket public as a whole:
+
+| Bucket | Holds | Links |
+|---|---|---|
+| public (e.g. `upcz-public`) | branch logos and hero images, minister photos | plain links on the bucket's public domain |
+| private (e.g. `upcz-private`) | media-library files (photos, documents) | signed links that expire after 1 hour |
+
+1. In the Cloudflare dashboard, open **R2** and create the two buckets.
+2. Make **only the public bucket** public: open it → **Settings** → **Public access**. Either connect a custom domain (e.g. `media.yourdomain.org`, recommended) or enable the `r2.dev` subdomain (fine to start with, but rate-limited). Leave the private bucket private.
+3. Create an API token: **R2 → Manage API tokens → Create API token**, with **Object Read & Write** permission for both buckets. Copy the Access Key ID and Secret Access Key. The secret is shown only once.
+4. In Render → your service → **Environment**, add:
+
+   | Key | Value |
+   |---|---|
+   | `AWS_STORAGE_BUCKET_NAME` | the public bucket's name |
+   | `AWS_PRIVATE_BUCKET_NAME` | the private bucket's name |
+   | `MEDIA_PUBLIC_DOMAIN` | the public bucket's domain, without `https://` (e.g. `pub-xxxx.r2.dev`) |
+   | `AWS_S3_ENDPOINT_URL` | `https://<account-id>.r2.cloudflarestorage.com` (shown on the bucket's settings page) |
+   | `AWS_ACCESS_KEY_ID` | from step 3 |
+   | `AWS_SECRET_ACCESS_KEY` | from step 3 |
+
+   Save and redeploy. If any of these is missing once `AWS_STORAGE_BUCKET_NAME` is set, the backend refuses to start and names the missing one. Without `AWS_STORAGE_BUCKET_NAME`, uploads stay on Render's disk and vanish on the next deploy.
+5. Check: upload a hero image on a branch in the admin, open the branch's page, and confirm the image URL starts with your public domain.
+
+The tests check all of this against an in-process fake S3 (`moto`, in `requirements-dev.txt`).
+
 ## Settings
 
 `manage.py` defaults to `church_erp.settings.local`. Production uses `DJANGO_SETTINGS_MODULE=church_erp.settings.production`.

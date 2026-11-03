@@ -95,6 +95,18 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+# Media-library files are internal; production keeps them in a private
+# bucket (settings/storage.py). Locally both live on disk.
+PRIVATE_MEDIA_URL = "media-private/"
+PRIVATE_MEDIA_ROOT = BASE_DIR / "media_private"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "private": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": PRIVATE_MEDIA_ROOT, "base_url": f"/{PRIVATE_MEDIA_URL}"},
+    },
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
