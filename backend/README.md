@@ -58,6 +58,21 @@ python manage.py sync_youtube
 
 Add `--branch <slug>` to sync a single branch. In production, Celery beat runs the same sync every 5 minutes (`CELERY_BEAT_SCHEDULE` in `settings/base.py`). Each run costs about 2 YouTube API quota units per branch. New videos are added, but titles, series and verses edited by staff are never overwritten.
 
+## Onboarding a branch
+
+One command creates the branch and its first branch-admin login, and prints a temporary password:
+
+```bash
+python manage.py create_branch --name "Kabwe Presbyterian Church" --slug kabwe --contact-email kabwe@example.org --youtube-channel-id UCxxxxxxxxxxxxxxxxxxxxxx --phone "0977 000 000" --address "Kabwe"
+```
+
+- The site appears at `/<slug>`, and the national directory lists it automatically.
+- The login is `<slug>-admin` by default (change it with `--admin-username` / `--admin-email`). It has the Branch Admin role, so it sees and edits only this branch.
+- Hand the username and password over privately, not by plain email, and ask the admin to change the password after first login (`/admin/password_change/`).
+- Then, in the admin, add the branch's minister(s), service times, home-page text, projects and activities. Run `sync_youtube --branch <slug>` to import its sermons.
+
+On Render's free plan there is no shell, so run it from your own machine against the production database, the same way as `createsuperuser` in step 4 of "Deploying to Render" below.
+
 ## Deploying to Render
 
 `render.yaml` at the repository root is a Render Blueprint for this backend on Render's **free** plan. The frontend goes on Vercel.

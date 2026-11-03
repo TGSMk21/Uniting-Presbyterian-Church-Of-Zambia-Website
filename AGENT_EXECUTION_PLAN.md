@@ -288,24 +288,26 @@ Every branch currently renders Chilanga's home page.
   - `POST /api/tasks/sync-youtube/`, protected by an `X-Sync-Token` header, replaces cron (not available on the free plan). An external scheduler (cron-job.org) calls it every 10 minutes, which also keeps the service awake.
   - Step-by-step guide: `backend/README.md`, "Deploying to Render".
   - Known free-plan limits: no shell (run management commands locally against the Supabase session-pooler URL); 750 free hours/month covers exactly one always-awake service; uploaded media isn't persisted (Phase 3).
-- [ ] Create a Railway (or Render) project, connect the GitHub repo, set the root to `backend/`.
-- [ ] Set all required env vars (see Appendix A) in the hosting dashboard — never commit them.
-- [ ] Confirm `DJANGO_SETTINGS_MODULE=church_erp.settings.production` is set for the deployed service.
-- [ ] Run `python manage.py migrate` against the production database (via the platform's one-off command feature).
+- [x] Create a Railway (or Render) project, connect the GitHub repo, set the root to `backend/`.
+- [x] Set all required env vars (see Appendix A) in the hosting dashboard — never commit them.
+- [x] Confirm `DJANGO_SETTINGS_MODULE=church_erp.settings.production` is set for the deployed service.
+- [x] Run `python manage.py migrate` against the production database (via the platform's one-off command feature).
 - [ ] **[rev]** Do NOT run the demo seed in production (it creates placeholder sermons with random YouTube videos and a weak superuser). Instead: `python manage.py createsuperuser` with a strong password, then create the Chilanga branch with `create_branch` (pull Task 2.1 forward) or via Django Admin, and enter its real sermons/projects/activities.
-- [ ] Run `python manage.py collectstatic --noinput` as part of the build/release step.
-- [ ] **[rev]** Run `python manage.py setup_roles` once after `migrate`.
+- [x] Run `python manage.py collectstatic --noinput` as part of the build/release step.
+- [x] **[rev]** Run `python manage.py setup_roles` once after `migrate`.
 - [ ] **[rev]** Schedule the YouTube sync: either a Celery worker + beat (Task 4.4) or a cron job running `python manage.py sync_youtube` every 5–15 minutes. Run it once by hand after creating the Chilanga branch to import its sermons.
-- [ ] Confirm `/api/branches/` responds correctly from the deployed URL.
-- [ ] Commit any deploy-config files added (e.g. `Procfile`, `railway.json`, `nixpacks.toml`) : `"Add backend deployment configuration"`
+- [x] Confirm `/api/branches/` responds correctly from the deployed URL.
+- [x] Commit any deploy-config files added (e.g. `Procfile`, `railway.json`, `nixpacks.toml`) : `"Add backend deployment configuration"`
+- **[rev] Live (verified 2026-11-03):** `https://upcz-backend.onrender.com` serves `/api/branches/` (200, ~1–3s), `/admin/login/` (200); the sync endpoint is enabled (403 without the token). Still open on your side: schedule the cron-job.org sync (Chilanga had only the 6 demo sermons, none from YouTube, at the time of checking), remove the demo sermons/projects/activities, deal with any old `admin`/`admin123` user, and add real content.
 
 ### Task 1.5 — Deploy frontend
-- [ ] Set `NEXT_PUBLIC_API_URL` in Vercel's project env vars to the deployed backend URL (not `localhost:8000`).
-- [ ] Set all other required frontend env vars in Vercel (Resend, Upstash — see Appendix A; **[rev]** YouTube now lives on the backend).
-- [ ] Connect the Vercel project to the GitHub repo, root directory `presbyterian-web/`.
-- [ ] **[rev]** Remove `PROJECT_ID` (Sanity) and `YOUTUBE_CHANNEL_ID` from the Vercel env vars if they were ever set there.
+- [x] Set `NEXT_PUBLIC_API_URL` in Vercel's project env vars to the deployed backend URL (not `localhost:8000`).
+- [x] Set all other required frontend env vars in Vercel (Resend, Upstash — see Appendix A; **[rev]** YouTube now lives on the backend).
+- [x] Connect the Vercel project to the GitHub repo, root directory `presbyterian-web/`.
+- [x] **[rev]** Remove `PROJECT_ID` (Sanity) and `YOUTUBE_CHANNEL_ID` from the Vercel env vars if they were ever set there.
 - [ ] Deploy and smoke-test the full flow: national landing loads branches → `/chilanga` loads real sermons/projects/activities/daily message → contact form delivers an email to Chilanga's `contact_email` → sermons page shows Chilanga's sermons (from whichever source was chosen in Task 0.4) and a sermon detail page shows "More Sermons" from Chilanga's own channel → an unknown slug (e.g. `/does-not-exist`) shows the 404 page.
 - [ ] Point the real domain (if purchased) at this Vercel deployment; otherwise note the `.vercel.app` URL as the current production URL.
+- **[rev] Live (verified 2026-11-03):** `https://uniting-presbyterian-church-of-zamb-navy.vercel.app`: `/`, `/branches`, `/contact`, `/chilanga`, `/chilanga/sermons`, `/chilanga/about` all 200. The full smoke test (contact email delivery, real YouTube sermons) waits on Resend domain verification and the sync schedule; the custom domain is still to do.
 
 **Phase 1 Definition of Done:** Chilanga's site is live in production end-to-end on the new stack, the old Sanity-based deployment (if still live anywhere) can be decommissioned, and this is explicitly confirmed with whoever is the Chilanga branch stakeholder before moving on.
 
@@ -316,9 +318,10 @@ Every branch currently renders Chilanga's home page.
 **Goal:** All remaining UPCZ branches (fewer than 10 total) live, each with a working branch-admin login.
 
 ### Task 2.1 — Generalize the onboarding flow
-- [ ] **[rev]** (Needed for Task 1.4 — do this before the first deploy.) Add a reusable `create_branch` command (Task 0.7 already turned `seed_chilanga` into the dev-only `seed_demo`; reuse its structure) taking `--name`, `--slug`, `--contact-email`, `--youtube-channel-id`, and creating one `branch_admin`-role `User` for it with a generated temporary password printed to stdout (never emailed in plaintext without being told to).
-- [ ] Document the command's usage in `backend/README.md` (created in Task 0.7; Phase 6's "Documentation rewrite" covers the root README).
-- [ ] Commit: `"Add general-purpose branch onboarding command"`
+- [x] **[rev]** (Needed for Task 1.4 — do this before the first deploy.) Add a reusable `create_branch` command (Task 0.7 already turned `seed_chilanga` into the dev-only `seed_demo`; reuse its structure) taking `--name`, `--slug`, `--contact-email`, `--youtube-channel-id`, and creating one `branch_admin`-role `User` for it with a generated temporary password printed to stdout (never emailed in plaintext without being told to).
+- [x] Document the command's usage in `backend/README.md` (created in Task 0.7; Phase 6's "Documentation rewrite" covers the root README).
+- [x] Commit: `"Add general-purpose branch onboarding command"`
+- **[rev] Done notes (2026-11-03):** `create_branch` validates slug/email/channel ID, refuses an existing slug or username, creates the branch and a `<slug>-admin` Branch Admin login in one transaction, and prints a 16-byte random temporary password. Optional `--youtube-channel-id`, `--phone`, `--address`, `--admin-username`, `--admin-email`. 8 tests, 6 deliberate breakages caught. Usage is in `backend/README.md` ("Onboarding a branch"); on Render's free plan run it locally against the production database.
 
 ### Task 2.2 — Onboard remaining branches
 - [ ] For each remaining branch: run the onboarding command, create its `Minister` record(s), enter or migrate its initial sermons/projects/activities/about content via Django Admin.
