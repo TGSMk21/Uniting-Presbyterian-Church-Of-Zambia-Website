@@ -48,7 +48,7 @@ export default async function NationalLanding() {
               you — a place to worship, to grow, and to belong.
             </p>
             <div className="nat-hero-actions">
-              <Link href="/branches" className="btn-primary">
+              <Link href="/find-a-church" className="btn-primary">
                 Find a branch near you
               </Link>
               <a href="#welcome" className="nat-link-quiet">
@@ -216,7 +216,7 @@ export default async function NationalLanding() {
             No matter your story, you are welcome at any of our branches this
             week.
           </p>
-          <Link href="/branches" className="btn-primary">
+          <Link href="/find-a-church" className="btn-primary">
             Find your branch
           </Link>
         </div>

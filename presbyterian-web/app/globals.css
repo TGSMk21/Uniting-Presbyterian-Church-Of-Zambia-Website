@@ -2467,3 +2467,50 @@ body::after {
   .sermon-meta { gap: 1rem; }
   .sermon-related-thumb { width: 108px; height: 68px; }
 }
+
+/* ===== CHURCH LOCATOR ===== */
+.loc-section { padding: 3rem 2.5rem 5rem; background: var(--cream); }
+.loc-layout {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+  grid-template-areas: "search map" "list map";
+  grid-template-rows: auto 1fr;
+  gap: 1rem 2rem;
+  align-items: start;
+}
+.loc-search-area { grid-area: search; }
+.loc-list-area { grid-area: list; }
+/* Sticky on the wrapper: Leaflet forces position: relative on the map itself. */
+.loc-map-area { grid-area: map; position: sticky; top: 6rem; }
+.loc-controls { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+.loc-controls .form-input { margin-bottom: 0.5rem; }
+.loc-near { margin-top: 0.25rem; cursor: pointer; text-align: center; justify-content: center; }
+.loc-near:disabled { opacity: 0.6; cursor: wait; }
+.loc-error { color: var(--red); font-size: 0.875rem; margin-top: 0.25rem; }
+.loc-count { font-weight: 600; color: var(--navy); margin-bottom: 0.25rem; }
+.loc-note { font-size: 0.8125rem; color: var(--muted); margin-bottom: 0.75rem; }
+.loc-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; max-height: 560px; overflow-y: auto; }
+.loc-card { background: var(--warm-white); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.125rem; }
+.loc-card.selected { border-color: var(--navy); box-shadow: 0 0 0 1px var(--navy); }
+.loc-card-name {
+  display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
+  font-family: var(--font-playfair), serif; font-size: 1.0625rem; font-weight: 600; color: var(--navy);
+}
+.loc-card-name:hover { color: var(--red); }
+.loc-card-text { font-size: 0.875rem; color: var(--text-soft); margin-top: 0.25rem; }
+.loc-card-links { display: flex; gap: 1.25rem; margin-top: 0.625rem; font-size: 0.875rem; font-weight: 600; }
+.loc-card-links a { color: var(--red); }
+/* isolation keeps Leaflet's high z-index panes underneath the sticky nav */
+.loc-map {
+  height: 680px; width: 100%; border-radius: 16px; border: 1px solid var(--line);
+  isolation: isolate; background: var(--sand);
+}
+@media (max-width: 900px) {
+  .loc-section { padding: 2rem 1rem 3rem; }
+  .loc-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "search" "map" "list"; grid-template-rows: none; }
+  .loc-map-area { position: static; }
+  .loc-map { height: 380px; }
+  .loc-list { max-height: none; overflow: visible; }
+}

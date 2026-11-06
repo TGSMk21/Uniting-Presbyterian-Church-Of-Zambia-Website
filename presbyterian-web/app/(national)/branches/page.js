@@ -17,8 +17,8 @@ export default async function BranchesDirectory() {
             One church, <em>many homes</em>
           </h1>
           <p className="page-banner-desc">
-            Find a branch of the United Church of Zambia near you. Each one is a
-            community ready to welcome you.
+            Find a branch of the Uniting Presbyterian Church In Zambia near you.
+            Each one is a community ready to welcome you.
           </p>
         </div>
       </section>
