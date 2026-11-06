@@ -324,6 +324,7 @@ Every branch currently renders Chilanga's home page.
 - **[rev] Done notes (2026-11-03):** `create_branch` validates slug/email/channel ID, refuses an existing slug or username, creates the branch and a `<slug>-admin` Branch Admin login in one transaction, and prints a 16-byte random temporary password. Optional `--youtube-channel-id`, `--phone`, `--address`, `--admin-username`, `--admin-email`. 8 tests, 6 deliberate breakages caught. Usage is in `backend/README.md` ("Onboarding a branch"); on Render's free plan run it locally against the production database.
 
 ### Task 2.2 — Onboard remaining branches
+- **[rev] Placeholder branches (2026-11-06):** `python manage.py seed_upcsa_branches` adds 14 UPCSA Zambia congregations named on unitingpresbyterian.org (indexed "Find a Congregation" pages, the Jan 2025 list, the 2026 Executive Commission papers), with their presbyteries noted in the command. **This list is not complete:** the official list is no longer online and its locator page is broken, so confirm it with the Presbyteries or gensec@unitingpresbyterian.org. Contact details are deliberately empty, not invented; the address is the town only; the contact form falls back to `NATIONAL_CONTACT_EMAIL` until a branch has its own email. No logins are created. As details arrive, enter them in the admin and add each branch's admin user. The command never overwrites existing branches. The directory shows the API's first 20 branches, so add paging before passing 20.
 - [ ] For each remaining branch: run the onboarding command, create its `Minister` record(s), enter or migrate its initial sermons/projects/activities/about content via Django Admin.
 - [ ] Hand each branch admin their login and a short walkthrough of Django Admin scoped to their branch (even a one-page PDF or a recorded screen share — not a coding task, but track it as done here).
 - [ ] Confirm each branch's public page (`/[slug]`) renders correctly with real content.
@@ -345,7 +346,7 @@ Every branch currently renders Chilanga's home page.
 - [x] Confirm `MediaAssetAdmin` supports bulk tagging and shows file previews for images in the changelist.
 - **[rev] Done notes (2026-11-03):** two R2 buckets, because R2 makes a bucket public as a whole. `default` (public: branch images, minister photos) is served from the bucket's public domain with non-expiring links, since cached pages would break on expiring ones. `private` (media-library files) uses signed links that expire after 1 hour. Config is in `settings/storage.py`. Production switches to R2 when `AWS_STORAGE_BUCKET_NAME` is set and refuses to start if any companion variable is missing. Local dev and tests keep both on disk (`media/`, `media_private/`). Media API filters: `?file_type=`, `?tags=`. Admin: image thumbnails in the list, tag filter, horizontal tag picker, and an "Add tag to selected files" bulk action that creates the tag if needed and stays branch-scoped. Tested against moto's fake S3 (real uploads, bucket placement, link shape, no overwrites), plus 9 deliberate breakages, all caught. R2 is configured in production.
 - **[rev] Verified live (2026-11-06):** a test image in `upcz` loads from the bucket's `r2.dev` address (200, image/png). A test file in `upcz-private` opens through its signed link (signed, `X-Amz-Expires=3600`), is refused without a signature (400), and isn't reachable through the public address (404). Test records were removed from the database; their small files remain in the buckets because deleting a record doesn't delete its file (see the `django-cleanup` note in Task 0.7). Settings now refuse the same bucket for both roles and an API host or `https://` value in `MEDIA_PUBLIC_DOMAIN`, after both mistakes came up during setup.
-- **[rev] Open, your side:** rotate the R2 API token (its secret appeared in a chat screenshot). The old `admin` superuser is disabled and `tmk` is the active superuser.
+- **[rev] Accounts (2026-11-06):** the old `admin` superuser is disabled and `tmk` is the active superuser. Rotating the R2 token was considered and declined by the project owner.
 
 **Phase 3 Definition of Done:** A branch admin can upload and tag event photos/documents through Django Admin, durably stored off the app server.
 
@@ -355,18 +356,18 @@ Every branch currently renders Chilanga's home page.
 
 **Goal:** Build the actual pipeline the `SermonEmbedding`/`DailyMessage` models were designed for — currently only the data model and a plain viewset exist.
 
-### Task 4.1 — Transcription
-- [ ] **[rev] STOP — human decision required:** the Whisper API needs an audio file; it cannot read a YouTube URL. Downloading audio from YouTube needs a tool like `yt-dlp` and may conflict with YouTube's Terms of Service even for the church's own channel. Decide the audio source: (a) branches upload sermon audio as a `MediaAsset` (cleanest), (b) use YouTube's own captions via the channel owner's OAuth access to the YouTube Data API `captions` endpoint, or (c) accept the yt-dlp route for the church's own uploads. Record the decision here.
-- [ ] Add `backend/church_erp/ai_messages/services/transcription.py`: a function taking a `Sermon`, locating its audio (per the decision above), and calling the Whisper API (via the `openai` package already in `requirements.txt`) to produce text, saved into `Sermon.transcript`.
-- [ ] Add a management command `transcribe_sermon --id <id>` for manual/backfill use, callable per sermon.
-- [ ] Pilot: transcribe the backlog of sermons for one minister only (the pilot minister, chosen in Task 4.6).
-- [ ] Commit: `"Add sermon transcription service via Whisper"`
+### Task 4.1 — Written sermons (replaces transcription)
+**[rev] Decision (2026-11-06):** no audio and no Whisper. Pastors will provide written sermons later. The pastors' consent is confirmed by the project owner, since the project is being done for the churches.
+- [ ] Add a private `SermonDocument` model (minister, title, `text`, optional source file, date), branch-scoped through its minister with `BranchScopedAdmin`. Keep it separate from `Sermon`: those rows drive the public archive and need a `video_id`, and pastors' writing stays internal unless published.
+- [ ] Admin: paste text or upload `.txt`, `.docx` or `.pdf`, extracting the text on upload, with bulk upload for a pastor's backlog. Source files go in the private bucket.
+- [ ] **Confirm when samples arrive:** the file formats pastors actually use, and whether any are scanned images, which would need OCR.
+- [ ] Commit: `"Add written sermon documents for the daily message pipeline"`
 
 ### Task 4.2 — Embeddings
 - [ ] **[rev] Fix the model first:** `SermonEmbedding.sermon` is a `OneToOneField`, which allows only one chunk per sermon. Change it to `ForeignKey(Sermon, on_delete=CASCADE, related_name='embeddings')`, add `UniqueConstraint(fields=['sermon', 'chunk_index'])`, and generate the migration. Safe to do now — no embeddings exist yet.
 - [ ] Enable the `pgvector` extension **via a migration**, not a one-off command, so a fresh database works: add `pgvector.django.VectorExtension()` as the first operation of a migration that `ai_messages/0001_initial` depends on (or insert it at the top of 0001 while no production database has applied it yet).
 - [ ] Add an HNSW (or IVFFlat) index on `embedding` with `vector_cosine_ops` once there are more than a few thousand rows.
-- [ ] Add `backend/church_erp/ai_messages/services/embeddings.py`: chunk a sermon's `transcript` (e.g. ~500-token chunks with overlap), call an embeddings API, create one `SermonEmbedding` row per chunk with `chunk_index`, `chunk_text`, `embedding`. **[rev]** The `VectorField` is 1536-dimensional, which matches OpenAI `text-embedding-3-small` (`OPENAI_API_KEY`). The `AI_API_KEY`/`AI_API_MODEL` pair is for generation only — Anthropic has no embeddings endpoint. Pin the embedding model name in settings and store it on each row (or in a setting checked at query time), so a model change forces a re-embed rather than mixing vector spaces.
+- [ ] Add `backend/church_erp/ai_messages/services/embeddings.py`: chunk a `SermonDocument`'s `text` (e.g. ~500-token chunks with overlap; **[rev]** `SermonEmbedding` must point at `SermonDocument`, not `Sermon`), call an embeddings API, create one `SermonEmbedding` row per chunk with `chunk_index`, `chunk_text`, `embedding`. **[rev]** The `VectorField` is 1536-dimensional, which matches OpenAI `text-embedding-3-small` (`OPENAI_API_KEY`). The `AI_API_KEY`/`AI_API_MODEL` pair is for generation only — Anthropic has no embeddings endpoint. Pin the embedding model name in settings and store it on each row (or in a setting checked at query time), so a model change forces a re-embed rather than mixing vector spaces.
 - [ ] Add a management command `embed_sermon --id <id>` and ensure it's safe to re-run (delete-then-recreate that sermon's embeddings, so it's idempotent per rule 5 in Section 0).
 - [ ] Commit: `"Add sermon chunking and embedding generation"`
 
@@ -389,7 +390,7 @@ Every branch currently renders Chilanga's home page.
 - [ ] **[rev]** Add a unique constraint on `DailyMessage(minister, date)` limited to `status='published'`, and pick which message the frontend shows per day (the home page currently shows `results[0]`, i.e. the newest by `-date`, across all ministers of the branch).
 
 ### Task 4.6 — Pilot
-- [ ] **STOP — human decision required:** confirm with the pilot minister/pastor before enabling this for them; this is their preaching voice being used as generation context.
+- [x] **[rev] Consent confirmed by the project owner (2026-11-06)**: the project is being done for the churches, and pastors will supply their sermons.
 - [ ] Run the full pipeline for one minister for one real week; every message reviewed and approved manually before publishing.
 - [ ] Gather the pastor's feedback on tone/accuracy and adjust the style-notes prompt accordingly before expanding to any other minister.
 

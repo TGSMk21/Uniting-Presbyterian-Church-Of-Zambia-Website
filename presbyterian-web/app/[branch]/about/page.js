@@ -148,16 +148,18 @@ export default async function About({ params }) {
                         </p>
                       </div>
                     )}
-                    <div className="contact-info-card">
-                      <p className="contact-info-label">📞 Contact</p>
-                      <p className="contact-info-value">
-                        {branch?.contact_phone && (
-                          <a href={`tel:${branch.contact_phone.replace(/\s/g, "")}`}>{branch.contact_phone}</a>
-                        )}
-                        <br />
-                        {branch?.contact_email && <a href={`mailto:${branch.contact_email}`}>{branch.contact_email}</a>}
-                      </p>
-                    </div>
+                    {(branch?.contact_phone || branch?.contact_email) && (
+                      <div className="contact-info-card">
+                        <p className="contact-info-label">📞 Contact</p>
+                        <p className="contact-info-value">
+                          {branch.contact_phone && (
+                            <a href={`tel:${branch.contact_phone.replace(/\s/g, "")}`}>{branch.contact_phone}</a>
+                          )}
+                          {branch.contact_phone && branch.contact_email && <br />}
+                          {branch.contact_email && <a href={`mailto:${branch.contact_email}`}>{branch.contact_email}</a>}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

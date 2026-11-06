@@ -64,6 +64,22 @@ test("unknown branch or branch without email has no recipient", async () => {
   );
 });
 
+test("a branch without its own email falls back to the national address", async () => {
+  const getBranch = async () => ({ contact_email: "" });
+  assert.equal(
+    await resolveRecipient("kabushi", { getBranch, nationalEmail: "office@upcz.example" }),
+    "office@upcz.example",
+  );
+});
+
+test("an unknown branch never reaches the national address", async () => {
+  const getBranch = async () => null;
+  assert.equal(
+    await resolveRecipient("nowhere", { getBranch, nationalEmail: "office@upcz.example" }),
+    null,
+  );
+});
+
 test("slugs that aren't plain slugs are refused without an API call", async () => {
   let called = false;
   const getBranch = async () => { called = true; return { contact_email: "x@example.org" }; };

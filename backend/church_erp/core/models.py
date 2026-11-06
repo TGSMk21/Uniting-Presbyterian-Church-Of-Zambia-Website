@@ -5,9 +5,9 @@ class Branch(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
     logo = models.ImageField(upload_to='branch_logos/', blank=True)
-    contact_email = models.EmailField()
-    contact_phone = models.CharField(max_length=20)
-    address = models.TextField()
+    contact_email = models.EmailField(blank=True, help_text="Receives the contact form; empty sends it to the national office")
+    contact_phone = models.CharField(max_length=20, blank=True)
+    address = models.TextField(blank=True)
     youtube_channel_id = models.CharField(max_length=100, blank=True)
     # Home page content
     tagline = models.CharField(max_length=200, blank=True, help_text="Hero headline, e.g. 'A place of grace, belonging & purpose.'")

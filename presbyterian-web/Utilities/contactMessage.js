@@ -28,5 +28,7 @@ export async function resolveRecipient(branchSlug, { getBranch, nationalEmail } 
   if (!branchSlug) return nationalEmail || null;
   if (!SLUG_RE.test(branchSlug)) return null;
   const branch = await getBranch(branchSlug);
-  return branch?.contact_email || null;
+  if (!branch) return null; // never relay for a branch that doesn't exist
+  // Branches still waiting on their details fall back to the national office.
+  return branch.contact_email || nationalEmail || null;
 }
