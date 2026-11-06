@@ -12,8 +12,7 @@ export default function NationalLayout({ children }) {
     { label: "Home", href: "/" },
     { label: "Fellowships", href: "/#fellowships" },
     { label: "Events", href: "/#events" },
-    { label: "Branches", href: "/branches" },
-    { label: "Find a Church", href: "/find-a-church" },
+    { label: "Find a Branch", href: "/find-a-branch" },
     { label: "Contact", href: "/contact" },
   ];
   const contact = { email: "hello@upcz.org", phone: "+260 977 681 606" };

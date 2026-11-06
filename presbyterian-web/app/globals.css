@@ -2042,67 +2042,18 @@ body::after {
   color: var(--text-soft);
   line-height: 1.7;
 }
-.nat-index {
-  border-bottom: 1px solid var(--line);
-}
 .nat-index-empty { color: var(--muted); padding: 2rem 0; font-style: italic; }
-.nat-index-row {
-  display: grid;
-  grid-template-columns: 72px 1fr auto;
-  align-items: center;
-  gap: 2rem;
-  padding: 2.1rem 0.5rem;
-  border-top: 1px solid var(--line);
-  text-decoration: none;
-  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
-  position: relative;
+.nat-branch-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+  padding: 2.5rem 3rem; background: var(--warm-white); border: 1px solid var(--line);
+  border-radius: 20px; text-decoration: none; transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
 }
-.nat-index-row::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--warm-white);
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  z-index: -1;
-  transform: scaleX(0.99);
-}
-.nat-index-row:hover { padding-left: 1.5rem; padding-right: 1.5rem; }
-.nat-index-row:hover::after { opacity: 1; }
-.nat-index-num {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--muted);
-  letter-spacing: 0.05em;
-}
-.nat-index-row:hover .nat-index-num { color: var(--red); }
-.nat-index-main { display: flex; flex-direction: column; gap: 0.3rem; }
-.nat-index-name {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(1.35rem, 2.4vw, 1.9rem);
-  font-weight: 600;
-  color: var(--navy);
-  line-height: 1.2;
-  transition: color 0.3s ease;
-}
-.nat-index-row:hover .nat-index-name { color: var(--red); }
-.nat-index-loc {
-  font-size: 0.9rem;
-  color: var(--muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-.nat-index-arrow {
-  font-size: 1.5rem;
-  color: var(--navy);
-  transition: transform 0.35s ease, color 0.3s ease;
-}
-.nat-index-row:hover .nat-index-arrow {
-  transform: translateX(6px);
-  color: var(--red);
-}
+.nat-branch-card:hover { border-color: var(--navy); box-shadow: 0 16px 40px rgba(13, 27, 61, 0.1); transform: translateY(-2px); }
+.nat-branch-card-main { display: flex; flex-direction: column; gap: 0.5rem; }
+.nat-branch-card-title { font-family: var(--font-playfair), serif; font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 600; color: var(--navy); }
+.nat-branch-card-text { color: var(--text-soft); line-height: 1.6; }
+.nat-branch-card-arrow { font-size: 1.75rem; color: var(--red); transition: transform 0.3s; }
+.nat-branch-card:hover .nat-branch-card-arrow { transform: translateX(6px); }
 
 /* ===== CLOSING ===== */
 .nat-closing {
@@ -2254,6 +2205,7 @@ body::after {
   .nat-arch-tag { bottom: 30px; }
   .nat-manifesto { padding: 5.5rem 2rem; }
   .nat-branches { padding: 5rem 2rem; }
+  .nat-branch-card { padding: 1.75rem 1.5rem; gap: 1rem; }
   .nat-fellowships { padding: 5rem 2rem; }
   .nat-events { padding: 5rem 2rem; }
   .nat-closing { padding: 6rem 2rem; }
@@ -2261,9 +2213,6 @@ body::after {
 @media (max-width: 640px) {
   .nat-hero { padding: 7.5rem 1.25rem 3.5rem; }
   .nat-h1 { margin: 1.3rem 0 1.4rem; }
-  .nat-index-row { grid-template-columns: 44px 1fr auto; gap: 1.1rem; padding: 1.7rem 0.25rem; }
-  .nat-index-row:hover { padding-left: 0.75rem; padding-right: 0.75rem; }
-  .nat-index-num { font-size: 1.1rem; }
   .nat-hero-actions { gap: 1.25rem; }
   .nat-arch, .nat-arch-back { height: 300px; }
   .nat-arch-back { top: 16px; left: 24px; }

@@ -14,8 +14,8 @@ export default function NotFound() {
         </p>
         <div className="nat-hero-actions" style={{ justifyContent: "center" }}>
           <Link href="/" className="btn-primary">Back to home</Link>
-          <Link href="/branches" className="nat-link-quiet">
-            Browse branches <span aria-hidden="true">→</span>
+          <Link href="/find-a-branch" className="nat-link-quiet">
+            Find a branch <span aria-hidden="true">→</span>
           </Link>
         </div>
       </div>

@@ -4,11 +4,11 @@ import { getBranches } from "@/Services/api";
 export const revalidate = 3600;
 
 export const metadata = {
-  title: "Find a Church — Uniting Presbyterian Church In Zambia",
+  title: "Find a Branch — Uniting Presbyterian Church In Zambia",
   description: "Find a Uniting Presbyterian Church branch near you, anywhere in Zambia.",
 };
 
-export default async function FindAChurch() {
+export default async function FindABranch() {
   const data = await getBranches();
   const branches = data?.results || [];
 
@@ -16,7 +16,7 @@ export default async function FindAChurch() {
     <main>
       <section className="page-banner">
         <div className="page-banner-inner">
-          <span className="page-banner-label">Find a Church</span>
+          <span className="page-banner-label">Find a Branch</span>
           <h1 style={{ fontFamily: "var(--font-playfair)" }}>
             There&apos;s a place for you <em>near you</em>
           </h1>

@@ -60,7 +60,7 @@ Add `--branch <slug>` to sync a single branch. In production, Celery beat runs t
 
 ## Main branches and the church locator
 
-`python manage.py seed_upcsa_branches` adds the main branches with placeholder details and approximate map pins. It's safe to re-run and never overwrites details entered later. To place a church exactly on the national "Find a Church" map, set **Latitude** and **Longitude** on its branch in the admin and tick **Location confirmed**.
+`python manage.py seed_upcsa_branches` adds the main branches with placeholder details and approximate map pins. It's safe to re-run and never overwrites details entered later. To place a church exactly on the national "Find a Branch" map, set **Latitude** and **Longitude** on its branch in the admin and tick **Location confirmed**.
 
 ## Onboarding a branch
 

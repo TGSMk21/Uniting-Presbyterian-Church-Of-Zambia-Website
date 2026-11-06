@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
-import { getBranches, getUpcomingActivities } from "@/Services/api";
+import { getUpcomingActivities } from "@/Services/api";
 
 export const revalidate = 3600;
 
@@ -22,8 +22,7 @@ function eventDate(isoDate) {
 }
 
 export default async function NationalLanding() {
-  const [data, activities] = await Promise.all([getBranches(), getUpcomingActivities()]);
-  const branches = data?.results || [];
+  const activities = await getUpcomingActivities();
   const events = (activities?.results || []).slice(0, EVENTS_SHOWN).map((a) => ({
     id: a.id,
     title: a.title,
@@ -48,7 +47,7 @@ export default async function NationalLanding() {
               you — a place to worship, to grow, and to belong.
             </p>
             <div className="nat-hero-actions">
-              <Link href="/find-a-church" className="btn-primary">
+              <Link href="/find-a-branch" className="btn-primary">
                 Find a branch near you
               </Link>
               <a href="#welcome" className="nat-link-quiet">
@@ -127,7 +126,7 @@ export default async function NationalLanding() {
         </div>
       </section>
 
-      {/* ===== BRANCH INDEX ===== */}
+      {/* ===== FIND A BRANCH ===== */}
       <section className="nat-branches">
         <div className="nat-branches-inner">
           <div className="nat-branches-head">
@@ -141,29 +140,18 @@ export default async function NationalLanding() {
             </p>
           </div>
 
-          <div className="nat-index">
-            {branches.length === 0 && (
-              <p className="nat-index-empty">No branches listed yet.</p>
-            )}
-            {branches.map((b, i) => (
-              <ScrollReveal key={b.id} delay={(i % 3) + 1}>
-                <Link href={`/${b.slug}`} className="nat-index-row">
-                  <span className="nat-index-num">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className="nat-index-main">
-                    <span className="nat-index-name">{b.name}</span>
-                    {b.address && (
-                      <span className="nat-index-loc">{b.address}</span>
-                    )}
-                  </span>
-                  <span className="nat-index-arrow" aria-hidden="true">
-                    →
-                  </span>
-                </Link>
-              </ScrollReveal>
-            ))}
-          </div>
+          <ScrollReveal>
+            <Link href="/find-a-branch" className="nat-branch-card">
+              <span className="nat-branch-card-main">
+                <span className="nat-branch-card-title">Find a branch</span>
+                <span className="nat-branch-card-text">
+                  Search by name or area, see every branch on the map, or find
+                  the one closest to you.
+                </span>
+              </span>
+              <span className="nat-branch-card-arrow" aria-hidden="true">→</span>
+            </Link>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -216,7 +204,7 @@ export default async function NationalLanding() {
             No matter your story, you are welcome at any of our branches this
             week.
           </p>
-          <Link href="/find-a-church" className="btn-primary">
+          <Link href="/find-a-branch" className="btn-primary">
             Find your branch
           </Link>
         </div>

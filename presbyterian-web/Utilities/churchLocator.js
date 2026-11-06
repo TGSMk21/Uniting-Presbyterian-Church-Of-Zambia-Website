@@ -1,4 +1,4 @@
-// Pure rules for the national "Find a Church" page, kept apart from the map
+// Pure rules for the national "Find a Branch" page, kept apart from the map
 // and React so they can be tested on their own.
 
 const EARTH_RADIUS_KM = 6371;

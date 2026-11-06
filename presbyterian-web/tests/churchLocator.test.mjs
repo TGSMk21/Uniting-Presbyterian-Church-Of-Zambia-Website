@@ -1,4 +1,4 @@
-// Church locator rules (national "Find a Church" page). Run: npm test
+// Church locator rules (national "Find a Branch" page). Run: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
