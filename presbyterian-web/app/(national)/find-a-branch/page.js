@@ -1,7 +1,6 @@
+import { connection } from "next/server";
 import ChurchLocator from "@/components/LocatorComponents/church-locator";
 import { getBranches } from "@/Services/api";
-
-export const revalidate = 3600;
 
 export const metadata = {
   title: "Find a Branch — Uniting Presbyterian Church In Zambia",
@@ -9,8 +8,10 @@ export const metadata = {
 };
 
 export default async function FindABranch() {
+  // Render on request, not at build time: a build that misses the API would
+  // publish an empty page. getBranches() still caches good answers for an hour.
+  await connection();
   const data = await getBranches();
-  const branches = data?.results || [];
 
   return (
     <main>
@@ -27,7 +28,13 @@ export default async function FindABranch() {
       </section>
 
       <section className="loc-section">
-        <ChurchLocator branches={branches} />
+        {data ? (
+          <ChurchLocator branches={data.results} />
+        ) : (
+          <p className="nat-index-empty">
+            We couldn&apos;t load the branches just now. Please refresh the page in a moment.
+          </p>
+        )}
       </section>
     </main>
   );

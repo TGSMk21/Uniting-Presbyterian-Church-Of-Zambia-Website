@@ -1,8 +1,7 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
 import { getUpcomingActivities } from "@/Services/api";
-
-export const revalidate = 3600;
 
 const EVENTS_SHOWN = 6;
 
@@ -22,6 +21,9 @@ function eventDate(isoDate) {
 }
 
 export default async function NationalLanding() {
+  // Render on request, not at build time: a build that misses the API would
+  // publish the page without its events. Good answers are still cached.
+  await connection();
   const activities = await getUpcomingActivities();
   const events = (activities?.results || []).slice(0, EVENTS_SHOWN).map((a) => ({
     id: a.id,
