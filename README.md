@@ -1,102 +1,98 @@
-# Uniting-Presbyterian-Church-Of-Zambia-Website
+# Uniting Presbyterian Church In Zambia: Website Platform
 
-A full-featured church website for **Presbyterian Church** built with **Next.js 16**, **Sanity CMS**, and modern web technologies. The site serves as a digital hub for the congregation, featuring sermon streaming, daily devotionals, church activities, project tracking, and a contact system.
+One platform for the national church site and a website for each branch. Branch staff manage their own content in a shared admin and can only see and change their own branch.
 
-## Features
+- **National site** (`/`): the welcome page, fellowships, nationwide events, a map to find a branch (`/find-a-branch`) and a contact page.
+- **Branch sites** (`/<branch-slug>`): home, about, sermons, projects and activities, and a contact form that reaches that branch.
+- **Admin** (Django admin): content, staff roles, media library and the record of who changed what.
 
-- **Dynamic Homepage** — Carousel with welcome banner, yearly theme, and daily verse; daily message display; ministries overview; schedule; contact form
-- **Sermons & Messages** — Live YouTube stream detection and embed, archived sermon videos with metadata (series, reference verses) fetched from the YouTube Data API
-- **Projects & Activities** — Track church projects (with status, progress, dates) and upcoming/ongoing activities (with time, location, details)
-- **About Page** — Church history, reverend biography, location map, and contact details
-- **Contact Form** — Server-action-based email sending via **Resend** with **Upstash rate limiting** to prevent spam
-- **Headless CMS** — **Sanity Studio 5** for managing content (verses, messages, streams, archive videos, projects, activities) with on-demand revalidation
-- **Responsive UI** — Fully responsive design using **Tailwind CSS 4** with mobile drawer navigation
-- **React Email** — Beautiful email templates for contact form submissions
+## How it fits together
 
-## Tech Stack
+| Part | Technology | Hosted on |
+|---|---|---|
+| Website (`presbyterian-web/`) | Next.js 16, React 19, Tailwind CSS 4, Leaflet with OpenStreetMap | Vercel |
+| API and admin (`backend/`) | Django 5.2, Django REST Framework | Render (free plan) |
+| Database | PostgreSQL with pgvector | Supabase |
+| Uploaded files | One public and one private bucket | Cloudflare R2 |
+| Contact form email | Resend, rate limited with Upstash Redis | Hosted services |
+| Sermon import | YouTube Data API, run by a scheduled call from cron-job.org | Render |
 
-| Layer | Technology |
-|-------|-----------|
-| **Framework** | [Next.js 16](https://nextjs.org/) (App Router, React Server Components) |
-| **UI Library** | [React 19](https://react.dev/) |
-| **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) |
-| **CMS** | [Sanity Studio 5](https://www.sanity.io/) (headless CMS + GROQ queries) |
-| **Email** | [Resend](https://resend.com/) + [React Email](https://react.email/) |
-| **Rate Limiting** | [Upstash Redis](https://upstash.com/) + [Upstash Ratelimit](https://github.com/upstash/ratelimit) |
-| **YouTube API** | [Google APIs](https://googleapis.dev/) (YouTube Data API v3) |
-| **Carousel** | [Embla Carousel](https://www.embla-carousel.com/) |
-| **Icons** | [Lucide React](https://lucide.dev/), [Simple Icons](https://simpleicons.org/) |
-| **Image Optimization** | [@sanity/image-url](https://www.sanity.io/docs/image-url) |
-| **Linting** | [ESLint](https://eslint.org/) (Next.js config) |
-| **Compiler** | [React Compiler](https://react.dev/learn/react-compiler) enabled |
+The website reads everything from the API and caches pages for an hour.
 
-## Project Structure
+## Project layout
 
 ```
-PresbyterianWeb/
-├── presbyterian-web/          # Next.js frontend application
-│   ├── app/                   # App Router pages
-│   │   ├── about/             # About page
-│   │   ├── sermons/           # Sermons page (live + archive)
-│   │   ├── projects-and-activities/  # Projects & activities page
-│   │   ├── api/revalidate/    # On-demand revalidation endpoint
-│   │   └── layout.js          # Root layout with Header/Footer
-│   ├── components/            # React components
-│   ├── Services/              # Data fetching (Sanity, YouTube)
-│   ├── Utilities/             # Date formatting, rate limiting
-│   ├── constants/             # Dummy data fallbacks
-│   └── react-email-starter/   # Email templates
-│
-└── PresbyterianSanity/        # Sanity CMS Studio
-    └── schemaTypes/           # Content schemas
-        ├── Home/              # Daily verse, daily message
-        ├── Sermons/           # Upcoming stream, archive video
-        └── Projects & Activities/  # Project, activity
+backend/              Django API and admin. See backend/README.md
+  church_erp/
+    core/             Branches, ministers, service times, admin scoping
+    accounts/         Staff users and roles
+    content/          Sermons, projects, activities, pages, YouTube sync
+    media_library/    Photos and documents (private files)
+    ai_messages/      Daily messages; AI generation is not built yet
+    finance/          Giving records; not live yet
+    api/              API routes and rate limits
+presbyterian-web/     Next.js website
+  app/(national)/     National site
+  app/[branch]/       Branch sites
+  Services/api.js     All calls to the API
+  tests/              Website tests
+render.yaml           Render deployment settings
+PresbyterianSanity/   Retired. See below
 ```
 
-## Getting Started
+## Running it locally
 
-### Prerequisites
+You need Python 3.12+, Node.js 20.9+ and a PostgreSQL database.
 
-- Node.js >= 18
-- A [Sanity](https://sanity.io) project with ID and dataset configured
-- A [YouTube Data API key](https://console.cloud.google.com/)
-- [Upstash Redis](https://upstash.com/) URL and token
-- [Resend](https://resend.com/) API key
+**Backend.** Full steps are in [backend/README.md](backend/README.md#local-setup). It runs on http://localhost:8000.
 
-### Environment Variables
-
-Create `presbyterian-web/.env.local`:
-
-```env
-YOUTUBE_API_KEY=your_youtube_api_key
-YOUTUBE_CHANNEL_ID=your_channel_id
-RESEND_API_KEY=your_resend_api_key
-UPSTASH_REDIS_REST_URL=your_upstash_url
-UPSTASH_REDIS_REST_TOKEN=your_upstash_token
-PROJECT_ID=your_sanity_project_id
-```
-
-### Install & Run
+**Website.** From `presbyterian-web/`, install the packages:
 
 ```bash
-# Frontend
-cd presbyterian-web
 npm install
+```
+
+Copy the environment template and fill it in. Only `NEXT_PUBLIC_API_URL` is needed to browse; the Resend and Upstash values are for the contact form:
+
+```bash
+cp .env.example .env.local
+```
+
+Start it on http://localhost:3000:
+
+```bash
 npm run dev
-
-# Sanity Studio (separate terminal)
-cd PresbyterianSanity
-npm install
-npx sanity dev
 ```
 
-### Build
+## Tests
+
+From `backend/`, using an in-memory database:
 
 ```bash
-npm run build   # presbyterian-web
-npx sanity build  # PresbyterianSanity
+python manage.py test --settings=church_erp.settings.test
 ```
+
+From `presbyterian-web/`:
+
+```bash
+npm test
+```
+
+## Deploying
+
+Pushing to `master` deploys both the website (Vercel) and the backend (Render). Hosting set-up, storage and the sermon schedule are in [backend/README.md](backend/README.md#deploying-to-render).
+
+## Security
+
+- **API:** rate limited, and anyone can read public content, but only signed-in staff can change it, and only for their own branch.
+- **Admin login:** locks after 10 failed attempts for 15 minutes.
+- **Website:** sends a Content-Security-Policy and other security headers (`presbyterian-web/Utilities/securityHeaders.mjs`).
+
+More detail is in [backend/README.md](backend/README.md#security).
+
+## `PresbyterianSanity/` is retired
+
+The site used to run on Sanity CMS. All content now comes from the Django API, and nothing runs or deploys this folder. It's kept only for reference.
 
 ## License
 

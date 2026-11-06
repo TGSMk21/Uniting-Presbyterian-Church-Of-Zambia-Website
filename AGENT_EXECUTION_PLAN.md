@@ -429,15 +429,15 @@ Every branch currently renders Chilanga's home page.
 ## Phase 6 — Production Hardening & Launch Checklist
 
 - [ ] **Backups:** confirm Supabase's backup/PITR settings for the plan tier in use; if not sufficient, add a scheduled `pg_dump` to object storage.
-- [ ] **Admin activity logging:** Django's built-in `admin.LogEntry` already records create/update/delete through the admin for free — confirm it's not disabled and is viewable by superusers.
-- [ ] **Rate limiting / throttling:** add DRF `DEFAULT_THROTTLE_CLASSES`/`DEFAULT_THROTTLE_RATES` in `settings/base.py` for the public API, especially the giving-records and daily-messages write paths.
-- [ ] **Security headers:** **[rev]** `SECURE_HSTS_SECONDS` and `X_FRAME_OPTIONS = 'DENY'` are already set. Remaining: confirm `django-cors-headers` config is restrictive in production (Task 1.3), add a Content-Security-Policy on the Next.js side (`next.config.mjs` `headers()`), allowing `youtube.com` frames and `img.youtube.com` images.
-- [ ] **Admin hardening:** move the Django admin off `/admin/` to a non-obvious path via env var; consider `django-axes` for login lockout; require 2FA for superusers and `finance_admin` (e.g. `django-otp`) before Phase 5 goes live.
-- [ ] **JWT:** `SIMPLE_JWT` is not configured, so defaults apply (5-minute access, 1-day refresh, no rotation/blacklist). Nothing on the frontend uses the JWT endpoints yet — either remove `/api/auth/*` until needed or configure rotation + blacklist.
-- [ ] **Dependency audits:** run `pip-audit` on `backend/requirements.txt` and `npm audit` on `presbyterian-web/package.json`; enable Dependabot on the GitHub repo.
+- [x] **Admin activity logging:** **[rev]** `LogEntry` was recording but had no admin page. Now read-only under Administration > Log entries, superusers only (`core/admin.py`).
+- [x] **Rate limiting / throttling:** **[rev]** `api/throttling.py`: 600 requests/min per visitor or user, 60 writes/min per user. Keyed on `CF-Connecting-IP` so a made-up `X-Forwarded-For` can't escape the limit. Reads must stay at 300/min or above because the site builds from shared Vercel addresses. Live check of the address header is still to do after deploy.
+- [x] **Security headers:** **[rev]** `presbyterian-web/Utilities/securityHeaders.mjs`, applied in `next.config.mjs`. Inline scripts stay allowed because nonces would force every page to render per request and lose page caching. Images allow any https source so uploads can move to a custom domain.
+- [ ] **Admin hardening:** **[rev]** Done: `DJANGO_ADMIN_PATH` env var (default stays `/admin/`) and `django-axes` lockout (10 failures, 15 minutes, by username or address). Still to do before Phase 5 goes live: 2FA for superusers and `finance_admin`.
+- [x] **JWT:** **[rev]** Removed `/api/auth/*`: nothing used it and it had no lockout. Add back with rotation and blacklist when an app needs to write through the API.
+- [ ] **Dependency audits:** **[rev]** Done: upgraded Next.js to 16.4.5, Resend, React and others; Pillow to 13. `pip-audit` reports none. `npm audit` reports 4 low, all `deepmerge` via `html-to-text` via `@react-email`, with no fix available, used only to render the site's own email template. Still to do: enable Dependabot alerts in GitHub settings (owner); alerts only, since this project doesn't use pull requests.
 - [ ] **Monitoring:** add Vercel Analytics (frontend) and a simple uptime check (e.g. UptimeRobot) against both the frontend and the backend `/api/branches/` endpoint.
-- [ ] **Data export / exit plan:** confirm CSV export works for every content type an institution might need to migrate (sermons, giving records, members) — not just finance.
-- [ ] **Documentation rewrite:** the root `README.md` still describes the old Sanity-only stack. Rewrite it to describe the actual current architecture (Django + DRF backend, Next.js multi-branch frontend, Celery/Redis, pgvector), with setup instructions for both `backend/` and `presbyterian-web/`, and a note that `PresbyterianSanity/` is retired and kept only for historical reference.
+- [x] **Data export / exit plan:** **[rev]** No export existed despite `import_export` being installed. Every branch-scoped admin list now has CSV export limited to the rows that user can see; giving records stay finance-only and formulas are neutralised. There is no members model to export yet.
+- [x] **Documentation rewrite:** **[rev]** Root `README.md` rewritten; `backend/README.md` has a Security section.
 - [ ] **Governance:** confirm with UPCZ who the institutional point of contact/data owner is, and what happens if the developer is unavailable — not a coding task, but should be explicitly resolved before calling this "launched."
 
 ---

@@ -135,6 +135,20 @@ Render's disk is wiped on every deploy, so production uploads go to Cloudflare R
 
 The tests check all of this against an in-process fake S3 (`moto`, in `requirements-dev.txt`).
 
+## Security
+
+**API rate limits** are in `REST_FRAMEWORK` in `settings/base.py`: 600 requests a minute per visitor or signed-in user, and 60 writes a minute per user. Over the limit, the API answers `429`. The website builds its pages from a few shared Vercel addresses, so don't set the visitor limit below 300 a minute, or pages can be published empty. Counts are kept per server process, so with two workers the real limit can be up to double.
+
+**Admin login lockout** comes from `django-axes`. Ten failed attempts lock that username, or that address, for 15 minutes, even for the right password. To unlock someone sooner, a superuser can delete the entry under **Axes → Access attempts**. Someone who knows a username can lock it for 15 minutes on purpose, which is the cost of stopping password guessing.
+
+**Admin address.** Set `DJANGO_ADMIN_PATH` (e.g. `manage-upcz`) to move the admin away from `/admin/`, then tell staff the new address.
+
+**Activity log.** Superusers can see who changed what under **Administration → Log entries**. Nobody can edit or delete entries there.
+
+**Exporting data.** Every branch list in the admin has an **Export** button that downloads a CSV of the rows that person can see. Giving records can only be exported by finance staff and superusers.
+
+**API sign-in.** There's no `/api/auth/` route: nothing uses it, and it would be a way to guess passwords. Add it back with token rotation when an app needs to write through the API.
+
 ## Settings
 
 `manage.py` defaults to `church_erp.settings.local`. Production uses `DJANGO_SETTINGS_MODULE=church_erp.settings.production`.
