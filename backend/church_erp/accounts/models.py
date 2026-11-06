@@ -15,6 +15,10 @@ class User(AbstractUser):
         ('finance_admin', 'Finance Admin'),
         ('content_editor', 'Content Editor'),
     ], default='content_editor')
+    must_change_password = models.BooleanField(
+        default=False,
+        help_text="Ask this person to choose a new password when they next sign in to the dashboard.",
+    )
 
     class Meta:
         verbose_name = "user"

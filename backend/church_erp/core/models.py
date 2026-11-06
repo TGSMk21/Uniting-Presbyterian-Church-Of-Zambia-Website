@@ -1,9 +1,11 @@
 from django.db import models
 
+from .validators import validate_not_reserved
+
 
 class Branch(models.Model):
     name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, validators=[validate_not_reserved])
     logo = models.ImageField(upload_to='branch_logos/', blank=True)
     contact_email = models.EmailField(blank=True, help_text="Receives the contact form; empty sends it to the national office")
     contact_phone = models.CharField(max_length=20, blank=True)

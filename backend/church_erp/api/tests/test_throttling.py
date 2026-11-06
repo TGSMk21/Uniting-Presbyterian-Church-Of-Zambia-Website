@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.core.cache import cache
-from django.urls import NoReverseMatch, reverse
+from django.urls import reverse
 from rest_framework.test import APITestCase
 
 from church_erp.accounts.models import User
@@ -116,14 +116,12 @@ class WriteLimitTests(ThrottleTestCase):
 
 
 class LoginEndpointTests(ThrottleTestCase):
-    """Nothing uses JWT login, and it has no lockout, so it must not be exposed."""
+    """Only the website's own server can reach sign-in (accounts/tests/test_staff_auth.py)."""
 
-    def test_login_and_refresh_routes_are_gone(self):
+    def test_login_and_refresh_routes_are_hidden_from_the_public(self):
         for path in ("/api/auth/login/", "/api/auth/refresh/"):
             with self.subTest(path=path):
                 self.assertEqual(
                     self.client.post(path, {"username": "x", "password": "y"}, format="json").status_code,
                     404,
                 )
-        with self.assertRaises(NoReverseMatch):
-            reverse("token_obtain_pair")

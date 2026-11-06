@@ -3,6 +3,8 @@ import secrets
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.core.validators import validate_email, validate_slug
+
+from church_erp.core.validators import validate_not_reserved
 from django.db import transaction
 
 from church_erp.accounts.models import User
@@ -30,6 +32,7 @@ class Command(BaseCommand):
         username = opts["admin_username"] or f"{slug}-admin"
         try:
             validate_slug(slug)
+            validate_not_reserved(slug)
             validate_email(opts["contact_email"])
             if opts["admin_email"]:
                 validate_email(opts["admin_email"])
@@ -60,12 +63,13 @@ class Command(BaseCommand):
                 branch=branch,
                 role="branch_admin",
                 is_staff=True,
+                must_change_password=True,
             )
 
         self.stdout.write(self.style.SUCCESS(f"Created branch '{branch.name}' at /{slug}"))
         self.stdout.write(f"Admin username: {username}")
         self.stdout.write(f"Temporary password: {password}")
         self.stdout.write(
-            "Give these to the branch admin privately (not by plain email), and ask them "
-            "to change the password at /admin/password_change/ after first login."
+            "Give these to the branch admin privately (not by plain email). The dashboard "
+            "asks them to choose a new password when they first sign in."
         )

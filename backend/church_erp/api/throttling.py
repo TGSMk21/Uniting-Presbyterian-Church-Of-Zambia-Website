@@ -7,6 +7,8 @@ to stop abuse without paying for a shared Redis.
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.throttling import AnonRateThrottle, SimpleRateThrottle, UserRateThrottle
 
+from church_erp.core.client_address import known_client_address
+
 
 class ClientAddressMixin:
     """Identify visitors by the address Cloudflare, in front of Render, saw.
@@ -17,7 +19,7 @@ class ClientAddressMixin:
     """
 
     def get_ident(self, request):
-        return request.META.get("HTTP_CF_CONNECTING_IP", "").strip() or super().get_ident(request)
+        return known_client_address(request) or super().get_ident(request)
 
 
 class PublicReadThrottle(ClientAddressMixin, AnonRateThrottle):

@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     # Third-party
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "django_filters",
     "import_export",
@@ -142,7 +143,7 @@ IMPORT_EXPORT_ESCAPE_FORMULAE_ON_EXPORT = True
 # --- REST Framework ---
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "church_erp.accounts.authentication.StaffJWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
@@ -165,7 +166,22 @@ REST_FRAMEWORK = {
         "anon": "600/min",
         "user": "600/min",
         "write": "60/min",
+        "login": "30/min",
     },
+}
+
+# --- Staff sign-in ---
+# Shared with the website's server; sign-in stays off until it's set.
+INTERNAL_API_SECRET = os.environ.get("INTERNAL_API_SECRET", "")
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    # Each use replaces it, so a session ends after 3 days without a visit.
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=3),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    # Changing a password ends the access tokens issued before it.
+    "CHECK_REVOKE_TOKEN": True,
+    "USER_AUTHENTICATION_RULE": "church_erp.accounts.authentication.is_active_staff",
 }
 
 # --- Celery ---

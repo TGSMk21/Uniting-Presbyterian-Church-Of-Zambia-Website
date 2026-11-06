@@ -13,6 +13,7 @@ services:
     startCommand: >-
       python manage.py migrate --noinput &&
       python manage.py setup_roles &&
+      python manage.py flushexpiredtokens &&
       gunicorn church_erp.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 60
     envVars:
       - key: PYTHON_VERSION
@@ -32,6 +33,9 @@ services:
       - key: FRONTEND_URL
         sync: false
       - key: YOUTUBE_API_KEY
+        sync: false
+      # Shared with the website's server for dashboard sign-in; see backend/README.md.
+      - key: INTERNAL_API_SECRET
         sync: false
       # Cloudflare R2 for uploads; see backend/README.md "Storing uploads".
       # Blueprints only prompt for these when first created, so on an existing

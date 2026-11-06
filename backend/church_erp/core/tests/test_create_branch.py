@@ -2,6 +2,7 @@
 import re
 from io import StringIO
 
+from django.core.exceptions import ValidationError
 from django.core.management import CommandError, call_command
 from django.test import TestCase
 from django.urls import reverse
@@ -55,6 +56,23 @@ class CreateBranchTests(TestCase):
             {"username": "kabwe-admin", "password": printed_password(output), "next": "/"},
         )
         self.assertEqual(response.status_code, 302)
+
+    def test_the_temporary_password_must_be_changed_at_first_sign_in(self):
+        create()
+        self.assertTrue(User.objects.get(username="kabwe-admin").must_change_password)
+
+    def test_addresses_the_website_uses_are_refused(self):
+        for slug in ("dashboard", "contact", "find-a-branch"):
+            with self.subTest(slug=slug), self.assertRaises(CommandError):
+                call_command("create_branch", "--name", "X", "--slug", slug,
+                             "--contact-email", "x@example.org", stdout=StringIO())
+            self.assertFalse(Branch.objects.filter(slug=slug).exists())
+
+    def test_reserved_addresses_are_refused_in_forms_too(self):
+        branch = Branch(name="X", slug="dashboard")
+        with self.assertRaises(ValidationError) as caught:
+            branch.full_clean()
+        self.assertIn("slug", caught.exception.message_dict)
 
     def test_admin_username_and_email_can_be_chosen(self):
         create("--admin-username", "rev.banda", "--admin-email", "banda@example.org")

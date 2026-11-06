@@ -16,7 +16,7 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('role', 'branch', 'is_active')
     search_fields = ('username', 'email', 'first_name', 'last_name')
     fieldsets = BaseUserAdmin.fieldsets + (
-        ('Branch & Role', {'fields': ('branch', 'role')}),
+        ('Branch & Role', {'fields': ('branch', 'role', 'must_change_password')}),
     )
 
     def get_queryset(self, request):

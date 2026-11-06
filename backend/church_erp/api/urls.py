@@ -20,5 +20,6 @@ router.register(r'giving-records', GivingRecordViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('auth/', include('church_erp.accounts.urls')),
     path('tasks/sync-youtube/', sync_youtube, name='sync-youtube'),
 ]
