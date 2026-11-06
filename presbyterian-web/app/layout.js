@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { inter, playfair, cormorant } from "./fonts";
 
@@ -11,6 +12,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${playfair.variable} ${cormorant.variable}`}>
       <body className={`${inter.className} antialiased`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );

@@ -5,7 +5,12 @@ export function contentSecurityPolicy({ dev }) {
     "default-src": ["'self'"],
     // Next.js puts inline scripts in every page. Allowing only those by nonce
     // would force every page to render per request and lose page caching.
-    "script-src": ["'self'", "'unsafe-inline'", ...(dev ? ["'unsafe-eval'"] : [])],
+    // Analytics loads from this site in production and from Vercel's host in dev.
+    "script-src": [
+      "'self'",
+      "'unsafe-inline'",
+      ...(dev ? ["'unsafe-eval'", "https://va.vercel-scripts.com"] : []),
+    ],
     "style-src": ["'self'", "'unsafe-inline'"],
     // Any https image: map tiles, YouTube thumbnails, and uploads, which may
     // move to a custom domain. Images can't run code.

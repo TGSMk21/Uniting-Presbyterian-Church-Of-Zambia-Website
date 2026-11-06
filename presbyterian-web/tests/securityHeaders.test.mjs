@@ -52,6 +52,12 @@ test("next dev keeps working: it needs eval and its reload socket", () => {
   assert.ok(!production["connect-src"].some((source) => source.startsWith("ws:")));
 });
 
+test("analytics runs from our own domain, so only next dev allows Vercel's script host", () => {
+  const dev = directives(contentSecurityPolicy({ dev: true }));
+  assert.ok(dev["script-src"].includes("https://va.vercel-scripts.com"));
+  assert.ok(!production["script-src"].includes("https://va.vercel-scripts.com"));
+});
+
 test("every page gets the full set of headers", () => {
   const headers = Object.fromEntries(securityHeaders({ dev: false }).map((h) => [h.key, h.value]));
   assert.equal(headers["Content-Security-Policy"], contentSecurityPolicy({ dev: false }));
