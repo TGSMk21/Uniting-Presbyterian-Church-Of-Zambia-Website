@@ -1,4 +1,4 @@
-import { securityHeaders } from "./Utilities/securityHeaders.mjs";
+import { dashboardHeaders, securityHeaders } from "./Utilities/securityHeaders.mjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -16,6 +16,7 @@ const nextConfig = {
         source: "/:path*",
         headers: securityHeaders({ dev: process.env.NODE_ENV === "development" }),
       },
+      { source: "/dashboard/:path*", headers: dashboardHeaders() },
     ];
   },
   images: {

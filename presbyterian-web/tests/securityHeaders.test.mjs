@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { contentSecurityPolicy, securityHeaders } from "../Utilities/securityHeaders.mjs";
+import { contentSecurityPolicy, dashboardHeaders, securityHeaders } from "../Utilities/securityHeaders.mjs";
 
 // "default-src 'self'; img-src a b" → { "default-src": ["'self'"], "img-src": ["a", "b"] }
 function directives(policy) {
@@ -56,6 +56,13 @@ test("analytics runs from our own domain, so only next dev allows Vercel's scrip
   const dev = directives(contentSecurityPolicy({ dev: true }));
   assert.ok(dev["script-src"].includes("https://va.vercel-scripts.com"));
   assert.ok(!production["script-src"].includes("https://va.vercel-scripts.com"));
+});
+
+test("dashboard pages stay out of search engines and shared caches", () => {
+  const headers = Object.fromEntries(dashboardHeaders().map((h) => [h.key, h.value]));
+  assert.match(headers["X-Robots-Tag"], /noindex/);
+  assert.match(headers["Cache-Control"], /no-store/);
+  assert.match(headers["Cache-Control"], /private/);
 });
 
 test("every page gets the full set of headers", () => {

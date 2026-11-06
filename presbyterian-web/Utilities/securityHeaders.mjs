@@ -28,6 +28,14 @@ export function contentSecurityPolicy({ dev }) {
     .join("; ");
 }
 
+// Staff pages hold one person's data: never index them or store them in a shared cache.
+export function dashboardHeaders() {
+  return [
+    { key: "X-Robots-Tag", value: "noindex, nofollow" },
+    { key: "Cache-Control", value: "private, no-store" },
+  ];
+}
+
 export function securityHeaders({ dev }) {
   return [
     { key: "Content-Security-Policy", value: contentSecurityPolicy({ dev }) },

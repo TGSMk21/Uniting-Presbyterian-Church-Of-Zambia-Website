@@ -1,0 +1,198 @@
+/* Staff dashboard. Colours and buttons come from globals.css. */
+.dash {
+  min-height: 100vh;
+  background: var(--cream);
+  color: var(--text);
+}
+
+/* Sign-in and password pages */
+.dash-center {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+}
+.dash-card {
+  width: 100%;
+  max-width: 26rem;
+  background: var(--warm-white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+}
+.dash-card-logo { margin-bottom: 1rem; }
+.dash-title {
+  font-family: var(--font-playfair);
+  font-size: 1.6rem;
+  color: var(--navy);
+  line-height: 1.25;
+}
+.dash-text {
+  margin-top: 0.5rem;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Forms */
+.dash-form {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+.dash-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--navy);
+}
+.dash-field input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+  font-size: 1rem;
+}
+.dash-field input:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 1px;
+}
+.dash-field small {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+.dash-error {
+  color: #a50d26;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.dash-error:empty { display: none; }
+.dash-submit {
+  width: 100%;
+  justify-content: center;
+  min-height: 2.75rem;
+}
+.dash-submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
+  background: var(--navy);
+  box-shadow: none;
+}
+.dash-submit:focus-visible,
+.dash-signout:focus-visible,
+.dash-link:focus-visible,
+.dash-back:focus-visible,
+.dash-brand:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+.dash-back {
+  display: block;
+  margin-top: 1.25rem;
+  text-align: center;
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+
+/* Signed-in pages */
+.dash-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--navy);
+  color: white;
+}
+.dash-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+}
+.dash-brand img {
+  border-radius: 50%;
+  background: white;
+}
+.dash-account {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+.dash-account-name { overflow-wrap: anywhere; }
+.dash-signout {
+  min-height: 2.75rem;
+  padding: 0.3rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 100px;
+  background: transparent;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+.dash-signout:hover { background: rgba(255, 255, 255, 0.15); }
+.dash-main {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+.dash-heading {
+  font-family: var(--font-playfair);
+  font-size: 1.8rem;
+  color: var(--navy);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.dash-subheading {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+.dash-panel {
+  margin: 1.25rem 0;
+  padding: 1.25rem;
+  background: var(--warm-white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.dash-details {
+  margin: 0.9rem 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.dash-details dt {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+}
+.dash-details dd {
+  margin: 0;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+.dash-link {
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+
+@media (min-width: 640px) {
+  .dash-header { padding: 0.75rem 2rem; }
+  .dash-main { padding: 2.5rem 2rem 4rem; }
+  .dash-details { grid-template-columns: repeat(3, 1fr); }
+  .dash-card { padding: 2.5rem 2rem; }
+}
