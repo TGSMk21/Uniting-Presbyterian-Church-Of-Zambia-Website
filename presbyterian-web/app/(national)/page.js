@@ -126,35 +126,6 @@ export default async function NationalLanding() {
         </div>
       </section>
 
-      {/* ===== FIND A BRANCH ===== */}
-      <section className="nat-branches">
-        <div className="nat-branches-inner">
-          <div className="nat-branches-head">
-            <span className="nat-eyebrow">Our branches</span>
-            <h2 className="nat-h2">
-              Find a branch <em>near you</em>
-            </h2>
-            <p className="nat-branches-sub">
-              Each branch is its own community — the same faith, rooted in your
-              neighbourhood.
-            </p>
-          </div>
-
-          <ScrollReveal>
-            <Link href="/find-a-branch" className="nat-branch-card">
-              <span className="nat-branch-card-main">
-                <span className="nat-branch-card-title">Find a branch</span>
-                <span className="nat-branch-card-text">
-                  Search by name or area, see every branch on the map, or find
-                  the one closest to you.
-                </span>
-              </span>
-              <span className="nat-branch-card-arrow" aria-hidden="true">→</span>
-            </Link>
-          </ScrollReveal>
-        </div>
-      </section>
-
       {/* ===== NATIONWIDE EVENTS (upcoming activities of every branch) ===== */}
       {events.length > 0 && (
       <section className="nat-events" id="events">

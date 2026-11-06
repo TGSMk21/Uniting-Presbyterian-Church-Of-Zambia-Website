@@ -2021,12 +2021,6 @@ body::after {
 }
 
 /* ===== BRANCH INDEX ===== */
-.nat-branches { padding: 7rem 2.5rem; background: var(--cream); }
-.nat-branches-inner { max-width: 1100px; margin: 0 auto; }
-.nat-branches-head {
-  max-width: 640px;
-  margin-bottom: 3.5rem;
-}
 .nat-h2 {
   font-family: 'Playfair Display', serif;
   font-size: clamp(2.3rem, 4.5vw, 3.6rem);
@@ -2037,23 +2031,7 @@ body::after {
   margin: 1.4rem 0 1.1rem;
 }
 .nat-h2 em { font-style: italic; color: var(--red); font-weight: 500; }
-.nat-branches-sub {
-  font-size: 1.05rem;
-  color: var(--text-soft);
-  line-height: 1.7;
-}
 .nat-index-empty { color: var(--muted); padding: 2rem 0; font-style: italic; }
-.nat-branch-card {
-  display: flex; align-items: center; justify-content: space-between; gap: 2rem;
-  padding: 2.5rem 3rem; background: var(--warm-white); border: 1px solid var(--line);
-  border-radius: 20px; text-decoration: none; transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
-}
-.nat-branch-card:hover { border-color: var(--navy); box-shadow: 0 16px 40px rgba(13, 27, 61, 0.1); transform: translateY(-2px); }
-.nat-branch-card-main { display: flex; flex-direction: column; gap: 0.5rem; }
-.nat-branch-card-title { font-family: var(--font-playfair), serif; font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 600; color: var(--navy); }
-.nat-branch-card-text { color: var(--text-soft); line-height: 1.6; }
-.nat-branch-card-arrow { font-size: 1.75rem; color: var(--red); transition: transform 0.3s; }
-.nat-branch-card:hover .nat-branch-card-arrow { transform: translateX(6px); }
 
 /* ===== CLOSING ===== */
 .nat-closing {
@@ -2204,8 +2182,6 @@ body::after {
   .nat-arch-back { top: 20px; left: 34px; }
   .nat-arch-tag { bottom: 30px; }
   .nat-manifesto { padding: 5.5rem 2rem; }
-  .nat-branches { padding: 5rem 2rem; }
-  .nat-branch-card { padding: 1.75rem 1.5rem; gap: 1rem; }
   .nat-fellowships { padding: 5rem 2rem; }
   .nat-events { padding: 5rem 2rem; }
   .nat-closing { padding: 6rem 2rem; }
