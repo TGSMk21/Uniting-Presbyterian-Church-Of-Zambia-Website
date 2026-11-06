@@ -58,6 +58,10 @@ python manage.py sync_youtube
 
 Add `--branch <slug>` to sync a single branch. In production, Celery beat runs the same sync every 5 minutes (`CELERY_BEAT_SCHEDULE` in `settings/base.py`). Each run costs about 2 YouTube API quota units per branch. New videos are added, but titles, series and verses edited by staff are never overwritten.
 
+## Main branches and the church locator
+
+`python manage.py seed_upcsa_branches` adds the main branches with placeholder details and approximate map pins. It's safe to re-run and never overwrites details entered later. To place a church exactly on the national "Find a Church" map, set **Latitude** and **Longitude** on its branch in the admin and tick **Location confirmed**.
+
 ## Onboarding a branch
 
 One command creates the branch and its first branch-admin login, and prints a temporary password:

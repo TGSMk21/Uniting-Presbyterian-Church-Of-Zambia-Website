@@ -9,6 +9,12 @@ class Branch(models.Model):
     contact_phone = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
     youtube_channel_id = models.CharField(max_length=100, blank=True)
+    # Church locator map
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    location_confirmed = models.BooleanField(
+        default=False, help_text="Tick once the map position is the church itself, not just its area"
+    )
     # Home page content
     tagline = models.CharField(max_length=200, blank=True, help_text="Hero headline, e.g. 'A place of grace, belonging & purpose.'")
     welcome_text = models.TextField(blank=True, help_text="Short welcome paragraph under the headline")
