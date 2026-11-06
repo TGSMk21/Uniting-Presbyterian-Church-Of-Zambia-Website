@@ -357,6 +357,8 @@ Every branch currently renders Chilanga's home page.
 
 ## Phase 4 — AI Daily Messages (RAG Pipeline)
 
+**[rev] Build order (2026-11-07):** Phase 5 (Staff Dashboard) comes first. Staff-facing parts of this phase (sermon upload in Task 4.1, approve and reject in Task 4.5) are built in the dashboard, not the Django admin.
+
 **Goal:** Build the actual pipeline the `SermonEmbedding`/`DailyMessage` models were designed for — currently only the data model and a plain viewset exist.
 
 ### Task 4.1 — Written sermons (replaces transcription)
@@ -401,28 +403,53 @@ Every branch currently renders Chilanga's home page.
 
 ---
 
-## Phase 5 — Finance Module
+## Phase 5 — Staff Dashboard
 
-**STOP — human decision required before starting any task in this phase:** confirm with UPCZ leadership who the institutional finance stakeholder/approver is, and review Zambia's Data Protection Act (2021) implications for `GivingRecord`/member data, before writing any code here. This gate exists on purpose — do not treat it as optional because the models already exist.
+**[rev] Decision (2026-11-07):** the project owner chose a custom staff dashboard on the website over branding the Django admin, because it will be vital for the future. **Build this before Phase 4**, so the daily message review (Task 4.5) and sermon upload (Task 4.1) are built here instead of in the Django admin.
 
-### Task 5.1 — Confirm permission walling
-- [ ] Verify Task 0.2's `FinanceRoleRequired` mixin is applied and manually test that a `branch_admin` or `content_editor` role user genuinely cannot see the finance admin module at all (not just filtered — absent from their admin index).
+**Goal:** Staff sign in on the website at `/dashboard` and manage page content and everything else for their branch, without ever opening the Django admin. The Django admin stays as a superuser fallback.
 
-### Task 5.2 — Payment integration
-- [ ] Add `backend/church_erp/finance/services/payments.py` integrating Flutterwave and/or MTN MoMo (per `.env.example`'s existing `FLUTTERWAVE_SECRET_KEY`/`MTN_MOMO_API_KEY` vars).
-- [ ] Add a webhook endpoint (`finance/views.py`) that verifies the payment provider's signature, then creates a `GivingRecord(status='confirmed')` — reject/log (don't crash) on an unverifiable signature.
-- [ ] Enforce `reference_number` uniqueness at the webhook level to prevent duplicate records from retried webhook deliveries.
-- [ ] Commit: `"Add payment gateway webhook integration for online giving"`
+### Task 5.1 — Secure staff sign-in
+- [ ] Restore login on the API with short-lived tokens, rotation and a blacklist (`/api/auth/` was removed in Phase 6 until something needed it).
+- [ ] Keep tokens out of browser JavaScript: the Next.js server sets them as `httpOnly`, `Secure`, `SameSite=Lax` cookies, and sign-out blacklists the refresh token.
+- [ ] Keep the login lockout working through the API. **Trap:** dashboard calls reach the API from Vercel's servers, so address-based limits and lockouts would treat all staff as one visitor. Pass the visitor's real address in a header protected by a shared secret, and only trust it when the secret matches. Test that one person's failures can't lock out other staff.
+- [ ] Guard every `/dashboard` route on the server, keep the pages out of search engines, and never cache one person's page for another. Hiding a button is not protection: the API's role and branch checks stay the real gate.
+- [ ] Temporary passwords must be changed at first sign-in. Staff can change their own password; add a reset flow once Resend's domain is verified.
+- [ ] Two-step login for superusers and branch admins before the dashboard is handed to staff.
+- [ ] Commit: `"Add secure staff sign-in for the dashboard"`
 
-### Task 5.3 — Reporting & export
-- [ ] Add `django-import-export`'s `ExportMixin` (already in `requirements.txt`) to `GivingRecordAdmin` for CSV/PDF export, respecting the same branch and role scoping as the rest of the admin.
-- [ ] Add a simple aggregate report view (by branch, by `giving_type`, by date range) — a Django admin changelist with `list_filter` and a custom aggregate summary is sufficient for Phase 5; a nicer dashboard can come later.
+### Task 5.2 — Editable page content
+Most page wording is hard-coded today: on the national site, the landing page (hero, welcome, fellowships, closing) and the contact page. On branch sites, some fixed wording sits around fields that are already editable (tagline, welcome text, year theme, images). The `Page` model exists, but no website page reads it.
+- [ ] Add a content model with named fields per page and section, for both the national site and each branch, not one free-form HTML box. Plain text and images only, so edits can't break a layout or inject scripts.
+- [ ] Seed it with today's wording, and keep the current text as a fallback, so no page goes blank and nothing changes until someone edits it.
+- [ ] Dashboard section per page, with labelled fields and image upload to the public bucket.
+- [ ] Permissions: branch staff edit their own branch's pages; national pages are limited to superusers (or a national role, to be confirmed).
+- [ ] Make saved edits appear straight away: the website caches API answers for an hour, so saving must trigger on-demand revalidation through a shared-secret endpoint. Test that a failed revalidation still saves the edit and tells the user.
+- [ ] Decide what to do with the unused `Page` model: reuse it for the new content or remove it.
+- [ ] Commit: `"Add editable page content for national and branch sites"`
 
-### Task 5.4 — Pilot
-- [ ] Pilot with one branch's real giving for a defined trial period, reconciled by hand against that branch's existing manual records before trusting the numbers.
-- [ ] Roll out to remaining branches gradually, one at a time, only once each is comfortable — never all at once.
+### Task 5.3 — Content sections
+- [ ] Sermons (titles and verses; YouTube sync must not overwrite staff edits), projects, activities.
+- [ ] Ministers and service times; branch details, including the exact map position that confirms a branch's pin.
+- [ ] Media library, using the existing private signed links; files must not become public through the dashboard.
+- [ ] Daily messages: list, edit and manual entry now; Phase 4 adds AI drafts and approval.
+- [ ] CSV export, limited to the rows that person can see.
+- [ ] Commit per section.
 
-**Phase 5 Definition of Done:** One branch's real tithes/offerings are tracked end-to-end (payment → record → report), validated against their existing manual process, with the human sign-off from the STOP above already obtained.
+### Task 5.4 — Staff and activity
+- [ ] Branch admins add and suspend content editors for their own branch, and can't grant higher roles or see other branches. Superusers manage everyone and create branches.
+- [ ] **Trap:** Django's activity log only records changes made in the Django admin. Add logging on API writes so dashboard changes are recorded with who, what and when, and show it to superusers.
+- [ ] Commit: `"Add staff management and activity log to the dashboard"`
+
+### Task 5.5 — Testing and pilot
+- [ ] For every section, test that branch A staff can't read or change branch B's data, and that content editors can't reach admin-only sections, through the API as well as the screens.
+- [ ] Works on a phone, in plain language, and checked in a real browser, with the security headers on.
+- [ ] Pilot with one branch's real staff, and fix what they stumble on before rolling out to the others.
+
+**Phase 5 Definition of Done:** One branch's real staff run their site from `/dashboard` (editing page content and publishing sermons, activities and daily messages) without help and without the Django admin, and a superuser can edit the national pages.
+
+### Finance is out of the plan
+**[rev] Decision (2026-11-07):** the project owner removed the finance module (online giving, payment gateways, reporting) from the plan for now, and the dashboard has no finance section. The earlier task list is in git history if it returns. The existing `finance` app and `finance_admin` role stay in the code, unused and staff-only; removing them would be a separate decision. If finance returns, it still needs a UPCZ finance approver and a review under Zambia's Data Protection Act (2021) first.
 
 ---
 
@@ -432,11 +459,11 @@ Every branch currently renders Chilanga's home page.
 - [x] **Admin activity logging:** **[rev]** `LogEntry` was recording but had no admin page. Now read-only under Administration > Log entries, superusers only (`core/admin.py`).
 - [x] **Rate limiting / throttling:** **[rev]** `api/throttling.py`: 600 requests/min per visitor or user, 60 writes/min per user. Keyed on `CF-Connecting-IP` so a made-up `X-Forwarded-For` can't escape the limit. Reads must stay at 300/min or above because the site builds from shared Vercel addresses. Checked live on 2026-11-06: requests with a different fake `X-Forwarded-For` each still got `429`, first after about 2,080 requests in under a minute, higher than the two-worker estimate of 1,200 (cause not established). The admin login lockout was not tried on production; it's covered by tests only.
 - [x] **Security headers:** **[rev]** `presbyterian-web/Utilities/securityHeaders.mjs`, applied in `next.config.mjs`. Inline scripts stay allowed because nonces would force every page to render per request and lose page caching. Images allow any https source so uploads can move to a custom domain.
-- [ ] **Admin hardening:** **[rev]** Done: `DJANGO_ADMIN_PATH` env var (default stays `/admin/`) and `django-axes` lockout (10 failures, 15 minutes, by username or address). Still to do before Phase 5 goes live: 2FA for superusers and `finance_admin`.
-- [x] **JWT:** **[rev]** Removed `/api/auth/*`: nothing used it and it had no lockout. Add back with rotation and blacklist when an app needs to write through the API.
+- [ ] **Admin hardening:** **[rev]** Done: `DJANGO_ADMIN_PATH` env var (default stays `/admin/`) and `django-axes` lockout (10 failures, 15 minutes, by username or address). Two-step login moved to Task 5.1.
+- [x] **JWT:** **[rev]** Removed `/api/auth/*`: nothing used it and it had no lockout. Task 5.1 brings it back with rotation and a blacklist for the dashboard.
 - [ ] **Dependency audits:** **[rev]** Done: upgraded Next.js to 16.4.5, Resend, React and others; Pillow to 13. `pip-audit` reports none. `npm audit` reports 4 low, all `deepmerge` via `html-to-text` via `@react-email`, with no fix available, used only to render the site's own email template. Still to do: enable Dependabot alerts in GitHub settings (owner); alerts only, since this project doesn't use pull requests.
 - [ ] **Monitoring:** **[rev]** Done: `@vercel/analytics` in the root layout, so the national site and every branch are counted, without cookies. Web Analytics enabled in Vercel; a live visit was accepted on 2026-11-07. Still to do (owner): add an uptime check against the frontend and `/api/branches/`.
-- [x] **Data export / exit plan:** **[rev]** No export existed despite `import_export` being installed. Every branch-scoped admin list now has CSV export limited to the rows that user can see; giving records stay finance-only and formulas are neutralised. There is no members model to export yet.
+- [x] **Data export / exit plan:** **[rev]** No export existed despite `import_export` being installed. Every branch-scoped admin list now has CSV export limited to the rows that user can see, and formulas are neutralised. There is no members model to export yet.
 - [x] **Documentation rewrite:** **[rev]** Root `README.md` rewritten; `backend/README.md` has a Security section.
 - [x] **Deploy race:** **[rev]** A push that deploys both sides made Vercel build Find a Branch while Render was restarting, publishing "0 branches" for up to an hour. `/` and `/find-a-branch` now render on request, so a failed API call isn't kept (`tests/freshPages.test.mjs`).
 - [ ] **Governance:** confirm with UPCZ who the institutional point of contact/data owner is, and what happens if the developer is unavailable — not a coding task, but should be explicitly resolved before calling this "launched."
@@ -456,7 +483,7 @@ Remove once Phase 0 is done: `PROJECT_ID` (Sanity), `YOUTUBE_CHANNEL_ID` (now pe
 
 ## Appendix B — Current API Endpoints (`backend/church_erp/api/urls.py`)
 
-`/api/branches/` (lookup by slug: `/api/branches/<slug>/`), `/api/ministers/`, `/api/sermons/` (filter `?branch=<slug>`), `/api/sermons/<video_id>/` (**[rev]** not unique across branches — changes in Task 0.5), `/api/projects/`, `/api/activities/`, `/api/pages/`, `/api/media/`, `/api/daily-messages/` (filter `?branch=<slug>`; public callers only ever see `status=published`), `/api/giving-records/`, `/api/auth/login/`, `/api/auth/refresh/`.
+`/api/branches/` (lookup by slug: `/api/branches/<slug>/`), `/api/ministers/`, `/api/sermons/` (filter `?branch=<slug>`), `/api/sermons/<video_id>/` (**[rev]** not unique across branches — changes in Task 0.5), `/api/projects/`, `/api/activities/`, `/api/pages/`, `/api/media/`, `/api/daily-messages/` (filter `?branch=<slug>`; public callers only ever see `status=published`), `/api/giving-records/` (**[rev]** unused; finance is out of the plan). **[rev]** `/api/auth/` was removed in Phase 6; Task 5.1 restores it.
 
 ---
 
