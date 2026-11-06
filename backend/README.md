@@ -137,7 +137,7 @@ The tests check all of this against an in-process fake S3 (`moto`, in `requireme
 
 ## Security
 
-**API rate limits** are in `REST_FRAMEWORK` in `settings/base.py`: 600 requests a minute per visitor or signed-in user, and 60 writes a minute per user. Over the limit, the API answers `429`. The website builds its pages from a few shared Vercel addresses, so don't set the visitor limit below 300 a minute, or pages can be published empty. Counts are kept per server process, so with two workers the real limit can be up to double.
+**API rate limits** are in `REST_FRAMEWORK` in `settings/base.py`: 600 requests a minute per visitor or signed-in user, and 60 writes a minute per user. Over the limit, the API answers `429`. The website builds its pages from a few shared Vercel addresses, so don't set the visitor limit below 300 a minute, or pages can be published empty. Counts are kept per server process, so the real limit is higher than the setting. In a live test, one client first got a `429` after about 2,000 requests in under a minute, so treat these limits as protection against floods, not exact quotas.
 
 **Admin login lockout** comes from `django-axes`. Ten failed attempts lock that username, or that address, for 15 minutes, even for the right password. To unlock someone sooner, a superuser can delete the entry under **Axes → Access attempts**. Someone who knows a username can lock it for 15 minutes on purpose, which is the cost of stopping password guessing.
 

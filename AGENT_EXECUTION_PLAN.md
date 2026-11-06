@@ -430,7 +430,7 @@ Every branch currently renders Chilanga's home page.
 
 - [ ] **Backups:** confirm Supabase's backup/PITR settings for the plan tier in use; if not sufficient, add a scheduled `pg_dump` to object storage.
 - [x] **Admin activity logging:** **[rev]** `LogEntry` was recording but had no admin page. Now read-only under Administration > Log entries, superusers only (`core/admin.py`).
-- [x] **Rate limiting / throttling:** **[rev]** `api/throttling.py`: 600 requests/min per visitor or user, 60 writes/min per user. Keyed on `CF-Connecting-IP` so a made-up `X-Forwarded-For` can't escape the limit. Reads must stay at 300/min or above because the site builds from shared Vercel addresses. Live check of the address header is still to do after deploy.
+- [x] **Rate limiting / throttling:** **[rev]** `api/throttling.py`: 600 requests/min per visitor or user, 60 writes/min per user. Keyed on `CF-Connecting-IP` so a made-up `X-Forwarded-For` can't escape the limit. Reads must stay at 300/min or above because the site builds from shared Vercel addresses. Checked live on 2026-11-06: requests with a different fake `X-Forwarded-For` each still got `429`, first after about 2,080 requests in under a minute, higher than the two-worker estimate of 1,200 (cause not established). The admin login lockout was not tried on production; it's covered by tests only.
 - [x] **Security headers:** **[rev]** `presbyterian-web/Utilities/securityHeaders.mjs`, applied in `next.config.mjs`. Inline scripts stay allowed because nonces would force every page to render per request and lose page caching. Images allow any https source so uploads can move to a custom domain.
 - [ ] **Admin hardening:** **[rev]** Done: `DJANGO_ADMIN_PATH` env var (default stays `/admin/`) and `django-axes` lockout (10 failures, 15 minutes, by username or address). Still to do before Phase 5 goes live: 2FA for superusers and `finance_admin`.
 - [x] **JWT:** **[rev]** Removed `/api/auth/*`: nothing used it and it had no lockout. Add back with rotation and blacklist when an app needs to write through the API.
@@ -438,6 +438,7 @@ Every branch currently renders Chilanga's home page.
 - [ ] **Monitoring:** add Vercel Analytics (frontend) and a simple uptime check (e.g. UptimeRobot) against both the frontend and the backend `/api/branches/` endpoint.
 - [x] **Data export / exit plan:** **[rev]** No export existed despite `import_export` being installed. Every branch-scoped admin list now has CSV export limited to the rows that user can see; giving records stay finance-only and formulas are neutralised. There is no members model to export yet.
 - [x] **Documentation rewrite:** **[rev]** Root `README.md` rewritten; `backend/README.md` has a Security section.
+- [x] **Deploy race:** **[rev]** A push that deploys both sides made Vercel build Find a Branch while Render was restarting, publishing "0 branches" for up to an hour. `/` and `/find-a-branch` now render on request, so a failed API call isn't kept (`tests/freshPages.test.mjs`).
 - [ ] **Governance:** confirm with UPCZ who the institutional point of contact/data owner is, and what happens if the developer is unavailable — not a coding task, but should be explicitly resolved before calling this "launched."
 
 ---
