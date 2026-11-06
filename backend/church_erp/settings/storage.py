@@ -8,11 +8,23 @@ Two buckets, because R2 makes a bucket public as a whole:
   after an hour.
 """
 
+from django.core.exceptions import ImproperlyConfigured
+
 PRIVATE_LINK_SECONDS = 3600
 
 
 def object_storages(*, public_bucket, private_bucket, public_domain, endpoint_url,
                     access_key, secret_key, region_name="auto"):
+    if public_bucket == private_bucket:
+        raise ImproperlyConfigured(
+            "AWS_PRIVATE_BUCKET_NAME must differ from AWS_STORAGE_BUCKET_NAME: the public "
+            "bucket is readable by anyone, so private files can't share it."
+        )
+    if "://" in public_domain or "cloudflarestorage.com" in public_domain:
+        raise ImproperlyConfigured(
+            "MEDIA_PUBLIC_DOMAIN must be the public bucket's domain without https:// "
+            "(e.g. pub-xxxx.r2.dev), not the S3 API address."
+        )
     common = {
         "endpoint_url": endpoint_url,
         "access_key": access_key,

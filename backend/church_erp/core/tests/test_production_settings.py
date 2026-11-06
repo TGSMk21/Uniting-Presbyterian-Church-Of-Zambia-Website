@@ -138,6 +138,24 @@ class ProductionSettingsTests(SimpleTestCase):
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn(missing, result.stderr)
 
+    def test_refuses_the_same_bucket_for_public_and_private_files(self):
+        # R2 makes a bucket public as a whole, so sharing one would expose private files.
+        result = run(READ_SETTINGS, **{**self.R2_ENV, "AWS_PRIVATE_BUCKET_NAME": "upcz-public"})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("AWS_PRIVATE_BUCKET_NAME", result.stderr)
+
+    def test_refuses_the_s3_api_host_as_the_public_domain(self):
+        # That host needs signed requests, so visitors would get errors instead of images.
+        bad = "acct.r2.cloudflarestorage.com"
+        result = run(READ_SETTINGS, **{**self.R2_ENV, "MEDIA_PUBLIC_DOMAIN": bad})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("MEDIA_PUBLIC_DOMAIN", result.stderr)
+
+    def test_public_domain_with_a_scheme_is_refused(self):
+        result = run(READ_SETTINGS, **{**self.R2_ENV, "MEDIA_PUBLIC_DOMAIN": "https://pub-x.r2.dev"})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("MEDIA_PUBLIC_DOMAIN", result.stderr)
+
     def test_logs_go_to_stdout(self):
         self.assertEqual(settings_with()["ROOT_LOG_HANDLERS"], ["console"])
 
