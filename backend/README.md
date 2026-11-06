@@ -72,7 +72,7 @@ python manage.py create_branch --name "Kabwe Presbyterian Church" --slug kabwe -
 
 - The site appears at `/<slug>`, and the national directory lists it automatically.
 - The login is `<slug>-admin` by default (change it with `--admin-username` / `--admin-email`). It has the Branch Admin role, so it sees and edits only this branch.
-- Hand the username and password over privately, not by plain email, and ask the admin to change the password after first login (`/admin/password_change/`).
+- Hand the username and password over privately, not by plain email. The dashboard makes them choose a new password when they first sign in.
 - Then, in the admin, add the branch's minister(s), service times, home-page text, projects and activities. Run `sync_youtube --branch <slug>` to import its sermons.
 
 On Render's free plan there is no shell, so run it from your own machine against the production database, the same way as `createsuperuser` in step 4 of "Deploying to Render" below.
@@ -147,7 +147,22 @@ The tests check all of this against an in-process fake S3 (`moto`, in `requireme
 
 **Exporting data.** Every branch list in the admin has an **Export** button that downloads a CSV of the rows that person can see. Giving records can only be exported by finance staff and superusers.
 
-**API sign-in.** There's no `/api/auth/` route: nothing uses it, and it would be a way to guess passwords. Add it back with token rotation when an app needs to write through the API.
+**Dashboard sign-in** is off until `INTERNAL_API_SECRET` is set; see "Turning on the staff dashboard" below. `/api/auth/login/`, `refresh/` and `logout/` only answer the website's server, which proves itself with that secret. Everyone else gets a 404, so passwords can't be guessed against the API directly. Sign-in shares the Admin login lockout. Sessions end after 3 days without a visit. Changing a password ends every other session.
+
+## Turning on the staff dashboard
+
+Staff sign in at `/dashboard` on the website. It needs one shared secret, which you create once. Generate it on your own machine:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Add it as `INTERNAL_API_SECRET` in both places, with the same value, then redeploy both:
+
+1. **Render:** your service → **Environment**.
+2. **Vercel:** your project → **Settings → Environment Variables**, for Production. Mark it as sensitive, and don't add a `NEXT_PUBLIC_` prefix.
+
+Until both are set, the sign-in page says sign-in isn't available, and the public site is unaffected. To sign someone out everywhere, change their password or untick **Active** or **Staff status** on their user in the admin.
 
 ## Settings
 
@@ -177,7 +192,7 @@ Branch scoping is enforced in both the admin (`core/admin_mixins.py`) and the AP
 ## Apps
 
 - `core`: `Branch`, `Minister`
-- `accounts`: custom `User` with `branch` and `role`
+- `accounts`: custom `User` with `branch` and `role`, and staff sign-in for the dashboard
 - `content`: `Sermon`, `Project`, `Activity`, `Page`
 - `media_library`: `MediaAsset`, `MediaTag`
 - `ai_messages`: `SermonEmbedding` (pgvector), `DailyMessage`

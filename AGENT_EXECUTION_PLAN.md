@@ -410,11 +410,12 @@ Every branch currently renders Chilanga's home page.
 **Goal:** Staff sign in on the website at `/dashboard` and manage page content and everything else for their branch, without ever opening the Django admin. The Django admin stays as a superuser fallback.
 
 ### Task 5.1 — Secure staff sign-in
-- [ ] Restore login on the API with short-lived tokens, rotation and a blacklist (`/api/auth/` was removed in Phase 6 until something needed it).
-- [ ] Keep tokens out of browser JavaScript: the Next.js server sets them as `httpOnly`, `Secure`, `SameSite=Lax` cookies, and sign-out blacklists the refresh token.
-- [ ] Keep the login lockout working through the API. **Trap:** dashboard calls reach the API from Vercel's servers, so address-based limits and lockouts would treat all staff as one visitor. Pass the visitor's real address in a header protected by a shared secret, and only trust it when the secret matches. Test that one person's failures can't lock out other staff.
-- [ ] Guard every `/dashboard` route on the server, keep the pages out of search engines, and never cache one person's page for another. Hiding a button is not protection: the API's role and branch checks stay the real gate.
-- [ ] Temporary passwords must be changed at first sign-in. Staff can change their own password; add a reset flow once Resend's domain is verified.
+- [x] Restore login on the API with short-lived tokens, rotation and a blacklist (`/api/auth/` was removed in Phase 6 until something needed it). **[rev]** 15-minute access, 3-day refresh. Sign-in, refresh and sign-out only answer the website's server (`INTERNAL_API_SECRET`); everyone else gets a 404.
+- [x] Keep tokens out of browser JavaScript: the Next.js server sets them as `httpOnly`, `Secure`, `SameSite=Lax` cookies, and sign-out blacklists the refresh token.
+- [x] Keep the login lockout working through the API. **Trap:** dashboard calls reach the API from Vercel's servers, so address-based limits and lockouts would treat all staff as one visitor. Pass the visitor's real address in a header protected by a shared secret, and only trust it when the secret matches. Test that one person's failures can't lock out other staff.
+- [x] Guard every `/dashboard` route on the server, keep the pages out of search engines, and never cache one person's page for another. Hiding a button is not protection: the API's role and branch checks stay the real gate.
+- [x] Temporary passwords must be changed at first sign-in, enforced by the API. Staff can change their own password, which ends their other sessions.
+- [ ] Add a forgotten-password flow once Resend's domain is verified. Until then, an admin sets a new temporary password.
 - [ ] Two-step login for superusers and branch admins before the dashboard is handed to staff.
 - [ ] Commit: `"Add secure staff sign-in for the dashboard"`
 

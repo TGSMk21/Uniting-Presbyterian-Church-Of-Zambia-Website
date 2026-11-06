@@ -4,6 +4,7 @@ One platform for the national church site and a website for each branch. Branch 
 
 - **National site** (`/`): the welcome page, fellowships, nationwide events, a map to find a branch (`/find-a-branch`) and a contact page.
 - **Branch sites** (`/<branch-slug>`): home, about, sermons, projects and activities, and a contact form that reaches that branch.
+- **Staff dashboard** (`/dashboard`): staff sign-in, being built up section by section.
 - **Admin** (Django admin): content, staff roles, media library and the record of who changed what.
 
 ## How it fits together
@@ -29,11 +30,13 @@ backend/              Django API and admin. See backend/README.md
     content/          Sermons, projects, activities, pages, YouTube sync
     media_library/    Photos and documents (private files)
     ai_messages/      Daily messages; AI generation is not built yet
-    finance/          Giving records; not live yet
+    finance/          Giving records; unused
     api/              API routes and rate limits
 presbyterian-web/     Next.js website
   app/(national)/     National site
   app/[branch]/       Branch sites
+  app/dashboard/      Staff dashboard
+  proxy.js            Keeps dashboard sessions going
   Services/api.js     All calls to the API
   tests/              Website tests
 render.yaml           Render deployment settings
@@ -85,7 +88,7 @@ Pushing to `master` deploys both the website (Vercel) and the backend (Render). 
 ## Security
 
 - **API:** rate limited, and anyone can read public content, but only signed-in staff can change it, and only for their own branch.
-- **Admin login:** locks after 10 failed attempts for 15 minutes.
+- **Staff sign-in:** locks after 10 failed attempts for 15 minutes. Only the website's server can reach the sign-in API.
 - **Website:** sends a Content-Security-Policy and other security headers (`presbyterian-web/Utilities/securityHeaders.mjs`).
 
 More detail is in [backend/README.md](backend/README.md#security).
