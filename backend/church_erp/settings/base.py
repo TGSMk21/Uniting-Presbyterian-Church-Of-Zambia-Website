@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -26,6 +27,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "django_filters",
     "import_export",
+    "axes",
     # Local
     "church_erp.core",
     "church_erp.accounts",
@@ -45,6 +47,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "church_erp.urls"
@@ -110,11 +113,31 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+# --- Admin login ---
+# Set DJANGO_ADMIN_PATH to keep bots from finding the login page at /admin/.
+ADMIN_PATH = os.environ.get("DJANGO_ADMIN_PATH", "").strip().strip("/") or "admin"
+# Locks a username (bots rotate addresses) or an address (bots try one password
+# on many usernames). Anyone who knows a username can lock it for 15 minutes; a
+# superuser can clear it sooner under Axes > Access attempts in the admin.
+AXES_FAILURE_LIMIT = 10
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
+AXES_RESET_ON_SUCCESS = True
+AXES_CLIENT_IP_CALLABLE = "church_erp.core.client_address.client_address"
 
 # --- CORS ---
 CORS_ALLOWED_ORIGINS = [
     os.environ.get("FRONTEND_URL", "http://localhost:3000"),
 ]
+
+# --- CSV export ---
+# A cell starting with "=" could run as a formula when opened in a spreadsheet.
+IMPORT_EXPORT_ESCAPE_FORMULAE_ON_EXPORT = True
 
 # --- REST Framework ---
 REST_FRAMEWORK = {
@@ -131,6 +154,18 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "church_erp.api.throttling.PublicReadThrottle",
+        "church_erp.api.throttling.StaffThrottle",
+        "church_erp.api.throttling.WriteThrottle",
+    ],
+    # The website builds and refreshes its pages from a few shared Vercel
+    # addresses, so "anon" must stay high enough for a full site build.
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "600/min",
+        "user": "600/min",
+        "write": "60/min",
+    },
 }
 
 # --- Celery ---

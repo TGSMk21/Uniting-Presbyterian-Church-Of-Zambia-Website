@@ -4,6 +4,7 @@ from io import StringIO
 
 from django.core.management import CommandError, call_command
 from django.test import TestCase
+from django.urls import reverse
 
 from church_erp.accounts.models import User
 from church_erp.core.models import Branch
@@ -49,7 +50,11 @@ class CreateBranchTests(TestCase):
         self.assertEqual(admin.email, "kabwe@example.org")
         self.assertIn("Branch Admin", admin.groups.values_list("name", flat=True))
         self.assertTrue(admin.check_password(printed_password(output)))
-        self.assertTrue(self.client.login(username="kabwe-admin", password=printed_password(output)))
+        response = self.client.post(
+            reverse("admin:login"),
+            {"username": "kabwe-admin", "password": printed_password(output), "next": "/"},
+        )
+        self.assertEqual(response.status_code, 302)
 
     def test_admin_username_and_email_can_be_chosen(self):
         create("--admin-username", "rev.banda", "--admin-email", "banda@example.org")

@@ -1,7 +1,43 @@
 from django.contrib import admin
+from django.contrib.admin.models import LogEntry
 
 from .admin_mixins import BranchScopedAdmin
 from .models import Branch, Minister, ServiceTime
+
+
+@admin.register(LogEntry)
+class ActivityLogAdmin(admin.ModelAdmin):
+    """Who changed what through the admin. Superusers can read it; nobody can edit it."""
+
+    list_display = ("action_time", "user", "action", "content_type", "object_repr")
+    list_filter = ("action_flag", "content_type")
+    search_fields = ("object_repr", "change_message", "user__username")
+    date_hierarchy = "action_time"
+    ordering = ("-action_time",)
+    list_select_related = ("user", "content_type")
+
+    @admin.display(description="Action", ordering="action_flag")
+    def action(self, entry):
+        if entry.is_addition():
+            return "Added"
+        if entry.is_change():
+            return "Changed"
+        return "Deleted"
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class MinisterInline(admin.TabularInline):

@@ -1,4 +1,6 @@
 from django.contrib import admin
+from import_export.admin import ExportMixin
+from import_export.formats.base_formats import CSV
 
 from .models import Branch
 
@@ -13,7 +15,7 @@ def _own_branch_choices(model, branch_id):
     return None
 
 
-class BranchScopedAdmin(admin.ModelAdmin):
+class BranchScopedAdmin(ExportMixin, admin.ModelAdmin):
     """Restricts the admin to the logged-in user's branch, unless the user
     is a superuser.
 
@@ -22,9 +24,18 @@ class BranchScopedAdmin(admin.ModelAdmin):
     through a FK).
     `branch_field`: name of this model's direct Branch FK, which is locked
     to the user's branch on add/change. Set to None when the model has no
-    direct Branch FK (e.g. Branch itself, DailyMessage)."""
+    direct Branch FK (e.g. Branch itself, DailyMessage).
+
+    Lists can be exported to CSV, limited to the same rows the user can see."""
     branch_lookup = 'branch_id'
     branch_field = 'branch'
+
+    def has_export_permission(self, request):
+        # The library's default lets any admin user export any model.
+        return self.has_view_permission(request)
+
+    def get_export_formats(self):
+        return [CSV]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
