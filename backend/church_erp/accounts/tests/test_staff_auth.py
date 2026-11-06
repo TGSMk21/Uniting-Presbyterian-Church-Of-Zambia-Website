@@ -5,11 +5,13 @@ from unittest.mock import patch
 from axes.models import AccessAttempt
 from django.conf import settings
 from django.core.cache import cache
+from django.core.management import call_command
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 
 from church_erp.accounts.auth_views import LoginThrottle
 from church_erp.accounts.models import User
@@ -224,6 +226,20 @@ class RefreshAndLogoutTests(AuthTestCase):
         response = self.server_post("auth-logout", {"refresh": tokens["refresh"]})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.refresh(tokens["refresh"]).status_code, 401)
+
+
+class ExpiredTokenCleanupTests(AuthTestCase):
+    def test_the_startup_cleanup_removes_only_expired_tokens(self):
+        # render.yaml runs this on every start, so a failure would stop the backend starting.
+        self.tokens()
+        self.tokens("editor")
+        self.assertEqual(OutstandingToken.objects.count(), 2)
+        expired = OutstandingToken.objects.get(user=self.other)
+        OutstandingToken.objects.filter(pk=expired.pk).update(
+            expires_at=timezone.now() - timedelta(days=1)
+        )
+        call_command("flushexpiredtokens", verbosity=0)
+        self.assertEqual(list(OutstandingToken.objects.values_list("user__username", flat=True)), ["manager"])
 
 
 class MeTests(AuthTestCase):
