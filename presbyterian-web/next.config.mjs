@@ -1,3 +1,5 @@
+import { securityHeaders } from "./Utilities/securityHeaders.mjs";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactCompiler: true,
@@ -6,6 +8,14 @@ const nextConfig = {
     return [
       { source: "/branches", destination: "/find-a-branch", permanent: true },
       { source: "/find-a-church", destination: "/find-a-branch", permanent: true },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: securityHeaders({ dev: process.env.NODE_ENV === "development" }),
+      },
     ];
   },
   images: {
