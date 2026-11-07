@@ -32,9 +32,11 @@ def video(video_id, title="A sermon", state="none", duration="PT45M10S",
 class FakeYouTube:
     """Stands in for the YouTube Data API at the HTTP layer."""
 
-    def __init__(self, videos=(), fail_with=None):
+    def __init__(self, videos=(), fail_with=None, empty_channel=False):
         self.videos = list(videos)
         self.fail_with = fail_with
+        # YouTube only creates a channel's uploads list with its first video.
+        self.empty_channel = empty_channel
         self.requests = []
 
     def handler(self, request):
@@ -45,6 +47,8 @@ class FakeYouTube:
             return httpx.Response(self.fail_with, json={"error": {"message": "boom"}})
         params = request.url.params
         if request.url.path.endswith("/playlistItems"):
+            if self.empty_channel:
+                return httpx.Response(404, json={"error": {"code": 404, "errors": [{"reason": "playlistNotFound"}]}})
             assert params["playlistId"] == "UU" + CHANNEL[2:]
             items = [{"contentDetails": {"videoId": v["id"]}} for v in self.videos]
             return httpx.Response(200, json={"items": items})
@@ -136,6 +140,16 @@ class SyncBranchTests(TestCase):
                 self.assertFalse(Sermon.objects.filter(video_id="v1").exists())
                 live.refresh_from_db()
                 self.assertTrue(live.is_live)
+
+    def test_a_channel_with_no_videos_yet_is_not_an_error(self):
+        result = self.sync(FakeYouTube(empty_channel=True))
+        self.assertEqual((result.created, result.live, result.error), (0, 0, ""))
+        self.assertFalse(Sermon.objects.filter(branch=self.branch).exists())
+
+    def test_other_not_found_answers_are_still_errors(self):
+        # Only YouTube's "this playlist doesn't exist" means an empty channel.
+        result = self.sync(FakeYouTube([video("v1")], fail_with=404))
+        self.assertTrue(result.error)
 
     def test_branch_without_channel_makes_no_requests(self):
         self.branch.youtube_channel_id = ""

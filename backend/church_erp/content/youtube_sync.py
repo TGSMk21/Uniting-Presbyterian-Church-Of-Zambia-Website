@@ -28,6 +28,13 @@ class SyncResult:
     error: str = ""
 
 
+def _reason(response):
+    try:
+        return response.json()["error"]["errors"][0]["reason"]
+    except (ValueError, KeyError, IndexError, TypeError):
+        return ""
+
+
 def fetch_recent_videos(client, channel_id, api_key):
     """Public videos among the channel's latest uploads, newest first."""
     uploads_playlist = "UU" + channel_id[2:]
@@ -37,6 +44,9 @@ def fetch_recent_videos(client, channel_id, api_key):
         "maxResults": RECENT_UPLOADS,
         "key": api_key,
     })
+    if playlist.status_code == 404 and _reason(playlist) == "playlistNotFound":
+        # YouTube only creates a channel's uploads list with its first video.
+        return []
     playlist.raise_for_status()
     video_ids = [item["contentDetails"]["videoId"] for item in playlist.json().get("items", [])]
     if not video_ids:
