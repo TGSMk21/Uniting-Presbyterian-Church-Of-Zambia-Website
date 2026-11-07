@@ -27,6 +27,7 @@ from church_erp.core.models import Branch, Minister, ServiceTime
 from .models import Activity, Project, Sermon
 from .page_content import can_edit
 from .page_images import delete_quietly, prepared_image
+from .staff_export import EXPORT_LIMIT, csv_response, export_filename
 
 VIDEO_ID = re.compile(r"[A-Za-z0-9_-]{11}")
 YOUTUBE_HOSTS = {
@@ -149,6 +150,21 @@ class BranchContentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(branch=self.branch)
+
+    # Left out of the CSV export, such as links that give access to private files.
+    export_exclude = ()
+
+    @action(detail=False)
+    def export(self, request, *args, **kwargs):
+        """The section's rows as a CSV file: the same rows the list shows, all pages."""
+        rows = self.filter_queryset(self.get_queryset())[:EXPORT_LIMIT]
+        serializer = self.get_serializer(rows, many=True)
+        fields = {
+            name: field for name, field in serializer.child.fields.items()
+            if not field.write_only and name not in self.export_exclude
+        }
+        section = self.basename.removeprefix("staff-")
+        return csv_response(serializer.data, fields, export_filename(self.branch, section))
 
 
 class StaffSermonViewSet(BranchContentViewSet):

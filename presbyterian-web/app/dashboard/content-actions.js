@@ -4,6 +4,7 @@ import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { imageFailure } from "@/Utilities/imageUpload.mjs";
 import { detailsFailure, detailsFromForm, detailsTags } from "@/Utilities/branchDetails.mjs";
+import { mediaEdits, mediaFailure } from "@/Utilities/mediaLibrary.mjs";
 import {
   apiPath,
   isBranchSlug,
@@ -111,4 +112,53 @@ export async function saveBranchDetails(branch, previousState, formData) {
   const failure = detailsFailure(status, data);
   if (failure.signedOut) redirect("/dashboard/login");
   return { saved: false, ...failure, values: typed };
+}
+
+// The media library. Files are only ever sent to the API, which keeps them private.
+function mediaPath(branch, id) {
+  return `/staff/${encodeURIComponent(branch)}/media/${id ? `${id}/` : ""}`;
+}
+
+function mediaAllowed(branch, id) {
+  return isBranchSlug(branch) && (id === null || isRowId(id));
+}
+
+export async function uploadMedia(branch, formData) {
+  const file = formData.get("file");
+  if (!mediaAllowed(branch, null) || !(file instanceof File)) return { error: "Please choose a file.", fields: {} };
+  const upload = new FormData();
+  upload.append("file", file, file.name || "file");
+  for (const key of ["title", "description", "tags"]) {
+    const value = String(formData.get(key) ?? "").trim();
+    if (value) upload.append(key, value);
+  }
+  const { status, data } = await staffRequest(mediaPath(branch), {
+    method: "POST",
+    formData: upload,
+    timeoutMs: UPLOAD_TIMEOUT_MS,
+  });
+  if (status === 201) return { id: data.id };
+  const failure = mediaFailure(status, data);
+  if (failure.signedOut) redirect("/dashboard/login");
+  return failure;
+}
+
+export async function saveMedia(branch, id, previousState, formData) {
+  const values = mediaEdits(formData);
+  if (!mediaAllowed(branch, id) || id === null) return { error: "This can't be saved.", fields: {}, values };
+  const { status, data } = await staffRequest(mediaPath(branch, id), { method: "PATCH", body: values });
+  if (status === 200) redirect(`/dashboard/content/${branch}/media?saved=changed`);
+  const failure = mediaFailure(status, data);
+  if (failure.signedOut) redirect("/dashboard/login");
+  return { ...failure, values };
+}
+
+export async function deleteMedia(branch, id) {
+  if (!mediaAllowed(branch, id) || id === null) return { error: "This can't be deleted." };
+  const { status } = await staffRequest(mediaPath(branch, id), { method: "DELETE" });
+  // Already gone counts as deleted.
+  if (status === 204 || status === 404) redirect(`/dashboard/content/${branch}/media?saved=deleted`);
+  if (status === 401) redirect("/dashboard/login");
+  if (status === 403) return { error: "You can't change this branch's files." };
+  return { error: "It couldn't be deleted right now. Please try again in a moment." };
 }

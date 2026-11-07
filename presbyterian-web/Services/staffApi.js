@@ -26,3 +26,23 @@ export async function staffFetch(path, { method = "GET", body, formData, access,
     return { status: 0, data: null };
   }
 }
+
+// A file from the API, such as a CSV export: { status, body, disposition }.
+export async function staffDownload(path, { access, forwardedFor, timeoutMs = 30000 } = {}) {
+  try {
+    const response = await fetch(`${API_BASE}${path}`, {
+      headers: serverHeaders({ secret: process.env.INTERNAL_API_SECRET, forwardedFor, access, json: false }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (!response.ok) return { status: response.status, body: null, disposition: null };
+    return {
+      status: response.status,
+      body: await response.arrayBuffer(),
+      disposition: response.headers.get("content-disposition"),
+    };
+  } catch (error) {
+    console.error(`Staff API download failed: ${path}`, error);
+    return { status: 0, body: null, disposition: null };
+  }
+}

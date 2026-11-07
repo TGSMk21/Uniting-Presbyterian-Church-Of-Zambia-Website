@@ -14,7 +14,9 @@ class IsBranchStaff(permissions.BasePermission):
         )
 
 
-class MediaAssetViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
+# Read-only: staff add and change files through the dashboard's own address in
+# staff_media.py, which checks what each file really is.
+class MediaAssetViewSet(BranchScopedViewSetMixin, viewsets.ReadOnlyModelViewSet):
     queryset = MediaAsset.objects.all()
     serializer_class = MediaAssetSerializer
     permission_classes = [IsBranchStaff]
@@ -26,7 +28,3 @@ class MediaAssetViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
         if user.is_superuser:
             return qs
         return qs.filter(branch_id=user.branch_id)
-
-    def perform_create(self, serializer):
-        self.check_branch(serializer)
-        serializer.save(uploaded_by=self.request.user)

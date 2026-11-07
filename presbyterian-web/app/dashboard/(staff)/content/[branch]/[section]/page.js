@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getBranch } from "@/Services/api";
 import { apiPath, isBranchSlug, isRowId, rowSummary, rowTitle, section } from "@/Utilities/branchContent.mjs";
+import { exportHref } from "@/Utilities/csvExport.mjs";
 import { requireStaff, staffRequest } from "../../../../session";
 
 const SAVED = { added: "Added.", changed: "Saved.", deleted: "Deleted." };
@@ -43,6 +44,9 @@ export default async function SectionList({ params, searchParams }) {
       <div className="dash-toolbar">
         <Link href={`${base}/new`} className="btn-primary" prefetch={false}>{spec.adding}</Link>
         <a href={publicHref} target="_blank" rel="noopener" className="dash-link">View on the website</a>
+        {rows.length > 0 && (
+          <a href={exportHref(branch, name)} className="dash-link" download>Download as a spreadsheet (CSV)</a>
+        )}
       </div>
 
       {rows.length === 0 ? (

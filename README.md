@@ -4,7 +4,7 @@ One platform for the national church site and a website for each branch. Branch 
 
 - **National site** (`/`): the welcome page, fellowships, nationwide events, a map to find a branch (`/find-a-branch`) and a contact page.
 - **Branch sites** (`/<branch-slug>`): home, about, sermons, projects and activities, and a contact form that reaches that branch.
-- **Staff dashboard** (`/dashboard`): staff sign-in, editing the wording and images of every page, and each branch's sermons, projects, activities, ministers, service times, daily messages, contact details and map position, being built up section by section.
+- **Staff dashboard** (`/dashboard`): staff sign-in, editing the wording and images of every page, and each branch's sermons, projects, activities, ministers, service times, daily messages, private media library, contact details and map position, with CSV export, being built up section by section.
 - **Admin** (Django admin): content, staff roles, media library and the record of who changed what.
 
 ## How it fits together

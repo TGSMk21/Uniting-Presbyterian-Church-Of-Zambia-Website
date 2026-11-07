@@ -202,6 +202,16 @@ Staff write their branch's daily messages at `/dashboard/content/<branch>/messag
 
 The public address, `/api/daily-messages/`, is read-only. It shows only published messages whose day has come, newest day first, so a message written ahead for next Sunday appears on Sunday. The home page shows the first one. It doesn't say who published a message. Phase 4's AI drafts will arrive in the same list as drafts for staff to check.
 
+### Media library
+
+Staff keep their branch's private files at `/dashboard/content/<branch>/media`, through `/api/staff/<branch>/media/`. A file's kind is decided by what's inside it, not its name. Accepted: photos (JPG, PNG, WebP), PDFs, Word, Excel and PowerPoint files, and MP3 or M4A recordings, up to 4 MB, which is the website host's limit. Photos are saved again as WebP, at most 2560 pixels on the longest side, which removes hidden details such as where they were taken; the website makes them smaller first. Videos are refused, since they belong on YouTube. Everything else is refused too.
+
+Files are stored under names the server chooses, in the private bucket, and the API only hands out signed links that expire after an hour. A file can't be replaced after it's added; its title, description and tags can change. Tags are typed with commas and shared by name across branches, but each branch only sees its own. Deleting a file deletes it from storage too. The list filters with `?type=image|document|audio`, `?tag=` and `?q=`, and `tags/` lists the branch's tags. The old `/api/media/` address is now read-only, because uploads there skipped these checks.
+
+### CSV export
+
+Every section exports at `/api/staff/<branch>/<section>/export/` (sermons, projects, activities, ministers, services, messages and media), with the same rows the person can manage there, all pages at once. The dashboard's lists link to it as "Download as a spreadsheet (CSV)". The media export follows the list's filters and leaves out the links to files. Cells that a spreadsheet would run as a formula start with an apostrophe, and the file starts with the marker Excel needs to read it as UTF-8.
+
 ### Branch details and map position
 
 `GET` and `PATCH /api/staff/<branch>/details/` change a branch's contact email (where its Contact form's messages go), phone, address and map position, at `/dashboard/content/<branch>/details`. Staff click the church on a map or paste the position from Google Maps. Positions outside Zambia, half a position, and "confirmed" without a position are refused; extra decimal places are rounded to six (about 10 cm). The name, web address and YouTube channel stay in the admin for superusers.
