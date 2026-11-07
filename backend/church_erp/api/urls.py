@@ -11,7 +11,7 @@ from church_erp.accounts.staff_people import StaffPeopleViewSet
 from church_erp.core.staff_branches import StaffBranchViewSet
 from church_erp.core.changes import StaffChangeViewSet
 from church_erp.finance.views import GivingRecordViewSet
-from church_erp.api.views import generate_daily_messages, sync_youtube
+from church_erp.api.views import backup_database, generate_daily_messages, sync_youtube
 from church_erp.content.page_content_views import PageContentPageView, PageContentView, PageImageView
 from church_erp.content.staff_content import (
     BranchDetailsView,
@@ -56,4 +56,5 @@ urlpatterns = [
     path('staff/<slug:scope>/details/', BranchDetailsView.as_view(), name='staff-branch-details'),
     path('tasks/sync-youtube/', sync_youtube, name='sync-youtube'),
     path('tasks/daily-messages/', generate_daily_messages, name='generate-daily-messages'),
+    path('tasks/backup/', backup_database, name='backup-database'),
 ]

@@ -107,6 +107,26 @@ On Render's free plan there is no shell, so run it from your own machine against
 
 If the site later moves to a paid Render plan, replace step 5 with a Render cron job running `python manage.py sync_youtube`, and move `migrate`/`setup_roles` into a pre-deploy command.
 
+## Backups
+
+Supabase's free plan keeps no backups you can restore yourself, so the site makes its own: each night, a copy of the whole database goes to the **private** R2 bucket as `backups/upcz-YYYY-MM-DD.json.gz` (the day in Zambia). The newest 30 are kept; older ones are deleted. Running it again the same day replaces that day's file. It's Django's own `dumpdata`, so Render needs no extra programs.
+
+**Schedule it** with a third cron-job.org job, the same way as the others: `POST https://<service>.onrender.com/api/tasks/backup/` with the `X-Sync-Token` header, once a day (for example at 02:00). A failed backup answers `500`, so turn on cron-job.org's failure emails for this job. By hand: `python manage.py backup_database`.
+
+**What's in it:** everything except what Django makes again by itself (content types, permissions, sessions, expired-token lists) and the AI's sermon passages, which the hourly daily-messages job rebuilds for any sermon that has none. Uploaded photos and files aren't in it: they're already kept in R2. The file includes password hashes and two-step login secrets, so it only ever goes to the private bucket; anyone with access to that bucket can read it.
+
+**To restore:**
+1. In Cloudflare, open R2, the private bucket, `backups/`, and download the day you want.
+2. Make an empty Postgres database (a new Supabase project, or a reset of the current one) and run, on your computer with `DATABASE_URL` pointing at it:
+   ```bash
+   python manage.py migrate
+   python manage.py loaddata upcz-YYYY-MM-DD.json.gz
+   ```
+   (use the same settings as `createsuperuser` in "Deploying to Render").
+3. If it's a new database, set Render's `DATABASE_URL` to it and redeploy. Within the hour, the daily-messages job reads the written sermons again.
+
+Each backup runs inside one web request (Render allows 60 seconds). That's plenty for this site's data for a long time; if the database ever grows past tens of megabytes, move to `pg_dump` on a paid plan.
+
 ## Storing uploads (Cloudflare R2)
 
 Render's disk is wiped on every deploy, so production uploads go to Cloudflare R2. There are two buckets because R2 makes a bucket public as a whole:

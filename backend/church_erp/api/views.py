@@ -1,4 +1,5 @@
 import hmac
+import logging
 
 from django.conf import settings
 from django.http import Http404, HttpResponseForbidden, JsonResponse
@@ -7,6 +8,9 @@ from django.views.decorators.http import require_POST
 
 from church_erp.ai_messages.generation import run_daily
 from church_erp.content.tasks import sync_youtube_sermons
+from church_erp.core.backups import make_backup
+
+logger = logging.getLogger(__name__)
 
 # The website host stops a request after 60 seconds; stop well before.
 DAILY_MESSAGES_SECONDS = 25
@@ -40,3 +44,17 @@ def generate_daily_messages(request):
     if not _token_ok(request):
         return HttpResponseForbidden()
     return JsonResponse(run_daily(budget_seconds=DAILY_MESSAGES_SECONDS))
+
+
+@csrf_exempt
+@require_POST
+def backup_database(request):
+    """Save tonight's database backup to the private bucket. Call it once a night.
+    A failure answers 500, so the scheduler reports it."""
+    if not _token_ok(request):
+        return HttpResponseForbidden()
+    try:
+        return JsonResponse(make_backup())
+    except Exception:
+        logger.exception("The database backup failed")
+        return JsonResponse({"error": "The backup failed; see the server's logs."}, status=500)
