@@ -483,6 +483,55 @@ Most page wording is hard-coded today: on the national site, the landing page (h
 
 ---
 
+## Phase 7 — Ready for the mobile app: access control and a better dashboard
+
+**Goal (2026-11-07, set by the owner):** before the mobile app is started, bring what exists up to a finished standard in two areas: (1) who can get an account and what each person can reach, and (2) the dashboard's look and organisation. The mobile app will use the same API and the same rules, so both must be right first.
+
+### What already exists (audited 2026-11-07)
+- **Roles** on `User.role`: `super_admin` (shown as National Admin: national pages), `branch_admin` (one branch: content, pages, its content editors), `content_editor` (one branch: content and pages), `finance_admin` (unused). Superusers reach everything.
+- **Branch scoping is enforced by the API**, not by hiding buttons: every staff address checks the person's branch and role (`content/page_content.py: can_edit`, `accounts/staff_people.py`), and `api/tests/test_access_matrix.py` tries every staff address as people who must be refused.
+- **Accounts are made by hand:** a superuser (or a branch admin, for content editors) creates the account in the dashboard and passes on a one-time temporary password, which must be changed at first sign-in. Two-step login is required for superusers, national admins and branch admins.
+- **Gaps:** (a) a `Minister` (the public profile) and a `User` (a login) aren't linked, so the system doesn't know which account is which minister; (b) nobody can ask for access; (c) there's no way to send a "set your password" link, because email (Resend) still sends only from its sandbox until a domain is verified (Task 1.1).
+
+### Task 7.1 — Ministers' accounts belong to their branch
+- [ ] **STOP — decisions (owner):** see "Decisions" below (D1–D4).
+- [ ] Link a `User` to at most one `Minister` (`Minister.account`, one-to-one, optional), with the same branch enforced on both sides. A minister's account gets the **Branch Admin** role for that branch (D1).
+- [ ] Superusers stay for the developer only. Check the live accounts and turn any non-developer superuser into a branch-scoped role (owner's decision for each account).
+- [ ] Tests: a minister reaches only their own branch through every staff address (extend the access matrix with a linked minister account); linking a minister to an account of another branch is refused.
+
+### Task 7.2 — Asking for access, approval, and setting a password
+1. **Request form** at `/dashboard/request-access` (public, linked from the sign-in page): full name, email, phone, branch (from the list), what they are (minister or other staff), optional note. Protected like the contact form: rate limit by address, a hidden honeypot field, length checks. The answer is always the same ("We've received your request"), so the form can't be used to discover who has an account.
+2. **`AccessRequest` model**: those details, status (waiting, approved, turned down), who decided and when. A request never creates an account by itself.
+3. **Review in the dashboard** (`/dashboard/requests`): superusers see every request (and branch admins their own branch's staff requests, if D2 says so). Approving means choosing the branch and role, and for a minister, linking to their existing minister profile or making a new one. Turning down keeps the request, with an optional reason.
+4. **Set-password link**: approval creates the account with no usable password and a **single-use link that expires after 72 hours** (a signed token, like Django's own password reset, stored only as a hash). The person opens it, chooses a password (same strength rules as now), then sets up two-step login if their role needs it.
+5. **Delivering the link (D3):** by email once Resend's domain is verified; until then, the dashboard shows the link to the approver once, with a "Copy" button, to send by WhatsApp or SMS. Either way the link is never stored or logged in readable form.
+6. Every step goes in the change history (`StaffChange`): requested, approved or turned down, link made, password set.
+7. The same link replaces today's typed temporary passwords for new accounts and resets (a superuser can make a new link if one expires or is lost).
+8. Tests first for each step, the access matrix extended to the new addresses, mutation checks, and a browser walk of the whole journey: request, approve, open link, set password, set up two-step login, sign in, reach only their branch.
+
+### Task 7.3 — Dashboard redesign
+**Aim:** calm, professional and clearly organised; built around what staff actually do, not decoration. Avoid the things that make interfaces look machine-made: gradients, glowing shadows, emoji, rounded "cards for everything", vague headings, and filler text.
+1. **Design foundation first** (one shared stylesheet, no new framework): a type scale (the site's serif for page titles only, Inter for everything else), a 4-pixel spacing scale, a restrained palette from the church's navy plus one accent and clear status colours (draft, published, turned down, error), and one set of components: buttons, form fields, tables, status labels, page header, empty states, confirmation dialogs (replacing the browser's own pop-ups), and notices that fade. Icons from `lucide-react` (already installed), used sparingly.
+2. **Layout:** a left sidebar on computers (Overview, Branch content, Daily messages, Written sermons, Pages, Media, Staff, Requests, History; each shown only to people who can use it), a branch name at the top, and a bottom menu or drawer on phones. Superusers get a branch switcher instead of a list of every branch's links.
+3. **Overview becomes a work list:** what needs attention now (AI drafts to check, access requests waiting, sermons still being read, a daily message missing for tomorrow), with counts and direct links, then recent changes.
+4. **Lists become tables** on computers (sortable title, date, status, who), turning into stacked rows on phones; filters and search on the long lists; consistent pagination.
+5. **Forms:** grouped sections with short headings, help text under the field, a save bar that stays in view, clear unsaved-changes warnings, and the same success and error messages everywhere.
+6. **Daily messages get a proper review screen:** the draft as it will look on the website next to the boxes, the source sermons, and Publish or Turn down buttons instead of a status drop-down.
+7. **Order of work:** foundation and layout, then Overview, then Daily messages and Written sermons (the pilot), then the remaining sections. Screenshots of each step at computer and phone width go to the owner for approval before moving on; the first screen is a mock-up for approval before anything is built.
+8. **Standards:** works from 375 pixels wide, keyboard use and visible focus, colour contrast at WCAG AA, plain language kept, no change to what the API allows. Existing tests stay green, and the dashboard guard tests are extended for any new pages.
+
+### Task 7.4 — Ready for the app
+- [ ] Write down which API addresses the app will use and how it will sign in. Today staff sign-in only answers the website's server (`INTERNAL_API_SECRET`), so the app needs its own sign-in route with the same lockout and two-step rules. Decide this when the app's scope is set; nothing in 7.1–7.3 should depend on the website alone.
+
+### Decisions needed before building (owner)
+- **D1 — What a minister's account can do.** Recommendation: Branch Admin of their branch (content, pages, daily messages, written sermons, and adding content editors for their branch). Alternative: a narrower "Minister" role.
+- **D2 — Who approves.** Recommendation: the owner approves ministers; each branch's minister approves requests from their own branch's other staff.
+- **D3 — How the set-password link is delivered** until a Resend sending domain is verified. Recommendation: copy-and-send by WhatsApp or SMS from the dashboard now; switch to email when the domain is verified.
+- **D4 — Two-step login for ministers.** It's required for Branch Admins today (an authenticator app on their phone). Recommendation: keep it, with a short illustrated guide; the alternative is to require it only for superusers and national admins.
+- **D5 — Dashboard look.** Approve a first mock-up (Overview and the daily message review) before the redesign is built.
+
+---
+
 ## Appendix A — Environment Variables Reference
 
 **Backend (`backend/.env`):**
