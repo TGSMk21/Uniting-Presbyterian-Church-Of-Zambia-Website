@@ -75,7 +75,13 @@ export default function ChurchMap({ branches, selectedSlug, userLocation, onSele
     import("leaflet").then(({ default: L }) => {
       if (cancelled || mapRef.current || !containerRef.current) return;
       leafletRef.current = L;
-      mapRef.current = L.map(containerRef.current).setView(ZAMBIA_CENTRE, 6);
+      // Scrolling the page past the map shouldn't zoom it. Once someone clicks
+      // the map to use it, the mouse wheel zooms until they click away.
+      // Panning stays on, even on phones: this map is for looking around.
+      const map = L.map(containerRef.current, { scrollWheelZoom: false }).setView(ZAMBIA_CENTRE, 6);
+      mapRef.current = map;
+      map.on("focus", () => map.scrollWheelZoom.enable());
+      map.on("blur", () => map.scrollWheelZoom.disable());
       mapRef.current.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,

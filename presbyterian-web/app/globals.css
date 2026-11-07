@@ -2486,6 +2486,14 @@ body::after {
   height: 680px; width: 100%; border-radius: 16px; border: 1px solid var(--line);
   isolation: isolate; background: var(--sand);
 }
+/* Zoom buttons big enough to tap. Beats Leaflet's own .leaflet-touch .leaflet-bar a, which sets 30px. */
+.loc-map .leaflet-bar.leaflet-control-zoom a,
+.branch-map-canvas .leaflet-bar.leaflet-control-zoom a {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  font-size: 22px;
+}
 @media (max-width: 900px) {
   .loc-section { padding: 2rem 1rem 3rem; }
   .loc-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "search" "map" "list"; grid-template-rows: none; }
