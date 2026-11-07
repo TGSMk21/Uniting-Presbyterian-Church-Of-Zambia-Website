@@ -28,6 +28,13 @@ class SyncResult:
     error: str = ""
 
 
+def _safe_reason(exc):
+    """What went wrong, without the request's address (which holds the API key)."""
+    if isinstance(exc, httpx.HTTPStatusError):
+        return f"YouTube answered {exc.response.status_code}"
+    return exc.__class__.__name__
+
+
 def _reason(response):
     try:
         return response.json()["error"]["errors"][0]["reason"]
@@ -80,8 +87,10 @@ def sync_branch(branch, client=None):
     try:
         videos = fetch_recent_videos(client, channel_id, api_key)
     except (httpx.HTTPError, KeyError, ValueError) as exc:
-        logger.warning("YouTube sync failed for branch %s: %s", branch.slug, exc)
-        return SyncResult(error=str(exc) or exc.__class__.__name__)
+        # Never the error's own text: httpx puts the full address, API key included, in it.
+        reason = _safe_reason(exc)
+        logger.warning("YouTube sync failed for branch %s: %s", branch.slug, reason)
+        return SyncResult(error=reason)
     finally:
         if owns_client:
             client.close()

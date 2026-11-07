@@ -77,5 +77,7 @@ LOGGING = {
     "root": {"handlers": ["console"], "level": "INFO"},
     "loggers": {
         "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        # httpx logs each request's full address at INFO, and the YouTube API key is part of it.
+        "httpx": {"handlers": ["console"], "level": "WARNING", "propagate": False},
     },
 }

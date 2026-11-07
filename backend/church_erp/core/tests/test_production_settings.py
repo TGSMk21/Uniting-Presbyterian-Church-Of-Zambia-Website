@@ -47,6 +47,7 @@ print(json.dumps({
     "STATICFILES_BACKEND": s.STORAGES["staticfiles"]["BACKEND"],
     "STORAGES": {k: v for k, v in s.STORAGES.items() if k != "staticfiles"},
     "ROOT_LOG_HANDLERS": s.LOGGING["root"]["handlers"],
+    "HTTPX_LOG_LEVEL": s.LOGGING["loggers"].get("httpx", {}).get("level"),
 }, default=str))
 """
 
@@ -68,6 +69,10 @@ def settings_with(**overrides):
 
 
 class ProductionSettingsTests(SimpleTestCase):
+    def test_web_request_lines_with_api_keys_in_them_are_not_logged(self):
+        # httpx logs every request's full address at INFO, and the YouTube key is part of it.
+        self.assertEqual(settings_with()["HTTPX_LOG_LEVEL"], "WARNING")
+
     def test_debug_is_off_even_if_env_says_otherwise(self):
         self.assertFalse(settings_with(DJANGO_DEBUG="True")["DEBUG"])
 

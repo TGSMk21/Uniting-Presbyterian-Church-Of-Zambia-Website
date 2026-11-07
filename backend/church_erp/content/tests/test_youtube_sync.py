@@ -171,6 +171,17 @@ class SyncBranchTests(TestCase):
         self.assertTrue(result.error)
         self.assertEqual(youtube.requests, [])
 
+    def test_the_key_never_appears_in_errors_or_logs(self):
+        # The sync's answer goes back to cron-job.org, and its logs to Render.
+        for failure in (500, 403, 404, "timeout"):
+            with self.subTest(failure=failure):
+                with self.assertLogs("church_erp.content.youtube_sync", level="WARNING") as logs:
+                    result = self.sync(FakeYouTube([video("v1")], fail_with=failure))
+                self.assertTrue(result.error)
+                self.assertNotIn("test-key", result.error)
+                self.assertNotIn("test-key", "\n".join(logs.output))
+        self.assertEqual(self.sync(FakeYouTube(fail_with=403)).error, "YouTube answered 403")
+
     def test_api_key_is_sent(self):
         youtube = FakeYouTube([video("v1")])
         self.sync(youtube)
