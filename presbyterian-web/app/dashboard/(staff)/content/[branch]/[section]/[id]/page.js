@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import ContentForm from "@/components/DashboardComponents/content-form";
-import { apiPath, formValues, isBranchSlug, isRowId, section } from "@/Utilities/branchContent.mjs";
+import MinisterPhoto from "@/components/DashboardComponents/minister-photo";
+import { apiPath, formValues, isBranchSlug, isRowId, rowTitle, section } from "@/Utilities/branchContent.mjs";
 import { requireStaff, staffRequest } from "../../../../../session";
 
 export default async function EditRow({ params }) {
@@ -20,7 +21,7 @@ export default async function EditRow({ params }) {
       <Link href={`/dashboard/content/${branch}/${name}`} className="dash-link" prefetch={false}>
         ← All {spec.label.toLowerCase()}
       </Link>
-      <h1 className="dash-heading dash-heading-spaced">{data.title}</h1>
+      <h1 className="dash-heading dash-heading-spaced">{rowTitle(data)}</h1>
       {name === "sermons" && data.video_id && (
         <p className="dash-text">
           {data.is_live ? "Live on YouTube now. " : ""}
@@ -29,6 +30,9 @@ export default async function EditRow({ params }) {
           </a>
           . The video itself can&apos;t be changed here.
         </p>
+      )}
+      {name === "ministers" && (
+        <MinisterPhoto branch={branch} id={id} value={data.photo || ""} viewHref={spec.publicPath(branch)} />
       )}
       <ContentForm branch={branch} name={name} id={id} values={formValues(name, data)} />
     </main>

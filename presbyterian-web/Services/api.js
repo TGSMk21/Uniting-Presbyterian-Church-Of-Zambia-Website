@@ -1,5 +1,5 @@
 import { branchTag, contentTag } from '@/Utilities/pageContent.mjs'
-import { UPCOMING_ACTIVITIES_TAG, sectionTag } from '@/Utilities/branchContent.mjs'
+import { BRANCH_LIST_TAG, UPCOMING_ACTIVITIES_TAG, sectionTag } from '@/Utilities/branchContent.mjs'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
@@ -25,8 +25,9 @@ async function fetchAPI(endpoint, options = {}) {
 }
 
 // --- Branches ---
+// The dashboard clears the tag when staff change service times.
 export async function getBranches() {
-  return fetchAPI(`/branches/`)
+  return fetchAPI(`/branches/`, { next: { revalidate: 3600, tags: [BRANCH_LIST_TAG] } })
 }
 
 export async function getBranch(slug) {
@@ -72,7 +73,7 @@ export async function getUpcomingActivities() {
 }
 
 export async function getMinisters(branch) {
-  return fetchAPI(`/ministers/?branch=${branch}`)
+  return fetchAPI(`/ministers/?branch=${branch}`, cachedFor(sectionTag('ministers', branch)))
 }
 
 export async function getDailyMessages(branch) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { savePageContent } from "@/app/dashboard/actions";
+import { removePageImage, savePageContent, uploadPageImage } from "@/app/dashboard/actions";
 import ImageField from "./image-field";
 
 const HELP = {
@@ -55,11 +55,11 @@ export default function PageEditor({ scope, page, sections, values, viewHref }) 
             field.type === "image" ? (
               <ImageField
                 key={field.key}
-                scope={scope}
-                page={page}
                 field={field}
                 value={values[field.key]}
                 viewHref={viewHref}
+                upload={(form) => uploadPageImage(scope, page, field.key, form)}
+                remove={() => removePageImage(scope, page, field.key)}
               />
             ) : (
               <Field

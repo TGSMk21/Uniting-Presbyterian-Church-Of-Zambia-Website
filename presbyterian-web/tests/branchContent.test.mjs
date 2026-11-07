@@ -4,6 +4,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 import {
+  BRANCH_LIST_TAG,
+  MINISTER_PHOTO,
+  NEW_DEFAULTS,
   SECTIONS,
   UPCOMING_ACTIVITIES_TAG,
   apiPath,
@@ -12,6 +15,7 @@ import {
   isRowId,
   manageableBranches,
   rowSummary,
+  rowTitle,
   saveFailure,
   section,
   sectionTag,
@@ -26,15 +30,18 @@ function form(entries) {
   return data;
 }
 
-test("only the three sections exist", () => {
-  assert.deepEqual(Object.keys(SECTIONS), ["sermons", "projects", "activities"]);
+test("only these sections exist", () => {
+  assert.deepEqual(Object.keys(SECTIONS), ["sermons", "projects", "activities", "ministers", "services"]);
+  assert.deepEqual(Object.keys(NEW_DEFAULTS), Object.keys(SECTIONS));
   assert.equal(section("sermons"), SECTIONS.sermons);
   assert.equal(section("toString"), undefined);
   assert.equal(section("pages"), undefined);
 });
 
 test("buttons read properly", () => {
-  assert.deepEqual(Object.values(SECTIONS).map((s) => s.adding), ["Add a sermon", "Add a project", "Add an activity"]);
+  assert.deepEqual(Object.values(SECTIONS).map((s) => s.adding), [
+    "Add a sermon", "Add a project", "Add an activity", "Add a minister", "Add a service time",
+  ]);
 });
 
 test("sermons can't be deleted, because YouTube would bring them back", () => {
@@ -53,6 +60,15 @@ test("form limits match the API's", () => {
   assert.equal(limits.sermons.description, 5000);
   assert.equal(limits.projects.progress, 100);
   assert.equal(limits.activities.location, 300);
+  assert.equal(limits.ministers.name, 200);
+  assert.equal(limits.ministers.bio, 5000);
+  assert.equal(limits.ministers.order, 999);
+  assert.equal(limits.services.day, 50);
+  assert.equal(limits.services.title, 200);
+  assert.equal(limits.services.location, 200);
+  assert.equal(limits.services.details, 200);
+  assert.equal(limits.services.order, 999);
+  assert.equal(MINISTER_PHOTO.max_side, 800);
 });
 
 test("only safe pieces go into API addresses", () => {
@@ -74,16 +90,23 @@ test("saving clears the public copy, and activities clear the national list too"
   assert.equal(sectionTag("sermons", "chilanga"), "sermons:chilanga");
   assert.deepEqual(tagsToClear("projects", "chilanga"), ["projects:chilanga"]);
   assert.deepEqual(tagsToClear("activities", "chilanga"), ["activities:chilanga", UPCOMING_ACTIVITIES_TAG]);
+  assert.deepEqual(tagsToClear("ministers", "chilanga"), ["ministers:chilanga"]);
+  // Service times come with the branch, and with the list in Find a Branch.
+  assert.deepEqual(tagsToClear("services", "chilanga"), ["branch:chilanga", BRANCH_LIST_TAG]);
 });
 
 test("the public site's requests carry the tags the dashboard clears", () => {
   const source = readFileSync(new URL("../Services/api.js", import.meta.url), "utf8");
-  for (const fn of ["getSermons", "getSermonByVideoId", "getProjects", "getActivities", "getUpcomingActivities"]) {
+  for (const fn of [
+    "getSermons", "getSermonByVideoId", "getProjects", "getActivities", "getUpcomingActivities", "getMinisters",
+    "getBranches", "getBranch",
+  ]) {
     const body = source.slice(source.indexOf(`function ${fn}(`)).split("\n}")[0];
     assert.match(body, /tags:|cachedFor\(/, `${fn} has no cache tag`);
   }
   assert.match(source, /UPCOMING_ACTIVITIES_TAG/);
-  for (const name of ["sermons", "projects", "activities"]) {
+  assert.match(source, /tags: \[BRANCH_LIST_TAG\]/);
+  for (const name of ["sermons", "projects", "activities", "ministers"]) {
     assert.match(source, new RegExp(`sectionTag\\(['"]${name}['"]`), `${name} tag missing`);
   }
 });
@@ -161,6 +184,22 @@ test("list rows say when, and how far along", () => {
     rowSummary("activities", { date: "2026-12-20", start_time: "08:00:00", end_time: "17:00:00", location: "Hall" }),
     "Sun, 20 Dec 2026 · 08:00–17:00 · Hall",
   );
+});
+
+test("ministers and service times are listed plainly", () => {
+  assert.equal(rowTitle({ name: "Banda" }), "Banda");
+  assert.equal(rowTitle({ title: "Roof" }), "Roof");
+  assert.equal(rowSummary("ministers", { order: 0, photo: null }), "Order 0 · No photo yet");
+  assert.equal(rowSummary("ministers", { order: 2, photo: "https://x/y.webp" }), "Order 2 · Has a photo");
+  assert.equal(
+    rowSummary("services", { day: "Every Sunday", start_time: "09:00:00", end_time: "11:00:00", location: "" }),
+    "Every Sunday · 09:00–11:00",
+  );
+});
+
+test("a minister's photo can't be typed into the form", () => {
+  assert.equal(SECTIONS.ministers.fields.some(({ key }) => key === "photo"), false);
+  assert.equal("photo" in valuesFromForm("ministers", form({ name: "Banda", photo: "x.webp", order: "0" }), { isNew: false }), false);
 });
 
 test("people manage only the branches the API lets them", () => {

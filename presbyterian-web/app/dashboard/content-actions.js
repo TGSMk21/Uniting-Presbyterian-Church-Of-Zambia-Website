@@ -2,6 +2,7 @@
 
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
+import { imageFailure } from "@/Utilities/imageUpload.mjs";
 import {
   apiPath,
   isBranchSlug,
@@ -43,10 +44,45 @@ export async function deleteBranchContent(branch, name, id) {
   if (!allowed(branch, name, id) || id === null || !section(name).canDelete) {
     return { error: "This can't be deleted." };
   }
-  const { status } = await staffRequest(apiPath(branch, name, id), { method: "DELETE" });
+  const { status, data } = await staffRequest(apiPath(branch, name, id), { method: "DELETE" });
   // Already gone counts as deleted.
   if (status === 204 || status === 404) done(branch, name, "deleted");
   if (status === 401) redirect("/dashboard/login");
   if (status === 403) return { error: "You can't change this branch's content." };
+  // Such as a minister who has daily messages.
+  if (status === 409 && data?.detail) return { error: data.detail };
   return { error: "It couldn't be deleted right now. Please try again in a moment." };
+}
+
+// The API re-saves the photo and sends it to storage, and may be waking from sleep.
+const UPLOAD_TIMEOUT_MS = 45000;
+
+function photoOutcome(branch, { status, data }) {
+  if (status === 200) {
+    for (const tag of tagsToClear("ministers", branch)) updateTag(tag);
+    return { url: data.url };
+  }
+  if (status === 403) return { error: "You can't change this branch's content." };
+  if (status === 404) return { error: "This minister no longer exists." };
+  return imageFailure(status, data);
+}
+
+function photoPath(branch, id) {
+  return `${apiPath(branch, "ministers", id)}photo/`;
+}
+
+export async function uploadMinisterPhoto(branch, id, formData) {
+  const file = formData.get("image");
+  if (!allowed(branch, "ministers", id) || id === null || !(file instanceof File)) return imageFailure(0);
+  const upload = new FormData();
+  upload.append("image", file);
+  return photoOutcome(
+    branch,
+    await staffRequest(photoPath(branch, id), { method: "POST", formData: upload, timeoutMs: UPLOAD_TIMEOUT_MS }),
+  );
+}
+
+export async function removeMinisterPhoto(branch, id) {
+  if (!allowed(branch, "ministers", id) || id === null) return imageFailure(0);
+  return photoOutcome(branch, await staffRequest(photoPath(branch, id), { method: "DELETE" }));
 }

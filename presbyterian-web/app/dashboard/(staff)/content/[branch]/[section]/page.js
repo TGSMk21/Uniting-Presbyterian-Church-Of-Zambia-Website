@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getBranch } from "@/Services/api";
-import { apiPath, isBranchSlug, isRowId, rowSummary, section } from "@/Utilities/branchContent.mjs";
+import { apiPath, isBranchSlug, isRowId, rowSummary, rowTitle, section } from "@/Utilities/branchContent.mjs";
 import { requireStaff, staffRequest } from "../../../../session";
 
 const SAVED = { added: "Added.", changed: "Saved.", deleted: "Deleted." };
@@ -52,7 +52,7 @@ export default async function SectionList({ params, searchParams }) {
           {rows.map((row) => (
             <li key={row.id}>
               <Link href={`${base}/${row.id}`} prefetch={false}>
-                <span className="dash-row-title">{row.title}</span>
+                <span className="dash-row-title">{rowTitle(row)}</span>
                 <span className="dash-row-meta">
                   {rowSummary(name, row)}
                   {row.is_live && <span className="dash-badge dash-badge-live">Live now</span>}

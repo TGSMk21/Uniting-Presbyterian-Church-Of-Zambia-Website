@@ -1,12 +1,13 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { removePageImage, uploadPageImage } from "@/app/dashboard/actions";
 import { IMAGE_TYPES, shrinkImage } from "@/Utilities/imageUpload.mjs";
 
 const TRY_AGAIN = "The photo couldn't be saved right now. Please try again in a moment.";
 
-export default function ImageField({ scope, page, field, value, viewHref }) {
+// `upload(formData)` and `remove()` save the change: page images and minister photos
+// each pass their own.
+export default function ImageField({ field, value, viewHref, upload, remove }) {
   const [custom, setCustom] = useState(value || "");
   const [chosen, setChosen] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -62,7 +63,7 @@ export default function ImageField({ scope, page, field, value, viewHref }) {
     const form = new FormData();
     form.append("image", chosen.blob, "photo");
     run(
-      () => uploadPageImage(scope, page, field.key, form),
+      () => upload(form),
       (result) => {
         setCustom(result.url);
         dropChosen();
@@ -72,7 +73,7 @@ export default function ImageField({ scope, page, field, value, viewHref }) {
 
   function removeCustom() {
     run(
-      () => removePageImage(scope, page, field.key),
+      () => remove(),
       () => setCustom(""),
     );
   }

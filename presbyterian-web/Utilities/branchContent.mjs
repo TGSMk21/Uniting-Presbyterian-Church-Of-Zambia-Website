@@ -1,9 +1,17 @@
-// Each branch's sermons, projects and activities, managed from the dashboard
-// (AGENT_EXECUTION_PLAN.md, Task 5.3). The API checks everything again; this file
-// only describes the forms and lists.
+// Each branch's sermons, projects, activities, ministers and service times, managed
+// from the dashboard (AGENT_EXECUTION_PLAN.md, Task 5.3). The API checks everything
+// again; this file only describes the forms and lists.
+import { branchTag } from "./pageContent.mjs";
 
 const LONG_TEXT = 5000;
 const TIME_ZONE = "Africa/Lusaka";
+const ORDER = {
+  key: "order", label: "Order on the page", type: "number", min: 0, max: 999, required: true,
+  help: "Lower numbers come first.",
+};
+
+// Uploaded on its own, like page photos.
+export const MINISTER_PHOTO = { key: "photo", label: "Photo", default: "", max_side: 800 };
 
 export const PROJECT_STATUSES = [
   { value: "PENDING", label: "Not started" },
@@ -62,12 +70,46 @@ export const SECTIONS = {
       { key: "details", label: "Details", type: "textarea", max: LONG_TEXT, required: true },
     ],
   },
+  ministers: {
+    label: "Ministers",
+    singular: "minister",
+    adding: "Add a minister",
+    intro: "The first minister in this list is shown on your About page. Open a minister to add their photo.",
+    canDelete: true,
+    publicPath: (branch) => `/${branch}/about`,
+    fields: [
+      { key: "name", label: "Name", type: "text", max: 200, required: true,
+        help: "Without “Rev.”, which the website adds." },
+      { key: "bio", label: "About them", type: "textarea", max: LONG_TEXT,
+        help: "Leave an empty line between paragraphs." },
+      { ...ORDER, help: "Lower numbers come first. Give the minister for your About page the lowest." },
+    ],
+  },
+  services: {
+    label: "Service times",
+    singular: "service time",
+    adding: "Add a service time",
+    intro: "Service times show on your home page, your About page and Find a Branch.",
+    canDelete: true,
+    publicPath: (branch) => `/${branch}#schedule`,
+    fields: [
+      { key: "day", label: "Day", type: "text", max: 50, required: true, help: "For example Every Sunday." },
+      { key: "title", label: "Name of the service", type: "text", max: 200, required: true },
+      { key: "start_time", label: "Starts", type: "time", required: true },
+      { key: "end_time", label: "Ends", type: "time", required: true },
+      { key: "location", label: "Where", type: "text", max: 200 },
+      { key: "details", label: "Details", type: "text", max: 200, help: "For example Worship · Word · Communion." },
+      ORDER,
+    ],
+  },
 };
 
 export const NEW_DEFAULTS = {
   sermons: {},
   projects: { status: "PENDING", progress: "0" },
   activities: {},
+  ministers: { order: "0" },
+  services: { order: "0" },
 };
 
 export function section(name) {
@@ -93,8 +135,11 @@ export function sectionTag(name, branch) {
 }
 
 export const UPCOMING_ACTIVITIES_TAG = "activities:upcoming";
+export const BRANCH_LIST_TAG = "branches";
 
 export function tagsToClear(name, branch) {
+  // Service times come with the branch itself, and with the list in Find a Branch.
+  if (name === "services") return [branchTag(branch), BRANCH_LIST_TAG];
   const tags = [sectionTag(name, branch)];
   if (name === "activities") tags.push(UPCOMING_ACTIVITIES_TAG);
   return tags;
@@ -167,6 +212,10 @@ function formatted(date, options) {
   return new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, ...options }).format(date);
 }
 
+export function rowTitle(row) {
+  return row.title ?? row.name ?? "";
+}
+
 // What the list shows under each title.
 export function rowSummary(name, row) {
   if (name === "sermons") {
@@ -176,6 +225,11 @@ export function rowSummary(name, row) {
   if (name === "projects") {
     const status = PROJECT_STATUSES.find(({ value }) => value === row.status)?.label || row.status;
     return `${status} · ${row.progress}%`;
+  }
+  if (name === "ministers") return `Order ${row.order} · ${row.photo ? "Has a photo" : "No photo yet"}`;
+  if (name === "services") {
+    const times = [row.start_time, row.end_time].filter(Boolean).map((t) => t.slice(0, 5)).join("–");
+    return [row.day, times, row.location].filter(Boolean).join(" · ");
   }
   // A date on its own is a calendar day, so it's read as such rather than as a moment.
   const day = row.date ? formatted(new Date(`${row.date}T12:00:00Z`), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
