@@ -51,22 +51,7 @@ class PublicReadTests(ApiScopingTestCase):
 # its own tests in content/tests/test_staff_content.py.
 
 
-class MinisterApiTests(ApiScopingTestCase):
-    def test_non_staff_user_cannot_create_ministers(self):
-        member = User.objects.create_user("member", branch=self.branch_a)
-        self.as_user(member)
-        response = self.client.post(
-            reverse("minister-list"), {"branch": self.branch_a.pk, "name": "Fake"}, format="json"
-        )
-        self.assertEqual(response.status_code, 403)
-        self.assertFalse(Minister.objects.filter(name="Fake").exists())
-
-    def test_staff_cannot_edit_other_branch_minister(self):
-        self.as_user(self.staff_a)
-        response = self.client.patch(
-            reverse("minister-detail", args=[self.b["minister"].pk]), {"name": "X"}, format="json"
-        )
-        self.assertEqual(response.status_code, 404)
+# Ministers are changed through the staff API too; see content/tests/test_staff_people.py.
 
 
 class DailyMessageApiTests(ApiScopingTestCase):

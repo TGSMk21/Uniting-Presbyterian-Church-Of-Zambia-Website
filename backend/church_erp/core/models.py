@@ -40,10 +40,13 @@ class Minister(models.Model):
     name = models.CharField(max_length=200)
     bio = models.TextField(blank=True)
     photo = models.ImageField(upload_to='ministers/', blank=True)
+    order = models.PositiveSmallIntegerField(
+        default=0, help_text="Lower numbers come first. The first minister is the one on the branch's About page.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['order', 'name']
 
     def __str__(self):
         return f"{self.name} — {self.branch.name}"

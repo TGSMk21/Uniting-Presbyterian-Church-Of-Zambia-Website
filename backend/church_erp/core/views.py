@@ -1,5 +1,5 @@
-from rest_framework import viewsets
-from church_erp.core.api_mixins import BranchScopedViewSetMixin, IsBranchStaffOrReadOnly
+from rest_framework import permissions, viewsets
+from church_erp.core.api_mixins import BranchScopedViewSetMixin
 from church_erp.core.models import Branch, Minister
 from church_erp.core.serializers import BranchSerializer, MinisterSerializer
 
@@ -10,7 +10,8 @@ class BranchViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = 'slug'
 
 
-class MinisterViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
+# Read-only: staff change ministers through the dashboard (content/staff_content.py).
+class MinisterViewSet(BranchScopedViewSetMixin, viewsets.ReadOnlyModelViewSet):
     queryset = Minister.objects.all()
     serializer_class = MinisterSerializer
-    permission_classes = [IsBranchStaffOrReadOnly]
+    permission_classes = [permissions.AllowAny]

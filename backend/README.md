@@ -73,7 +73,7 @@ python manage.py create_branch --name "Kabwe Presbyterian Church" --slug kabwe -
 - The site appears at `/<slug>`, and the national directory lists it automatically.
 - The login is `<slug>-admin` by default (change it with `--admin-username` / `--admin-email`). It has the Branch Admin role, so it sees and edits only this branch.
 - Hand the username and password over privately, not by plain email. The dashboard makes them choose a new password when they first sign in.
-- Then, in the admin, add the branch's minister(s) and service times. Its staff change the page wording, projects and activities from the dashboard. Run `sync_youtube --branch <slug>` to import its sermons.
+- Then its staff add ministers, service times, projects and activities, and change the page wording, from the dashboard. Run `sync_youtube --branch <slug>` to import its sermons.
 
 On Render's free plan there is no shell, so run it from your own machine against the production database, the same way as `createsuperuser` in step 4 of "Deploying to Render" below.
 
@@ -188,11 +188,13 @@ Fields of type `image` in the same list are uploaded instead of typed: branch ma
 
 The browser shrinks photos first, because Vercel refuses requests over 4.5 MB. The API then accepts only real JPG, PNG or WebP files up to 4 MB and 25 megapixels, and saves its own WebP copy with a new name, no hidden data such as location, and its longest side limited by the field's `max_side`. Files go to the public bucket, and a replaced or removed file is deleted from it. Images can't be set through the wording API, so a saved file name always came from an upload.
 
-### Sermons, projects and activities
+### Sermons, projects, activities, ministers and service times
 
-Staff manage each branch's sermons, projects and activities at `/dashboard/content`, through `/api/staff/<branch>/sermons/`, `projects/` and `activities/`. Who may manage a branch follows the same rule as its pages. The public addresses (`/api/sermons/` and so on) are read-only, so every change goes through these.
+Staff manage each branch's sermons, projects, activities, ministers and service times at `/dashboard/content`, through `/api/staff/<branch>/sermons/`, `projects/`, `activities/`, `ministers/` and `services/`. Who may manage a branch follows the same rule as its pages. The public addresses (`/api/sermons/` and so on) are read-only, so every change goes through these.
 
 Sermons are added from a YouTube link and can't be deleted, because the YouTube sync would import them again. Staff tick "Hide this sermon from the website" instead, which leaves it off the public list and its page. The sync never changes a sermon's wording or whether it's hidden; it only updates the length and the live state. The video itself can't be changed after adding. Projects and activities can be added, changed and deleted. The website clears its cached copies when staff save, so changes show straight away, including upcoming activities on the national home page.
+
+Ministers have an order number, and the lowest is the one on the branch's About page. Their photo is uploaded at `POST /api/staff/<branch>/ministers/<id>/photo/` (`DELETE` removes it) and checked and re-saved like page images, at most 800 pixels on the longest side. A minister who has daily messages can't be deleted, because their messages would be deleted with them. Service times come with the branch, so saving one also refreshes the branch's pages and Find a Branch.
 
 ## Settings
 

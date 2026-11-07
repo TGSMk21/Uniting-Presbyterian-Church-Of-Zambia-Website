@@ -7,7 +7,13 @@ from church_erp.ai_messages.views import DailyMessageViewSet
 from church_erp.finance.views import GivingRecordViewSet
 from church_erp.api.views import sync_youtube
 from church_erp.content.page_content_views import PageContentPageView, PageContentView, PageImageView
-from church_erp.content.staff_content import StaffActivityViewSet, StaffProjectViewSet, StaffSermonViewSet
+from church_erp.content.staff_content import (
+    StaffActivityViewSet,
+    StaffMinisterViewSet,
+    StaffProjectViewSet,
+    StaffSermonViewSet,
+    StaffServiceTimeViewSet,
+)
 
 router = DefaultRouter()
 router.register(r'branches', BranchViewSet)
@@ -25,6 +31,8 @@ staff_router = SimpleRouter()
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/sermons', StaffSermonViewSet, basename='staff-sermons')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/projects', StaffProjectViewSet, basename='staff-projects')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/activities', StaffActivityViewSet, basename='staff-activities')
+staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/ministers', StaffMinisterViewSet, basename='staff-ministers')
+staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/services', StaffServiceTimeViewSet, basename='staff-services')
 
 urlpatterns = [
     path('', include(router.urls)),

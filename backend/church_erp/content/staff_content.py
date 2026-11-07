@@ -1,22 +1,30 @@
-"""Sermons, projects and activities, managed by branch staff from the dashboard.
+"""Sermons, projects, activities, ministers and service times, managed by branch
+staff from the dashboard.
 
 The public addresses (/api/sermons/ and so on) are read-only, so every change goes
 through here, under /api/staff/<branch>/. Who may manage a branch follows the same
 rule as its pages (`page_content.can_edit`).
 """
 import re
+import uuid
 from urllib.parse import parse_qs, urlsplit
 
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.files.storage import default_storage
 from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers, viewsets
-from rest_framework.exceptions import PermissionDenied
+from rest_framework import serializers, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import APIException, PermissionDenied
+from rest_framework.parsers import MultiPartParser
+from rest_framework.response import Response
 
 from church_erp.accounts.auth_views import IsStaff
-from church_erp.core.models import Branch
+from church_erp.core.models import Branch, Minister, ServiceTime
 
 from .models import Activity, Project, Sermon
 from .page_content import can_edit
+from .page_images import delete_quietly, prepared_image
 
 VIDEO_ID = re.compile(r"[A-Za-z0-9_-]{11}")
 YOUTUBE_HOSTS = {
@@ -25,6 +33,8 @@ YOUTUBE_HOSTS = {
 }
 VIDEO_PATHS = {"live", "shorts", "embed", "v"}
 LONG_TEXT = 5000  # YouTube's own limit for a description
+MINISTER_PHOTO_SIDE = 800
+MAX_ORDER = 999
 
 
 def video_id_from(text):
@@ -154,3 +164,76 @@ class StaffProjectViewSet(BranchContentViewSet):
 class StaffActivityViewSet(BranchContentViewSet):
     queryset = Activity.objects.order_by("-date", "-start_time", "-pk")
     serializer_class = ActivitySerializer
+
+
+class MinisterSerializer(serializers.ModelSerializer):
+    bio = serializers.CharField(max_length=LONG_TEXT, allow_blank=True, required=False)
+
+    class Meta:
+        model = Minister
+        fields = ["id", "name", "bio", "order", "photo"]
+        # Photos change through their own upload, which checks them.
+        read_only_fields = ["photo"]
+        extra_kwargs = {"order": {"min_value": 0, "max_value": MAX_ORDER}}
+
+
+class ServiceTimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceTime
+        fields = ["id", "day", "title", "start_time", "end_time", "location", "details", "order"]
+        extra_kwargs = {"order": {"min_value": 0, "max_value": MAX_ORDER}}
+
+    def validate(self, attrs):
+        start = attrs.get("start_time", getattr(self.instance, "start_time", None))
+        end = attrs.get("end_time", getattr(self.instance, "end_time", None))
+        if start and end and end <= start:
+            raise serializers.ValidationError({"end_time": ["The end time must be after the start time."]})
+        return attrs
+
+
+class HasDailyMessages(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = "This minister has daily messages, so they can't be deleted."
+
+
+class StaffMinisterViewSet(BranchContentViewSet):
+    queryset = Minister.objects.order_by("order", "name", "pk")
+    serializer_class = MinisterSerializer
+
+    def perform_destroy(self, instance):
+        # Deleting a minister would delete their daily messages with them.
+        if instance.daily_messages.exists():
+            raise HasDailyMessages()
+        photo = instance.photo.name
+        instance.delete()
+        delete_quietly(photo)
+
+    @action(detail=True, methods=["post", "delete"], parser_classes=[MultiPartParser])
+    def photo(self, request, *args, **kwargs):
+        minister = self.get_object()
+        previous = minister.photo.name
+        if request.method == "DELETE":
+            Minister.objects.filter(pk=minister.pk).update(photo="")
+            delete_quietly(previous)
+            return Response({"url": ""})
+
+        uploaded = request.FILES.get("image")
+        if not uploaded:
+            raise serializers.ValidationError({"image": ["Please choose a photo."]})
+        try:
+            content = prepared_image(uploaded, MINISTER_PHOTO_SIDE)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"image": exc.messages})
+        name = default_storage.save(f"ministers/{uuid.uuid4().hex}.webp", content)
+        try:
+            Minister.objects.filter(pk=minister.pk).update(photo=name)
+        except Exception:
+            delete_quietly(name)
+            raise
+        delete_quietly(previous)
+        return Response({"url": request.build_absolute_uri(default_storage.url(name))})
+
+
+class StaffServiceTimeViewSet(BranchContentViewSet):
+    queryset = ServiceTime.objects.order_by("order", "start_time", "pk")
+    serializer_class = ServiceTimeSerializer

@@ -69,6 +69,6 @@ class BranchAdmin(BranchScopedAdmin):
 
 @admin.register(Minister)
 class MinisterAdmin(BranchScopedAdmin):
-    list_display = ('name', 'branch', 'created_at')
+    list_display = ('name', 'branch', 'order', 'created_at')
     search_fields = ('name', 'branch__name')
     list_filter = ('branch',)
