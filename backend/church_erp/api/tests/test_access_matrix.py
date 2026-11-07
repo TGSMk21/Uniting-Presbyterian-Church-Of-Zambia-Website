@@ -138,6 +138,8 @@ class AccessMatrixTests(APITestCase):
     def test_every_staff_address_is_listed_here(self):
         listed = {f"staff-{section}-{kind}" for section, extras in SECTIONS.items() for kind in ["list", "detail", "export", *extras]}
         listed |= {"staff-branch-details", "staff-people-list", "staff-people-detail"}
+        # Counts for the Overview, limited to what each person may see (core/tests/test_staff_overview.py).
+        listed |= {"staff-overview"}
         listed |= {f"staff-people-{name}" for name in PEOPLE_ACTIONS}
         listed |= {"staff-requests-list", "staff-requests-detail"} | {f"staff-requests-{name}" for name in REQUEST_ACTIONS}
         listed |= {f"{name}-{kind}" for name in SUPERUSER_ONLY for kind in ("list", "detail")}
