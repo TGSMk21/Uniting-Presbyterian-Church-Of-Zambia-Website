@@ -11,7 +11,7 @@ export default async function BranchContent() {
   return (
     <main className="dash-main">
       <h1 className="dash-heading">Branch content</h1>
-      <p className="dash-text">Add and change your branch&apos;s sermons, projects, activities, ministers and service times.</p>
+      <p className="dash-text">Add and change your branch&apos;s sermons, projects, activities, ministers and service times, and its contact details.</p>
       {manageable.length === 0 && (
         <p className="dash-text">
           {staff.is_superuser
@@ -28,6 +28,9 @@ export default async function BranchContent() {
                 <Link href={`/dashboard/content/${slug}/${section}`} prefetch={false}>{label}</Link>
               </li>
             ))}
+            <li>
+              <Link href={`/dashboard/content/${slug}/details`} prefetch={false}>Contact details and map position</Link>
+            </li>
           </ul>
         </section>
       ))}

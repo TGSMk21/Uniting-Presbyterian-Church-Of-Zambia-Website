@@ -3,6 +3,7 @@
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { imageFailure } from "@/Utilities/imageUpload.mjs";
+import { detailsFailure, detailsFromForm, detailsTags } from "@/Utilities/branchDetails.mjs";
 import {
   apiPath,
   isBranchSlug,
@@ -85,4 +86,29 @@ export async function uploadMinisterPhoto(branch, id, formData) {
 export async function removeMinisterPhoto(branch, id) {
   if (!allowed(branch, "ministers", id) || id === null) return imageFailure(0);
   return photoOutcome(branch, await staffRequest(photoPath(branch, id), { method: "DELETE" }));
+}
+
+export async function saveBranchDetails(branch, previousState, formData) {
+  const typed = {
+    contact_email: String(formData.get("contact_email") ?? ""),
+    contact_phone: String(formData.get("contact_phone") ?? ""),
+    address: String(formData.get("address") ?? ""),
+    location_confirmed: formData.get("location_confirmed") === "on",
+  };
+  if (!isBranchSlug(branch)) return { saved: false, error: "This can't be saved.", fields: {}, values: typed };
+  const { values, errors } = detailsFromForm(formData);
+  if (Object.keys(errors).length) return { saved: false, error: null, fields: errors, values: typed };
+
+  const { status, data } = await staffRequest(`/staff/${encodeURIComponent(branch)}/details/`, {
+    method: "PATCH",
+    body: values,
+  });
+  if (status === 200) {
+    // Show the change on the public site straight away.
+    for (const tag of detailsTags(branch)) updateTag(tag);
+    return { saved: true, error: null, fields: {}, values: typed };
+  }
+  const failure = detailsFailure(status, data);
+  if (failure.signedOut) redirect("/dashboard/login");
+  return { saved: false, ...failure, values: typed };
 }

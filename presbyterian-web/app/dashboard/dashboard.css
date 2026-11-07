@@ -539,3 +539,18 @@
 .dash-danger-button:disabled { opacity: 0.6; cursor: wait; }
 .dash-photo-section { margin-top: 1.25rem; gap: 0.5rem; }
 .dash-help { color: var(--text-soft); font-size: 0.8rem; line-height: 1.4; }
+.dash-map {
+  height: 320px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  z-index: 0;
+  cursor: crosshair;
+}
+.dash-align-start { align-self: flex-start; }
+/* Beats Leaflet's own .leaflet-touch .leaflet-bar a, which sets 30px. */
+.dash-map .leaflet-bar.leaflet-control-zoom a {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  font-size: 22px;
+}
