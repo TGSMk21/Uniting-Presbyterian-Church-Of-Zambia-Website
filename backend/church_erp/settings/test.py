@@ -12,3 +12,6 @@ DATABASES = {
 }
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+# accounts/tests/test_two_factor.py turns this on where it's being tested.
+REQUIRE_TWO_FACTOR = False

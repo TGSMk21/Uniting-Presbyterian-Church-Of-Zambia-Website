@@ -15,7 +15,7 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "church_erp.core.admin_config.StaffAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -29,6 +29,9 @@ INSTALLED_APPS = [
     "django_filters",
     "import_export",
     "axes",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
     # Local
     "church_erp.core",
     "church_erp.accounts",
@@ -46,6 +49,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "axes.middleware.AxesMiddleware",
@@ -135,6 +139,12 @@ AXES_CLIENT_IP_CALLABLE = "church_erp.core.client_address.client_address"
 CORS_ALLOWED_ORIGINS = [
     os.environ.get("FRONTEND_URL", "http://localhost:3000"),
 ]
+
+# --- Two-step login ---
+# Superusers and branch admins must use it; see accounts/two_factor.py.
+REQUIRE_TWO_FACTOR = True
+OTP_TOTP_ISSUER = "UPCZ Staff"
+OTP_ADMIN_HIDE_SENSITIVE_DATA = True
 
 # --- CSV export ---
 # A cell starting with "=" could run as a formula when opened in a spreadsheet.
