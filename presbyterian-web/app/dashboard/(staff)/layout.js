@@ -18,6 +18,7 @@ export default async function StaffLayout({ children }) {
           <Link href="/dashboard/pages" prefetch={false}>Pages</Link>
           <Link href="/dashboard/content" prefetch={false}>Branch content</Link>
           {canManageStaff(staff) && <Link href="/dashboard/staff" prefetch={false}>Staff</Link>}
+          {canManageStaff(staff) && <Link href="/dashboard/requests" prefetch={false}>Requests</Link>}
           {staff.is_superuser && <Link href="/dashboard/branches" prefetch={false}>Branches</Link>}
           {staff.is_superuser && <Link href="/dashboard/history" prefetch={false}>Change history</Link>}
         </nav>

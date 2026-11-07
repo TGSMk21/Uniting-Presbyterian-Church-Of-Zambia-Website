@@ -14,6 +14,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.db.models import Max
 from django.utils import timezone
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
@@ -23,6 +24,7 @@ from rest_framework.throttling import SimpleRateThrottle
 from rest_framework.views import APIView
 
 from church_erp.api.throttling import ClientAddressMixin
+from church_erp.content.staff_content import MAX_ORDER
 from church_erp.core.changes import record
 from church_erp.core.models import Branch, Minister
 
@@ -206,7 +208,10 @@ class StaffRequestViewSet(viewsets.ReadOnlyModelViewSet):
             account.save()
             minister = values["minister"]
             if minister == "new":
-                minister = Minister.objects.create(branch=values["branch"], name=access.full_name)
+                # Last in the branch's list, so the About page's main minister stays the same.
+                last = Minister.objects.filter(branch=values["branch"]).aggregate(top=Max("order"))["top"]
+                order = min((last + 1) if last is not None else 0, MAX_ORDER)
+                minister = Minister.objects.create(branch=values["branch"], name=access.full_name, order=order)
             if minister is not None:
                 link_minister(account, minister)
             AccessRequest.objects.filter(pk=access.pk).update(

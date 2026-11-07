@@ -98,7 +98,10 @@ test("sign-in failures say what to do without revealing whether an account exist
 test("both sign-in steps open without a session; everything else in the dashboard doesn't", () => {
   assert.equal(isSignInPage("/dashboard/login"), true);
   assert.equal(isSignInPage("/dashboard/login/verify"), true);
-  for (const path of ["/dashboard", "/dashboard/two-factor", "/dashboard/change-password", "/dashboard/login-history"]) {
+  // Asking for access and choosing a password from a link happen before anyone has a session (Task 7.2).
+  assert.equal(isSignInPage("/dashboard/request-access"), true);
+  assert.equal(isSignInPage("/dashboard/set-password"), true);
+  for (const path of ["/dashboard", "/dashboard/two-factor", "/dashboard/change-password", "/dashboard/login-history", "/dashboard/requests", "/dashboard/set-password/x"]) {
     assert.equal(isSignInPage(path), false, path);
   }
 });

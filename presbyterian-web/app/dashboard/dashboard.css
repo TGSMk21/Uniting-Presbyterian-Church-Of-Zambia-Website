@@ -661,3 +661,68 @@
   border-radius: 10px;
   color: var(--navy);
 }
+
+/* Asking for access and choosing a password from a link (Task 7.2). */
+.dash-card-wide { max-width: 32rem; }
+.dash-card-footer {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+.dash-choice {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+.dash-choice legend {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.35rem;
+}
+/* Kept out of sight and out of reach for people; robots still fill it in. */
+.dash-hidden {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.dash-handover textarea {
+  width: 100%;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+  font-size: 0.9rem;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.dash-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 1rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.dash-tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.dash-tabs a[aria-current="page"] {
+  color: var(--navy);
+  font-weight: 600;
+  border-bottom-color: var(--navy);
+}
+.dash-prewrap { white-space: pre-wrap; }
+.dash-copy { padding: 0.6rem 1.1rem; }
+.dash-delete details summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: center; }

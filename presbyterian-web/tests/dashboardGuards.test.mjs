@@ -33,6 +33,21 @@ test("staff pages are for branch admins and superusers only", () => {
   }
 });
 
+test("access requests are for branch admins and superusers only", () => {
+  const pages = files(join(STAFF, "requests"), "page.js");
+  assert.ok(pages.length >= 2);
+  for (const page of pages) {
+    assert.match(readFileSync(page, "utf8"), /if \(!canManageStaff\(staff\)\) notFound\(\);/, where(page));
+  }
+});
+
+test("the pages for people without an account stay outside the signed-in area", () => {
+  for (const page of ["request-access", "set-password"]) {
+    const path = fileURLToPath(new URL(`../app/dashboard/${page}/page.js`, import.meta.url));
+    assert.doesNotMatch(readFileSync(path, "utf8"), /requireStaff\(/, page);
+  }
+});
+
 test("branches and the change history are for superusers only", () => {
   const pages = [...files(join(STAFF, "branches"), "page.js"), ...files(join(STAFF, "history"), "page.js")];
   assert.ok(pages.length >= 4);

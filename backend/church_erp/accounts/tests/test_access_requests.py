@@ -47,7 +47,7 @@ class AccessTestCase(APITestCase):
         cls.boss = User.objects.create_superuser("boss", password="pw")
         cls.minister_a = User.objects.create_user("rev_a", password="pw", is_staff=True, branch=cls.alpha, role="branch_admin")
         cls.editor_a = User.objects.create_user("editor_a", password="pw", is_staff=True, branch=cls.alpha, role="content_editor")
-        cls.banda = Minister.objects.create(branch=cls.alpha, name="Banda")
+        cls.banda = Minister.objects.create(branch=cls.alpha, name="Banda", order=3)
 
     def setUp(self):
         cache.clear()
@@ -185,6 +185,9 @@ class ApprovalTests(AccessTestCase):
         self.assertEqual(response.status_code, 201, response.data)
         profile = Minister.objects.get(name="Joseph Mwale")
         self.assertEqual((profile.branch, profile.account.username), (self.alpha, "mwale"))
+        # It goes after the branch's ministers, so the About page's main minister doesn't change.
+        self.assertGreater(profile.order, self.banda.order)
+        self.assertEqual(Minister.objects.filter(branch=self.alpha).first(), self.banda)
 
     def test_a_minister_request_must_be_linked_to_a_minister_of_that_branch(self):
         other = Minister.objects.create(branch=self.beta, name="Phiri")

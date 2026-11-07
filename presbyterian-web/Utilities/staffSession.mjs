@@ -25,9 +25,14 @@ export function needsRefresh(access, now) {
   return tokenExpiry(access) - REFRESH_EARLY_BY <= now;
 }
 
-// Pages that must open without a session: the password step and the code step.
+// Pages that must open without a session: the password and code steps of signing in,
+// asking for access, and choosing a password from a link (Task 7.2).
+const NO_SESSION_PAGES = new Set([
+  "/dashboard/login", "/dashboard/login/verify", "/dashboard/request-access", "/dashboard/set-password",
+]);
+
 export function isSignInPage(pathname) {
-  return pathname === "/dashboard/login" || pathname === "/dashboard/login/verify";
+  return NO_SESSION_PAGES.has(pathname);
 }
 
 // What to do with a dashboard request: "continue", "refresh" or "to-login".
