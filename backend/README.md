@@ -73,7 +73,7 @@ python manage.py create_branch --name "Kabwe Presbyterian Church" --slug kabwe -
 - The site appears at `/<slug>`, and the national directory lists it automatically.
 - The login is `<slug>-admin` by default (change it with `--admin-username` / `--admin-email`). It has the Branch Admin role, so it sees and edits only this branch.
 - Hand the username and password over privately, not by plain email. The dashboard makes them choose a new password when they first sign in.
-- Then its staff add ministers, service times, projects and activities, and change the page wording, from the dashboard. Run `sync_youtube --branch <slug>` to import its sermons.
+- Then its staff add ministers, service times, projects and activities, set the contact details and map position, and change the page wording, from the dashboard. Run `sync_youtube --branch <slug>` to import its sermons.
 
 On Render's free plan there is no shell, so run it from your own machine against the production database, the same way as `createsuperuser` in step 4 of "Deploying to Render" below.
 
@@ -195,6 +195,10 @@ Staff manage each branch's sermons, projects, activities, ministers and service 
 Sermons are added from a YouTube link and can't be deleted, because the YouTube sync would import them again. Staff tick "Hide this sermon from the website" instead, which leaves it off the public list and its page. The sync never changes a sermon's wording or whether it's hidden; it only updates the length and the live state. The video itself can't be changed after adding. Projects and activities can be added, changed and deleted. The website clears its cached copies when staff save, so changes show straight away, including upcoming activities on the national home page.
 
 Ministers have an order number, and the lowest is the one on the branch's About page. Their photo is uploaded at `POST /api/staff/<branch>/ministers/<id>/photo/` (`DELETE` removes it) and checked and re-saved like page images, at most 800 pixels on the longest side. A minister who has daily messages can't be deleted, because their messages would be deleted with them. Service times come with the branch, so saving one also refreshes the branch's pages and Find a Branch.
+
+### Branch details and map position
+
+`GET` and `PATCH /api/staff/<branch>/details/` change a branch's contact email (where its Contact form's messages go), phone, address and map position, at `/dashboard/content/<branch>/details`. Staff click the church on a map or paste the position from Google Maps. Positions outside Zambia, half a position, and "confirmed" without a position are refused; extra decimal places are rounded to six (about 10 cm). The name, web address and YouTube channel stay in the admin for superusers.
 
 ## Settings
 

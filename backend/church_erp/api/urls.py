@@ -8,6 +8,7 @@ from church_erp.finance.views import GivingRecordViewSet
 from church_erp.api.views import sync_youtube
 from church_erp.content.page_content_views import PageContentPageView, PageContentView, PageImageView
 from church_erp.content.staff_content import (
+    BranchDetailsView,
     StaffActivityViewSet,
     StaffMinisterViewSet,
     StaffProjectViewSet,
@@ -41,5 +42,6 @@ urlpatterns = [
     path('page-content/<slug:scope>/', PageContentView.as_view(), name='page-content'),
     path('page-content/<slug:scope>/<slug:page>/', PageContentPageView.as_view(), name='page-content-page'),
     path('page-content/<slug:scope>/<slug:page>/images/<slug:key>/', PageImageView.as_view(), name='page-image'),
+    path('staff/<slug:scope>/details/', BranchDetailsView.as_view(), name='staff-branch-details'),
     path('tasks/sync-youtube/', sync_youtube, name='sync-youtube'),
 ]

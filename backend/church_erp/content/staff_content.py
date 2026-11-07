@@ -7,6 +7,7 @@ rule as its pages (`page_content.can_edit`).
 """
 import re
 import uuid
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from urllib.parse import parse_qs, urlsplit
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -18,6 +19,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from church_erp.accounts.auth_views import IsStaff
 from church_erp.core.models import Branch, Minister, ServiceTime
@@ -237,3 +239,75 @@ class StaffMinisterViewSet(BranchContentViewSet):
 class StaffServiceTimeViewSet(BranchContentViewSet):
     queryset = ServiceTime.objects.order_by("order", "start_time", "pk")
     serializer_class = ServiceTimeSerializer
+
+
+# Branch details: contact details and the map position for Find a Branch.
+# The name, address in the website and YouTube channel stay with superusers in the admin.
+ZAMBIA_LATITUDE = (Decimal("-18.5"), Decimal("-8.0"))
+ZAMBIA_LONGITUDE = (Decimal("21.5"), Decimal("34.0"))
+PHONE = re.compile(r"[0-9+()\- ]*")
+
+
+class PositionField(serializers.DecimalField):
+    """Six decimal places is about 10 cm. A map click gives more, so they're rounded."""
+
+    def __init__(self, **kwargs):
+        super().__init__(max_digits=9, decimal_places=6, allow_null=True, required=False, **kwargs)
+
+    def to_internal_value(self, data):
+        try:
+            data = Decimal(str(data).strip()).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
+        except (InvalidOperation, ValueError):
+            self.fail("invalid")
+        return super().to_internal_value(data)
+
+
+class BranchDetailsSerializer(serializers.ModelSerializer):
+    address = serializers.CharField(max_length=500, allow_blank=True, required=False)
+    latitude = PositionField()
+    longitude = PositionField()
+
+    class Meta:
+        model = Branch
+        fields = ["name", "slug", "contact_email", "contact_phone", "address", "latitude", "longitude", "location_confirmed"]
+        read_only_fields = ["name", "slug"]
+
+    def validate_contact_phone(self, value):
+        if not PHONE.fullmatch(value):
+            raise serializers.ValidationError("Please use only numbers, spaces and + - ( ).")
+        return value
+
+    def validate(self, attrs):
+        def final(key):
+            return attrs[key] if key in attrs else getattr(self.instance, key)
+
+        latitude, longitude = final("latitude"), final("longitude")
+        if (latitude is None) != (longitude is None):
+            raise serializers.ValidationError({"latitude": ["Please give both parts of the position, or clear both."]})
+        if latitude is not None and not (
+            ZAMBIA_LATITUDE[0] <= latitude <= ZAMBIA_LATITUDE[1]
+            and ZAMBIA_LONGITUDE[0] <= longitude <= ZAMBIA_LONGITUDE[1]
+        ):
+            raise serializers.ValidationError({"latitude": ["This position is outside Zambia. Please check it."]})
+        if final("location_confirmed") and latitude is None:
+            raise serializers.ValidationError({"location_confirmed": ["Set the map position before confirming it."]})
+        return attrs
+
+
+class BranchDetailsView(APIView):
+    permission_classes = [IsStaff]
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        self.branch = get_object_or_404(Branch, slug=kwargs["scope"], is_active=True)
+        if not can_edit(request.user, self.branch):
+            raise PermissionDenied("You can't manage this branch's details.")
+
+    def get(self, request, scope):
+        return Response(BranchDetailsSerializer(self.branch).data)
+
+    def patch(self, request, scope):
+        serializer = BranchDetailsSerializer(self.branch, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
