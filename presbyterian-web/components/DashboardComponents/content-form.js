@@ -21,7 +21,7 @@ function Box({ field, value, error, choices }) {
   const shared = { name: field.key, defaultValue: value, required: field.required, "aria-invalid": invalid };
   let input;
   if (field.type === "textarea") {
-    input = <textarea key={value} rows={6} maxLength={field.max} {...shared} />;
+    input = <textarea key={value} rows={field.rows || 6} maxLength={field.max} {...shared} />;
   } else if (field.type === "select") {
     input = (
       <select key={value} {...shared}>
@@ -51,10 +51,13 @@ function Box({ field, value, error, choices }) {
 function DeleteButton({ branch, name, id }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState(null);
-  const { singular } = SECTIONS[name];
+  const spec = SECTIONS[name];
+  const { singular } = spec;
+  // Private sections, such as written sermons, were never on the website.
+  const where = spec.publicPath ? " It will be removed from the website." : "";
 
   function confirmDelete() {
-    if (!window.confirm(`Delete this ${singular}? It will be removed from the website. This can't be undone.`)) return;
+    if (!window.confirm(`Delete this ${singular}?${where} This can't be undone.`)) return;
     setError(null);
     startTransition(async () => {
       const result = await deleteBranchContent(branch, name, id);

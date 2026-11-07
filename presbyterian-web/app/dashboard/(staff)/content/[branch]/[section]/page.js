@@ -26,7 +26,8 @@ export default async function SectionList({ params, searchParams }) {
   if (status !== 200) throw new Error(`The staff API answered ${status}`);
 
   const base = `/dashboard/content/${branch}/${name}`;
-  const publicHref = spec.publicPath(branch);
+  // Private sections, such as written sermons, aren't on the website.
+  const publicHref = spec.publicPath ? spec.publicPath(branch) : null;
   const rows = data.results || [];
 
   return (
@@ -38,12 +39,13 @@ export default async function SectionList({ params, searchParams }) {
       </p>
       {saved && (
         <p className="dash-notice" role="status">
-          {saved} <a href={publicHref} target="_blank" rel="noopener">View the page</a>
+          {saved} {publicHref && <a href={publicHref} target="_blank" rel="noopener">View the page</a>}
         </p>
       )}
       <div className="dash-toolbar">
         <Link href={`${base}/new`} className="btn-primary" prefetch={false}>{spec.adding}</Link>
-        <a href={publicHref} target="_blank" rel="noopener" className="dash-link">View on the website</a>
+        {spec.uploads && <Link href={`${base}/upload`} className="btn-ghost" prefetch={false}>Add files</Link>}
+        {publicHref && <a href={publicHref} target="_blank" rel="noopener" className="dash-link">View on the website</a>}
         {rows.length > 0 && (
           <a href={exportHref(branch, name)} className="dash-link" download>Download as a spreadsheet (CSV)</a>
         )}

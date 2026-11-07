@@ -5,6 +5,7 @@ from church_erp.content.views import SermonViewSet, ProjectViewSet, ActivityView
 from church_erp.media_library.views import MediaAssetViewSet
 from church_erp.ai_messages.views import DailyMessageViewSet
 from church_erp.ai_messages.staff_messages import StaffMessageViewSet
+from church_erp.ai_messages.staff_writings import StaffWritingViewSet
 from church_erp.media_library.staff_media import StaffMediaViewSet
 from church_erp.accounts.staff_people import StaffPeopleViewSet
 from church_erp.core.staff_branches import StaffBranchViewSet
@@ -40,6 +41,7 @@ staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/activities', StaffActivi
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/ministers', StaffMinisterViewSet, basename='staff-ministers')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/services', StaffServiceTimeViewSet, basename='staff-services')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/messages', StaffMessageViewSet, basename='staff-messages')
+staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/writings', StaffWritingViewSet, basename='staff-writings')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/media', StaffMediaViewSet, basename='staff-media')
 staff_router.register(r'staff-people', StaffPeopleViewSet, basename='staff-people')
 staff_router.register(r'staff-branches', StaffBranchViewSet, basename='staff-branches')

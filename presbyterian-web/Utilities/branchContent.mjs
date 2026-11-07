@@ -133,6 +133,23 @@ export const SECTIONS = {
         help: "Only published messages show on the website." },
     ],
   },
+  // Pastors' sermons, for the AI's daily message drafts (Task 4.1). Never on the website.
+  writings: {
+    label: "Written sermons",
+    singular: "written sermon",
+    adding: "Paste a written sermon",
+    intro: "Your ministers' sermons, for the daily message drafts. Only your branch's staff can see them; they're never shown on the website.",
+    canDelete: true,
+    uploads: true,
+    publicPath: null,
+    fields: [
+      { key: "minister", label: "Preached by", type: "select", choices: "ministers", required: true },
+      { key: "title", label: "Title", type: "text", max: 300, required: true },
+      { key: "preached_on", label: "Date preached", type: "date" },
+      { key: "text", label: "The sermon", type: "textarea", max: 200000, rows: 20, required: true,
+        help: "Paste the whole sermon. Leave an empty line between paragraphs." },
+    ],
+  },
 };
 
 export const NEW_DEFAULTS = {
@@ -142,6 +159,7 @@ export const NEW_DEFAULTS = {
   ministers: { order: "0" },
   services: { order: "0" },
   messages: { status: "pending_review" },
+  writings: {},
 };
 
 // The calendar day in Zambia, as YYYY-MM-DD.
@@ -156,8 +174,10 @@ export function ministerChoices(ministers = []) {
 
 // What a new row's boxes start with. A new message is a draft for today.
 export function newRowDefaults(name, { ministers = [], now = new Date() } = {}) {
+  const firstMinister = ministers[0] ? String(ministers[0].id) : "";
+  if (name === "writings") return { ...NEW_DEFAULTS.writings, minister: firstMinister };
   if (name !== "messages") return NEW_DEFAULTS[name];
-  return { ...NEW_DEFAULTS.messages, date: todayInZambia(now), minister: ministers[0] ? String(ministers[0].id) : "" };
+  return { ...NEW_DEFAULTS.messages, date: todayInZambia(now), minister: firstMinister };
 }
 
 export function section(name) {
@@ -186,6 +206,8 @@ export const UPCOMING_ACTIVITIES_TAG = "activities:upcoming";
 export const BRANCH_LIST_TAG = "branches";
 
 export function tagsToClear(name, branch) {
+  // Never on the website, so there's nothing to clear.
+  if (SECTIONS[name]?.publicPath === null) return [];
   // Service times come with the branch itself, and with the list in Find a Branch.
   if (name === "services") return [branchTag(branch), BRANCH_LIST_TAG];
   const tags = [sectionTag(name, branch)];
@@ -278,6 +300,11 @@ export function rowSummary(name, row) {
   if (name === "messages") {
     const day = row.date ? formatted(new Date(`${row.date}T12:00:00Z`), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
     return [day, row.minister_name, MESSAGE_STATUS_SHORT[row.status] || row.status].filter(Boolean).join(" · ");
+  }
+  if (name === "writings") {
+    const day = row.preached_on ? formatted(new Date(`${row.preached_on}T12:00:00Z`), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
+    const words = `${new Intl.NumberFormat("en-GB").format(row.word_count)} ${row.word_count === 1 ? "word" : "words"}`;
+    return [day, row.minister_name, words, row.ready ? "Ready for daily messages" : "Waiting to be read"].filter(Boolean).join(" · ");
   }
   if (name === "services") {
     const times = [row.start_time, row.end_time].filter(Boolean).map((t) => t.slice(0, 5)).join("–");

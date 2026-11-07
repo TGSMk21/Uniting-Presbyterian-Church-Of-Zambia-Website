@@ -10,8 +10,11 @@ def _own_branch_choices(model, branch_id):
     branch-owned (then the field's choices are left alone)."""
     if model is Branch:
         return Branch.objects.filter(id=branch_id)
-    if any(f.name == 'branch' for f in model._meta.fields):
+    names = {f.name for f in model._meta.fields}
+    if 'branch' in names:
         return model._default_manager.filter(branch_id=branch_id)
+    if 'minister' in names:  # such as written sermons, which belong to a branch through their minister
+        return model._default_manager.filter(minister__branch_id=branch_id)
     return None
 
 

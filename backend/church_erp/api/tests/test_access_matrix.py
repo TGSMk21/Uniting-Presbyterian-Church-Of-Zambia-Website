@@ -11,7 +11,7 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from church_erp.accounts.models import User
-from church_erp.ai_messages.models import DailyMessage
+from church_erp.ai_messages.models import DailyMessage, SermonDocument
 from church_erp.content.models import Activity, Project, Sermon
 from church_erp.core.models import Minister, ServiceTime
 from church_erp.core.tests.helpers import make_branch
@@ -22,7 +22,9 @@ SECTIONS = {
     "sermons": [], "projects": [], "activities": [], "services": [], "messages": [],
     "ministers": ["photo"],
     "media": ["tags"],
+    "writings": ["upload"],
 }
+POST_EXTRAS = {"upload"}
 PEOPLE_ACTIONS = ["suspend", "restore", "reset-password", "reset-two-factor"]
 # Branch admins manage staff; only superusers manage branches and read the history.
 SUPERUSER_ONLY = ["staff-branches", "staff-changes"]
@@ -70,6 +72,7 @@ class AccessMatrixTests(APITestCase):
             "services": ServiceTime.objects.create(branch=cls.beta, day="Sunday", title="B", start_time=time(9), end_time=time(10)),
             "messages": DailyMessage.objects.create(minister=minister, title="B", message="m", date=date(2026, 11, 1)),
             "media": MediaAsset.objects.create(branch=cls.beta, file="media_library/b.pdf", file_type="document", title="B"),
+            "writings": SermonDocument.objects.create(minister=minister, title="B", text="Words"),
         }
 
     def setUp(self):
@@ -87,7 +90,8 @@ class AccessMatrixTests(APITestCase):
                     yield "post", reverse("staff-ministers-photo", args=[scope, pk(section)])
                     yield "delete", reverse("staff-ministers-photo", args=[scope, pk(section)])
                 else:
-                    yield "get", reverse(f"staff-{section}-{extra}", args=[scope])
+                    method = "post" if extra in POST_EXTRAS else "get"
+                    yield method, reverse(f"staff-{section}-{extra}", args=[scope])
             for method in ("get", "patch", "put", "delete"):
                 yield method, reverse(f"staff-{section}-detail", args=[scope, pk(section)])
         yield "get", reverse("staff-branch-details", args=[scope])

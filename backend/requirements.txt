@@ -29,6 +29,9 @@ redis>=5.3,<6.0
 openai>=1.80,<2.0
 tiktoken>=0.9,<1.0
 
+# Reading pastors' sermon files (Word files are read with the standard library)
+pypdf>=6.0,<7.0
+
 # Media storage
 django-storages[s3]>=1.14,<2.0
 boto3>=1.37,<2.0

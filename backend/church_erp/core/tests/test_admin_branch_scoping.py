@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from church_erp.accounts.models import User
+from church_erp.ai_messages.models import SermonDocument
 from church_erp.content.models import Sermon
 from church_erp.finance.models import GivingRecord
 
@@ -17,6 +18,7 @@ APP_LABELS = {
     "page": "content",
     "mediaasset": "media_library",
     "dailymessage": "ai_messages",
+    "sermondocument": "ai_messages",
     "givingrecord": "finance",
 }
 CONTENT_MODELS = [m for m in APP_LABELS if m != "givingrecord"]
@@ -111,12 +113,14 @@ class BranchAssignmentTests(BranchScopedAdminTestCase):
                     [self.content_a["minister"]],
                 )
 
-    def test_daily_message_form_offers_only_own_branch_sermons(self):
+    def test_daily_message_form_offers_only_own_branch_written_sermons(self):
+        own = SermonDocument.objects.create(minister=self.content_a["minister"], title="Own", text="t")
+        SermonDocument.objects.create(minister=self.content_b["minister"], title="Other", text="t")
         self.client.force_login(self.admin_a)
         response = self.client.get(admin_url("dailymessage", "add"))
         form = response.context["adminform"].form
         self.assertEqual(
-            list(form.fields["source_sermons"].queryset), [self.content_a["sermon"]]
+            set(form.fields["source_documents"].queryset), {own, self.content_a["sermondocument"]}
         )
 
     def test_cannot_create_record_for_other_branch(self):

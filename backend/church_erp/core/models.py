@@ -44,6 +44,12 @@ class Minister(models.Model):
     order = models.PositiveSmallIntegerField(
         default=0, help_text="Lower numbers come first. The first minister is the one on the branch's About page.",
     )
+    # Daily message drafts written by the AI from their sermons (AGENT_EXECUTION_PLAN.md, Task 4.3).
+    # Off until staff turn it on, so the pilot covers one minister at a time.
+    ai_drafts = models.BooleanField(
+        default=False, help_text="Write a draft daily message from their written sermons each day, for staff to check.",
+    )
+    style_notes = models.TextField(blank=True, help_text="How they like to write, for the daily message drafts")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

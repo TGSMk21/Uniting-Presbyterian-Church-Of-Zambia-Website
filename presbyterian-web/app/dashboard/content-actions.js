@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { imageFailure } from "@/Utilities/imageUpload.mjs";
 import { detailsFailure, detailsFromForm, detailsTags } from "@/Utilities/branchDetails.mjs";
 import { mediaEdits, mediaFailure } from "@/Utilities/mediaLibrary.mjs";
+import { sermonUploadFailure } from "@/Utilities/sermonWritings.mjs";
 import {
   apiPath,
   isBranchSlug,
@@ -161,4 +162,25 @@ export async function deleteMedia(branch, id) {
   if (status === 401) redirect("/dashboard/login");
   if (status === 403) return { error: "You can't change this branch's files." };
   return { error: "It couldn't be deleted right now. Please try again in a moment." };
+}
+
+// A pastor's sermon file. The API reads the words and keeps the file privately.
+export async function uploadWriting(branch, formData) {
+  const file = formData.get("file");
+  const minister = String(formData.get("minister") ?? "");
+  if (!isBranchSlug(branch) || !(file instanceof File) || !isRowId(minister)) {
+    return { error: "Please choose a file and one of your ministers." };
+  }
+  const upload = new FormData();
+  upload.append("file", file, file.name || "sermon");
+  upload.append("minister", minister);
+  const { status, data } = await staffRequest(`${apiPath(branch, "writings")}upload/`, {
+    method: "POST",
+    formData: upload,
+    timeoutMs: UPLOAD_TIMEOUT_MS,
+  });
+  if (status === 201) return { id: data.id, title: data.title };
+  const failure = sermonUploadFailure(status, data);
+  if (failure.signedOut) redirect("/dashboard/login");
+  return failure;
 }

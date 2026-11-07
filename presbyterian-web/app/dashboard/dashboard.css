@@ -648,3 +648,14 @@
   border-radius: 10px;
 }
 .dash-history-what { color: var(--navy); overflow-wrap: anywhere; }
+/* A file that couldn't be added, in the sermon upload's results. */
+.dash-row-failed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.8rem 1rem;
+  background: var(--warm-white);
+  border: 1px solid #a50d26;
+  border-radius: 10px;
+  color: var(--navy);
+}

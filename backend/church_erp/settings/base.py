@@ -213,6 +213,16 @@ YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 # Shared secret for POST /api/tasks/sync-youtube/ (empty disables the endpoint)
 SYNC_TOKEN = os.environ.get("SYNC_TOKEN", "")
 
+# --- AI daily message drafts (AGENT_EXECUTION_PLAN.md, Phase 4) ---
+# Google's Gemini API. Empty turns the drafts off. The free tier may use what it's
+# sent to improve Google's products, so move to a paid tier (or another provider)
+# before real sermons are added.
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+# Writes the drafts. "gemini-flash-latest" follows Google's current Flash model.
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
+# Changing this means every written sermon is read again (see ai_messages/embeddings.py).
+GEMINI_EMBEDDING_MODEL = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
+
 # --- Security ---
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 X_FRAME_OPTIONS = "DENY"

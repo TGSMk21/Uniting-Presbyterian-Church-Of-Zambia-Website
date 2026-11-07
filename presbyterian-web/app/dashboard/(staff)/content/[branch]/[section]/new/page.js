@@ -26,14 +26,14 @@ export default async function AddRow({ params }) {
     </Link>
   );
 
-  // A daily message comes from one of the branch's ministers.
+  // A daily message or written sermon comes from one of the branch's ministers.
   if (ministers && ministers.length === 0) {
     return (
       <main className="dash-main">
         {back}
         <h1 className="dash-heading dash-heading-spaced">{spec.adding}</h1>
         <p className="dash-text">
-          Each message comes from one of your ministers, and this branch has none yet.{" "}
+          Each {spec.singular} comes from one of your ministers, and this branch has none yet.{" "}
           <Link href={`/dashboard/content/${branch}/ministers/new`} prefetch={false}>Add a minister first</Link>.
         </p>
       </main>

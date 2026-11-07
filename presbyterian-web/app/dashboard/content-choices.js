@@ -3,9 +3,9 @@ import { staffRequest } from "./session";
 
 const MOST_PAGES = 10;
 
-// The rows a section's form needs to choose from: a daily message's minister.
+// The rows a section's form needs to choose from: the minister of a daily message or written sermon.
 export async function sectionChoices(branch, name) {
-  if (name !== "messages") return {};
+  if (name !== "messages" && name !== "writings") return {};
   const ministers = [];
   for (let page = 1; page <= MOST_PAGES; page++) {
     const { status, data } = await staffRequest(`${apiPath(branch, "ministers")}?page=${page}`);

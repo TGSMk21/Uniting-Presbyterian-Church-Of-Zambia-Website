@@ -245,6 +245,14 @@ class HasDailyMessages(APIException):
     )
 
 
+class HasWrittenSermons(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = (
+        "This minister has written sermons, so they can't be deleted. "
+        "Delete their written sermons first."
+    )
+
+
 class StaffMinisterViewSet(BranchContentViewSet):
     queryset = Minister.objects.order_by("order", "name", "pk")
     serializer_class = MinisterSerializer
@@ -253,6 +261,8 @@ class StaffMinisterViewSet(BranchContentViewSet):
         # Deleting a minister would delete their daily messages with them.
         if instance.daily_messages.exists():
             raise HasDailyMessages()
+        if instance.sermon_documents.exists():
+            raise HasWrittenSermons()
         photo = instance.photo.name
         instance.delete()
         delete_quietly(photo)

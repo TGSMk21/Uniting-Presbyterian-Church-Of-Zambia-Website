@@ -6,7 +6,7 @@ from django.contrib.auth.models import Permission
 from django.utils import timezone
 
 from church_erp.accounts.models import User
-from church_erp.ai_messages.models import DailyMessage
+from church_erp.ai_messages.models import DailyMessage, SermonDocument
 from church_erp.content.models import Activity, Page, Project, Sermon
 from church_erp.core.models import Branch, Minister
 from church_erp.finance.models import GivingRecord
@@ -70,6 +70,9 @@ def make_branch_content(branch, recorded_by):
         ),
         "dailymessage": DailyMessage.objects.create(
             minister=minister, title="Word", message="m", date=date(2026, 1, 1)
+        ),
+        "sermondocument": SermonDocument.objects.create(
+            minister=minister, title=f"{branch.slug} written sermon", text="Words"
         ),
         "givingrecord": GivingRecord.objects.create(
             branch=branch,
