@@ -1,6 +1,8 @@
 import os
 from datetime import timedelta
 from pathlib import Path
+
+from celery.schedules import crontab
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -202,6 +204,11 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Africa/Lusaka"
 CELERY_BEAT_SCHEDULE = {
+    # Tomorrow's daily message drafts, for staff to check (ai_messages/generation.py).
+    "generate-daily-messages": {
+        "task": "church_erp.ai_messages.tasks.generate_daily_messages",
+        "schedule": crontab(hour=3, minute=17),
+    },
     "sync-youtube-sermons": {
         "task": "church_erp.content.tasks.sync_youtube_sermons",
         "schedule": 300.0,  # every 5 minutes; ~2 quota units per branch per run

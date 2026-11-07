@@ -471,6 +471,8 @@
   font-size: 0.95rem;
 }
 .dash-notice a { color: inherit; }
+/* An AI draft: a reminder to check it, in the warning colours. */
+.dash-notice-ai { background: #fdf3dc; color: #6b4a00; }
 .dash-rows {
   list-style: none;
   margin: 0;

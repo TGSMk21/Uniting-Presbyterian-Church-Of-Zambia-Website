@@ -22,14 +22,17 @@ class StaffMessageSerializer(serializers.ModelSerializer):
     message = serializers.CharField(max_length=MESSAGE_TEXT)
     verse_text = serializers.CharField(max_length=VERSE_TEXT, allow_blank=True, required=False)
     reviewed_by_name = serializers.SerializerMethodField()
+    # AI drafts (Task 4.3) say so, and which written sermons they came from.
+    source_titles = serializers.SerializerMethodField()
 
     class Meta:
         model = DailyMessage
         fields = [
             "id", "minister", "minister_name", "title", "message", "reference_verse", "verse_text",
             "date", "status", "reviewed_by_name", "published_at", "created_at",
+            "ai_generated", "source_titles",
         ]
-        read_only_fields = ["published_at", "created_at"]
+        read_only_fields = ["published_at", "created_at", "ai_generated"]
         # One published message per minister per day is a database rule; a clash
         # is turned into a message by the box for the day, in save_with_record().
         validators = []
@@ -41,6 +44,9 @@ class StaffMessageSerializer(serializers.ModelSerializer):
         if branch is not None:
             self.fields["minister"].queryset = Minister.objects.filter(branch=branch)
 
+    def get_source_titles(self, obj):
+        return [document.title for document in obj.source_documents.all()]
+
     def get_reviewed_by_name(self, obj):
         person = obj.reviewed_by
         if person is None:
@@ -49,7 +55,7 @@ class StaffMessageSerializer(serializers.ModelSerializer):
 
 
 class StaffMessageViewSet(BranchContentViewSet):
-    queryset = DailyMessage.objects.select_related("minister", "reviewed_by").order_by("-date", "-created_at", "-pk")
+    queryset = DailyMessage.objects.select_related("minister", "reviewed_by").prefetch_related("source_documents").order_by("-date", "-created_at", "-pk")
     serializer_class = StaffMessageSerializer
 
     def get_queryset(self):

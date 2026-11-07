@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-import { SECTIONS, newRowDefaults, rowSummary, tagsToClear, valuesFromForm } from "../Utilities/branchContent.mjs";
+import { SECTIONS, aiDraftNote, newRowDefaults, rowSummary, tagsToClear, valuesFromForm } from "../Utilities/branchContent.mjs";
 import {
   SERMON_ACCEPT,
   SERMON_MAX_BYTES,
@@ -83,4 +83,31 @@ test("a summary after adding several files", () => {
 test("deleting a private sermon doesn't talk about the website", () => {
   const source = readFileSync(new URL("../components/DashboardComponents/content-form.js", import.meta.url), "utf8");
   assert.match(source, /spec\.publicPath/);
+});
+
+test("staff turn AI drafts on per minister and describe how they write", () => {
+  const fields = Object.fromEntries(SECTIONS.ministers.fields.map((f) => [f.key, f]));
+  assert.equal(fields.ai_drafts.type, "checkbox");
+  assert.equal(fields.style_notes.type, "textarea");
+  assert.equal(fields.style_notes.max, 5000);
+  const values = valuesFromForm("ministers", form({ name: "Banda", bio: "", order: "0", style_notes: "Short.", ai_drafts: "on" }), { isNew: false });
+  assert.equal(values.ai_drafts, true);
+  assert.equal(values.style_notes, "Short.");
+});
+
+test("sermons of ministers with drafts off say so instead of waiting", () => {
+  const row = { minister_name: "Banda", preached_on: null, word_count: 10, ready: false, minister_ai_drafts: false };
+  assert.equal(rowSummary("writings", row), "Banda · 10 words · Drafts are off for this minister");
+  assert.equal(rowSummary("writings", { ...row, minister_ai_drafts: true }), "Banda · 10 words · Waiting to be read");
+});
+
+test("AI drafts are marked, and say what to check", () => {
+  assert.equal(aiDraftNote({ ai_generated: false }), null);
+  assert.equal(
+    aiDraftNote({ ai_generated: true, source_titles: ["The Good Shepherd", "Grace"] }),
+    "Written by AI from these sermons: The Good Shepherd, Grace. Please read it carefully, and check the verse's words in your Bible, before publishing.",
+  );
+  assert.match(aiDraftNote({ ai_generated: true, source_titles: [] }), /^Written by AI\. Please read/);
+  assert.equal(rowSummary("messages", { date: "2026-11-09", minister_name: "Banda", status: "pending_review", ai_generated: true }),
+    "Mon, 9 Nov 2026 · Banda · AI draft");
 });

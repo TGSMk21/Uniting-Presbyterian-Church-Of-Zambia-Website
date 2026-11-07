@@ -63,6 +63,7 @@ export default async function SectionList({ params, searchParams }) {
                   {rowSummary(name, row)}
                   {row.is_live && <span className="dash-badge dash-badge-live">Live now</span>}
                   {row.is_hidden && <span className="dash-badge">Hidden</span>}
+                  {row.ai_generated && row.status === "pending_review" && <span className="dash-badge">Check before publishing</span>}
                 </span>
               </Link>
             </li>

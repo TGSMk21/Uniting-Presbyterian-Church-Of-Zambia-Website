@@ -102,7 +102,7 @@ On Render's free plan there is no shell, so run it from your own machine against
    - Header: `X-Sync-Token` set to the `SYNC_TOKEN` value from the Render dashboard (Environment tab)
    - Schedule: every **10 minutes**
 
-   This runs the sync and keeps the service awake. One always-awake service uses about 744 of Render's 750 free hours a month, so don't add a second free service to the same workspace.
+   This runs the sync and keeps the service awake. For the AI daily message drafts, add a second job the same way with the URL `https://<service>.onrender.com/api/tasks/daily-messages/`, every **hour** (it writes tomorrow's drafts at its first run of the day and does nothing on the others). One always-awake service uses about 744 of Render's 750 free hours a month, so don't add a second free service to the same workspace.
 6. **Point the backend at the frontend.** After the Vercel deploy, set `FRONTEND_URL` to the real site URL(s), comma-separated, and redeploy.
 
 If the site later moves to a paid Render plan, replace step 5 with a Render cron job running `python manage.py sync_youtube`, and move `migrate`/`setup_roles` into a pre-deploy command.
@@ -200,7 +200,20 @@ Ministers have an order number, and the lowest is the one on the branch's About 
 
 Staff write their branch's daily messages at `/dashboard/content/<branch>/messages`, through `/api/staff/<branch>/messages/`. Each message comes from one of the branch's own ministers and is for one day. A new message is a draft; staff set it to Published when it's ready. Publishing records who did it and when, and unpublishing clears that again. A minister can have only one published message per day, which the database also enforces. Drafts for the same day are allowed.
 
-The public address, `/api/daily-messages/`, is read-only. It shows only published messages whose day has come, newest day first, so a message written ahead for next Sunday appears on Sunday. The home page shows the first one. It doesn't say who published a message. Phase 4's AI drafts will arrive in the same list as drafts for staff to check.
+The public address, `/api/daily-messages/`, is read-only. It shows only published messages whose day has come, newest day first, so a message written ahead for next Sunday appears on Sunday. The home page shows the first one. It doesn't say who published a message. AI drafts (below) arrive in the same list, marked "AI draft", for staff to check and publish.
+
+### Written sermons and AI daily message drafts
+
+Pastors' sermons are kept at `/dashboard/content/<branch>/writings`, through `/api/staff/<branch>/writings/`. Staff paste a sermon in, or add Word (`.docx`), PDF or plain text files, many at once (`POST .../writings/upload/`, one file per request, up to 4 MB). The words are read from the file (`ai_messages/sermon_text.py`); scanned PDFs have no text and are refused with a reason, and older `.doc` files are refused with how to save them as `.docx`. Sermons are private to the branch's staff and never on the website. Files go in the private bucket under server-chosen names and are never linked to.
+
+AI drafts are off for every minister until staff tick **Write a daily message draft from their written sermons each day** on the minister's page; they can also describe how the minister writes. Only those ministers' sermons are ever sent to the AI. For them, the daily job:
+
+1. Reads each waiting sermon: cuts it into passages of about 350 words that overlap by 50, and gets each passage's embedding from Gemini (`gemini-embedding-001`, 1536 numbers, made unit length here). Each row records the model; changing `GEMINI_EMBEDDING_MODEL` puts every sermon back in the queue. Changing a sermon's words does the same for that sermon.
+2. Writes **tomorrow's** draft for each of those ministers, unless they already have a message that day: the day has one of 30 themes in turn, the four passages nearest the theme are found with pgvector's cosine distance (sermons used in the last fortnight rest while there are others), and Gemini writes a title, Bible verse, the verse's words and the message in the minister's voice. The draft is saved as a draft (`ai_generated`, with the sermons it came from). Nothing is ever published by itself; staff check it, especially the verse's words, and publish it.
+
+The job is safe to run as often as wanted. Run it with `POST /api/tasks/daily-messages/` (header `X-Sync-Token`, as for the YouTube sync), which works for at most 25 seconds and carries on at the next call, or with the Celery task `church_erp.ai_messages.tasks.generate_daily_messages` (scheduled at 03:17 Zambian time where Celery beat runs). `python manage.py embed_sermon --id <number>` or `--waiting` reads sermons by hand.
+
+Settings: `GEMINI_API_KEY` (empty turns it all off), `GEMINI_MODEL` (default `gemini-flash-latest`, which follows Google's current Flash model) and `GEMINI_EMBEDDING_MODEL`. **Gemini's free tier may use what it's sent to improve Google's products**, so switch to a paid tier, or another provider, before real sermons are added.
 
 ### Media library
 

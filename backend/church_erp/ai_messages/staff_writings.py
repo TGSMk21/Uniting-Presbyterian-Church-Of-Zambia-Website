@@ -51,6 +51,8 @@ class BranchMinisterField(serializers.PrimaryKeyRelatedField):
 class WritingSerializer(serializers.ModelSerializer):
     minister = BranchMinisterField()
     minister_name = serializers.CharField(source="minister.name", read_only=True)
+    # Sermons are only read, and sent to Gemini, for ministers with AI drafts on.
+    minister_ai_drafts = serializers.BooleanField(source="minister.ai_drafts", read_only=True)
     text = SermonWordsField()
     word_count = serializers.SerializerMethodField()
     ready = serializers.SerializerMethodField()
@@ -58,7 +60,7 @@ class WritingSerializer(serializers.ModelSerializer):
     class Meta:
         model = SermonDocument
         fields = [
-            "id", "minister", "minister_name", "title", "preached_on", "text",
+            "id", "minister", "minister_name", "minister_ai_drafts", "title", "preached_on", "text",
             "source_name", "file_kind", "word_count", "ready", "created_at",
         ]
         read_only_fields = ["source_name", "file_kind", "created_at"]

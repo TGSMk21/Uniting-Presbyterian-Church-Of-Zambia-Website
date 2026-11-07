@@ -214,10 +214,11 @@ class StaffActivityViewSet(BranchContentViewSet):
 
 class MinisterSerializer(serializers.ModelSerializer):
     bio = serializers.CharField(max_length=LONG_TEXT, allow_blank=True, required=False)
+    style_notes = serializers.CharField(max_length=LONG_TEXT, allow_blank=True, required=False)
 
     class Meta:
         model = Minister
-        fields = ["id", "name", "bio", "order", "photo"]
+        fields = ["id", "name", "bio", "order", "photo", "ai_drafts", "style_notes"]
         # Photos change through their own upload, which checks them.
         read_only_fields = ["photo"]
         extra_kwargs = {"order": {"min_value": 0, "max_value": MAX_ORDER}}

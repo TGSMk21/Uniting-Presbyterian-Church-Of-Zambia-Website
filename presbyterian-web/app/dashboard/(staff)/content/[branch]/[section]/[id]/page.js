@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import ContentForm from "@/components/DashboardComponents/content-form";
 import MinisterPhoto from "@/components/DashboardComponents/minister-photo";
 import {
+  aiDraftNote,
   apiPath,
   formValues,
   isBranchSlug,
@@ -46,6 +47,9 @@ export default async function EditRow({ params }) {
       )}
       {name === "ministers" && (
         <MinisterPhoto branch={branch} id={id} value={data.photo || ""} viewHref={spec.publicPath(branch)} />
+      )}
+      {name === "messages" && aiDraftNote(data) && (
+        <p className="dash-notice dash-notice-ai">{aiDraftNote(data)}</p>
       )}
       {name === "messages" && data.status === "published" && data.published_at && (
         <p className="dash-text">{publishedNote(data)}</p>

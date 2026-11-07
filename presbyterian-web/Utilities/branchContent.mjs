@@ -92,6 +92,11 @@ export const SECTIONS = {
       { key: "bio", label: "About them", type: "textarea", max: LONG_TEXT,
         help: "Leave an empty line between paragraphs." },
       { ...ORDER, help: "Lower numbers come first. Give the minister for your About page the lowest." },
+      // Daily message drafts written by AI from their written sermons (Phase 4).
+      { key: "ai_drafts", label: "Write a daily message draft from their written sermons each day", type: "checkbox",
+        help: "Drafts appear in Daily messages for you to check and publish; nothing is published by itself. Their written sermons are sent to Google's Gemini AI to do this." },
+      { key: "style_notes", label: "How they write", type: "textarea", max: LONG_TEXT,
+        help: "For the drafts. For example: short sentences, a question to think about, ends with a short prayer." },
     ],
   },
   services: {
@@ -115,7 +120,7 @@ export const SECTIONS = {
     label: "Daily messages",
     singular: "daily message",
     adding: "Write a daily message",
-    intro: "Your home page shows the newest published message whose day has come, until the next one.",
+    intro: "Your home page shows the newest published message whose day has come, until the next one. Ministers with daily message drafts turned on get an AI draft for each day, to check and publish.",
     canDelete: true,
     publicPath: (branch) => `/${branch}`,
     fields: [
@@ -299,12 +304,17 @@ export function rowSummary(name, row) {
   if (name === "ministers") return `Order ${row.order} · ${row.photo ? "Has a photo" : "No photo yet"}`;
   if (name === "messages") {
     const day = row.date ? formatted(new Date(`${row.date}T12:00:00Z`), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
-    return [day, row.minister_name, MESSAGE_STATUS_SHORT[row.status] || row.status].filter(Boolean).join(" · ");
+    const status = row.ai_generated && row.status === "pending_review" ? "AI draft" : MESSAGE_STATUS_SHORT[row.status] || row.status;
+    return [day, row.minister_name, status].filter(Boolean).join(" · ");
   }
   if (name === "writings") {
     const day = row.preached_on ? formatted(new Date(`${row.preached_on}T12:00:00Z`), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
     const words = `${new Intl.NumberFormat("en-GB").format(row.word_count)} ${row.word_count === 1 ? "word" : "words"}`;
-    return [day, row.minister_name, words, row.ready ? "Ready for daily messages" : "Waiting to be read"].filter(Boolean).join(" · ");
+    let state = "Waiting to be read";
+    if (row.ready) state = "Ready for daily messages";
+    // Only read, and sent to the AI, for ministers with drafts on.
+    else if (row.minister_ai_drafts === false) state = "Drafts are off for this minister";
+    return [day, row.minister_name, words, state].filter(Boolean).join(" · ");
   }
   if (name === "services") {
     const times = [row.start_time, row.end_time].filter(Boolean).map((t) => t.slice(0, 5)).join("–");
@@ -314,6 +324,13 @@ export function rowSummary(name, row) {
   const day = row.date ? formatted(new Date(`${row.date}T12:00:00Z`), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
   const times = [row.start_time, row.end_time].filter(Boolean).map((t) => t.slice(0, 5)).join("–");
   return [day, times, row.location].filter(Boolean).join(" · ");
+}
+
+// Shown above an AI draft's form: where it came from, and what to check.
+export function aiDraftNote({ ai_generated, source_titles = [] }) {
+  if (!ai_generated) return null;
+  const from = source_titles.length ? ` from these sermons: ${source_titles.join(", ")}` : "";
+  return `Written by AI${from}. Please read it carefully, and check the verse's words in your Bible, before publishing.`;
 }
 
 // Shown above a published message's form.
