@@ -182,6 +182,12 @@ Staff change the wording of the website's pages at `/dashboard/pages`. Branch st
 
 Saving from the dashboard updates the public page straight away. A change to a branch's tagline, welcome text or year theme made in the Django admin can take up to an hour to show.
 
+### Page images
+
+Fields of type `image` in the same list are uploaded instead of typed: branch main and smaller photos and logo, and the national fellowship photos. `POST /api/page-content/<scope>/<page>/images/<key>/` uploads one and `DELETE` goes back to the original, with the same permissions as wording.
+
+The browser shrinks photos first, because Vercel refuses requests over 4.5 MB. The API then accepts only real JPG, PNG or WebP files up to 4 MB and 25 megapixels, and saves its own WebP copy with a new name, no hidden data such as location, and its longest side limited by the field's `max_side`. Files go to the public bucket, and a replaced or removed file is deleted from it. Images can't be set through the wording API, so a saved file name always came from an upload.
+
 ## Settings
 
 `manage.py` defaults to `church_erp.settings.local`. Production uses `DJANGO_SETTINGS_MODULE=church_erp.settings.production`.

@@ -423,11 +423,12 @@ Every branch currently renders Chilanga's home page.
 
 ### Task 5.2 — Editable page content
 Most page wording is hard-coded today: on the national site, the landing page (hero, welcome, fellowships, closing) and the contact page. On branch sites, some fixed wording sits around fields that are already editable (tagline, welcome text, year theme, images). The `Page` model exists, but no website page reads it.
-- [x] Add a content model with named fields per page and section, for both the national site and each branch, not one free-form HTML box. Plain text and images only, so edits can't break a layout or inject scripts. **[rev]** `PageContent` stores only changes; `pageSchema.json` (a copy on each side, compared by a test) lists every field. `*stars*` give emphasis. Tagline, welcome text and year theme stay on `Branch`. Text only so far.
+- [x] Add a content model with named fields per page and section, for both the national site and each branch, not one free-form HTML box. Plain text and images only, so edits can't break a layout or inject scripts. **[rev]** `PageContent` stores only changes; `pageSchema.json` (a copy on each side, compared by a test) lists every field. `*stars*` give emphasis. Tagline, welcome text, year theme, hero images and logo stay on `Branch`.
 - [x] Seed it with today's wording, and keep the current text as a fallback, so no page goes blank and nothing changes until someone edits it. **[rev]** Unedited national pages were compared word for word with the live site.
 - [x] Dashboard section per page, with labelled fields (`/dashboard/pages`).
-- [ ] Image upload to the public bucket: branch hero images and logos, and the national fellowship images.
+- [x] Image upload to the public bucket: branch hero images and logos, and the national fellowship images. **[rev]** Images are fields of type `image` in the same schema. The browser shrinks photos first; the API checks each one and saves its own clean WebP copy, then deletes the file it replaced. Branch logos now show in that branch's header and footer. Minister photos come with the ministers section in Task 5.3.
 - [x] Permissions: branch staff edit their own branch's pages; national pages are limited to superusers and the existing National Admin role.
+- [x] **[rev] Page editing live (verified 2026-11-07):** the owner edited a page on the production site and saw the change straight away.
 - [x] Make saved edits appear straight away: the website caches API answers for an hour. **[rev]** Saves go through the website's server, so it clears the cache tag itself (`updateTag`) and no extra endpoint is needed.
 - [ ] Decide what to do with the unused `Page` model: reuse it for the new content or remove it.
 - [x] Commit: `"Add editable page content for national and branch sites"`
