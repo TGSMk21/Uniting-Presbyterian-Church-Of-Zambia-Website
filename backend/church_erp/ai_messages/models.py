@@ -36,6 +36,14 @@ class DailyMessage(models.Model):
 
     class Meta:
         ordering = ['-date']
+        constraints = [
+            # A minister's day has one published message; drafts can pile up.
+            models.UniqueConstraint(
+                fields=['minister', 'date'],
+                condition=models.Q(status='published'),
+                name='one_published_message_per_minister_day',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.title} — {self.date}"

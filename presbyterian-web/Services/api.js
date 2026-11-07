@@ -77,7 +77,7 @@ export async function getMinisters(branch) {
 }
 
 export async function getDailyMessages(branch) {
-  return fetchAPI(`/daily-messages/?branch=${branch}`)
+  return fetchAPI(`/daily-messages/?branch=${branch}`, cachedFor(sectionTag('messages', branch)))
 }
 
 export async function getPages(branch) {

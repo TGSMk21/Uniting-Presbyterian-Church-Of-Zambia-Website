@@ -26,10 +26,10 @@ class VerseTextTests(APITestCase):
         self.assertEqual(row["minister_name"], "Rev A")
 
     def test_verse_is_optional(self):
-        staff = User.objects.create_user("ed", is_staff=True, branch=self.branch)
+        staff = User.objects.create_user("ed", is_staff=True, branch=self.branch, role="content_editor")
         self.client.force_authenticate(staff)
         response = self.client.post(
-            reverse("dailymessage-list"),
+            reverse("staff-messages-list", args=["alpha"]),
             {"minister": self.minister.pk, "title": "T", "message": "m", "date": "2026-11-03"},
             format="json",
         )

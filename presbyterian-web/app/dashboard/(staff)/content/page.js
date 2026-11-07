@@ -11,7 +11,7 @@ export default async function BranchContent() {
   return (
     <main className="dash-main">
       <h1 className="dash-heading">Branch content</h1>
-      <p className="dash-text">Add and change your branch&apos;s sermons, projects, activities, ministers and service times, and its contact details.</p>
+      <p className="dash-text">Add and change your branch&apos;s sermons, projects, activities, ministers, service times and daily messages, and its contact details.</p>
       {manageable.length === 0 && (
         <p className="dash-text">
           {staff.is_superuser

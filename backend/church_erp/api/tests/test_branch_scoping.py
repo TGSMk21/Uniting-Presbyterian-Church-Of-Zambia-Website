@@ -5,7 +5,6 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from church_erp.accounts.models import User
-from church_erp.ai_messages.models import DailyMessage
 from church_erp.content.models import Page, Project, Sermon
 from church_erp.core.models import Minister
 from church_erp.core.tests.helpers import make_branch, make_branch_content
@@ -54,28 +53,8 @@ class PublicReadTests(ApiScopingTestCase):
 # Ministers are changed through the staff API too; see content/tests/test_staff_people.py.
 
 
-class DailyMessageApiTests(ApiScopingTestCase):
-    def test_public_sees_only_published_messages(self):
-        published = DailyMessage.objects.create(
-            minister=self.a["minister"], title="Live", message="m",
-            date=timezone.now().date(), status="published",
-        )
-        response = self.client.get(reverse("dailymessage-list"))
-        self.assertEqual(self.ids(response), {published.pk})
-
-    def test_staff_see_unpublished_messages_of_own_branch_only(self):
-        self.as_user(self.staff_a)
-        response = self.client.get(reverse("dailymessage-list"))
-        self.assertEqual(self.ids(response), {self.a["dailymessage"].pk})
-
-    def test_staff_cannot_create_message_for_other_branch_minister(self):
-        self.as_user(self.staff_a)
-        response = self.client.post(
-            reverse("dailymessage-list"),
-            {"minister": self.b["minister"].pk, "title": "T", "message": "m", "date": "2026-02-01"},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 403)
+# Daily messages are written through the staff API, and the public address only
+# shows published ones; see ai_messages/tests/test_staff_messages.py.
 
 
 class PageApiTests(ApiScopingTestCase):

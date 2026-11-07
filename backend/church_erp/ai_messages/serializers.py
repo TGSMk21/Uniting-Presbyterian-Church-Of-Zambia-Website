@@ -10,9 +10,12 @@ class SermonEmbeddingSerializer(serializers.ModelSerializer):
 
 
 class DailyMessageSerializer(serializers.ModelSerializer):
+    """What the public sees. Who published it stays in the dashboard."""
     minister_name = serializers.CharField(source='minister.name', read_only=True)
 
     class Meta:
         model = DailyMessage
-        fields = '__all__'
-        read_only_fields = ('reviewed_by',)
+        fields = [
+            'id', 'minister', 'minister_name', 'title', 'message',
+            'reference_verse', 'verse_text', 'date', 'published_at',
+        ]

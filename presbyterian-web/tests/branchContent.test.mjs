@@ -31,7 +31,7 @@ function form(entries) {
 }
 
 test("only these sections exist", () => {
-  assert.deepEqual(Object.keys(SECTIONS), ["sermons", "projects", "activities", "ministers", "services"]);
+  assert.deepEqual(Object.keys(SECTIONS), ["sermons", "projects", "activities", "ministers", "services", "messages"]);
   assert.deepEqual(Object.keys(NEW_DEFAULTS), Object.keys(SECTIONS));
   assert.equal(section("sermons"), SECTIONS.sermons);
   assert.equal(section("toString"), undefined);
@@ -40,7 +40,7 @@ test("only these sections exist", () => {
 
 test("buttons read properly", () => {
   assert.deepEqual(Object.values(SECTIONS).map((s) => s.adding), [
-    "Add a sermon", "Add a project", "Add an activity", "Add a minister", "Add a service time",
+    "Add a sermon", "Add a project", "Add an activity", "Add a minister", "Add a service time", "Write a daily message",
   ]);
 });
 

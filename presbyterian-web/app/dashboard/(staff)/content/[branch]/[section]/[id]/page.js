@@ -2,7 +2,17 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import ContentForm from "@/components/DashboardComponents/content-form";
 import MinisterPhoto from "@/components/DashboardComponents/minister-photo";
-import { apiPath, formValues, isBranchSlug, isRowId, rowTitle, section } from "@/Utilities/branchContent.mjs";
+import {
+  apiPath,
+  formValues,
+  isBranchSlug,
+  isRowId,
+  ministerChoices,
+  publishedNote,
+  rowTitle,
+  section,
+} from "@/Utilities/branchContent.mjs";
+import { sectionChoices } from "../../../../../content-choices";
 import { requireStaff, staffRequest } from "../../../../../session";
 
 export default async function EditRow({ params }) {
@@ -11,7 +21,10 @@ export default async function EditRow({ params }) {
   const spec = section(name);
   if (!spec || !isBranchSlug(branch) || !isRowId(id)) notFound();
 
-  const { status, data } = await staffRequest(apiPath(branch, name, id));
+  const [{ status, data }, { ministers }] = await Promise.all([
+    staffRequest(apiPath(branch, name, id)),
+    sectionChoices(branch, name),
+  ]);
   if (status === 401) redirect("/dashboard/login");
   if (status === 403 || status === 404) notFound();
   if (status !== 200) throw new Error(`The staff API answered ${status}`);
@@ -34,7 +47,16 @@ export default async function EditRow({ params }) {
       {name === "ministers" && (
         <MinisterPhoto branch={branch} id={id} value={data.photo || ""} viewHref={spec.publicPath(branch)} />
       )}
-      <ContentForm branch={branch} name={name} id={id} values={formValues(name, data)} />
+      {name === "messages" && data.status === "published" && data.published_at && (
+        <p className="dash-text">{publishedNote(data)}</p>
+      )}
+      <ContentForm
+        branch={branch}
+        name={name}
+        id={id}
+        values={formValues(name, data)}
+        choices={{ ministers: ministerChoices(ministers) }}
+      />
     </main>
   );
 }

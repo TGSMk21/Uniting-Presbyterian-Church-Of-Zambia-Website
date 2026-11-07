@@ -195,7 +195,10 @@ class ServiceTimeSerializer(serializers.ModelSerializer):
 
 class HasDailyMessages(APIException):
     status_code = status.HTTP_409_CONFLICT
-    default_detail = "This minister has daily messages, so they can't be deleted."
+    default_detail = (
+        "This minister has daily messages, so they can't be deleted. "
+        "Move their messages to another minister, or delete them, first."
+    )
 
 
 class StaffMinisterViewSet(BranchContentViewSet):

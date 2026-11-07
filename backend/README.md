@@ -196,6 +196,12 @@ Sermons are added from a YouTube link and can't be deleted, because the YouTube 
 
 Ministers have an order number, and the lowest is the one on the branch's About page. Their photo is uploaded at `POST /api/staff/<branch>/ministers/<id>/photo/` (`DELETE` removes it) and checked and re-saved like page images, at most 800 pixels on the longest side. A minister who has daily messages can't be deleted, because their messages would be deleted with them. Service times come with the branch, so saving one also refreshes the branch's pages and Find a Branch.
 
+### Daily messages
+
+Staff write their branch's daily messages at `/dashboard/content/<branch>/messages`, through `/api/staff/<branch>/messages/`. Each message comes from one of the branch's own ministers and is for one day. A new message is a draft; staff set it to Published when it's ready. Publishing records who did it and when, and unpublishing clears that again. A minister can have only one published message per day, which the database also enforces. Drafts for the same day are allowed.
+
+The public address, `/api/daily-messages/`, is read-only. It shows only published messages whose day has come, newest day first, so a message written ahead for next Sunday appears on Sunday. The home page shows the first one. It doesn't say who published a message. Phase 4's AI drafts will arrive in the same list as drafts for staff to check.
+
 ### Branch details and map position
 
 `GET` and `PATCH /api/staff/<branch>/details/` change a branch's contact email (where its Contact form's messages go), phone, address and map position, at `/dashboard/content/<branch>/details`. Staff click the church on a map or paste the position from Google Maps. Positions outside Zambia, half a position, and "confirmed" without a position are refused; extra decimal places are rounded to six (about 10 cm). The name, web address and YouTube channel stay in the admin for superusers.

@@ -1,4 +1,4 @@
-// Each branch's sermons, projects, activities, ministers and service times, managed
+// Each branch's sermons, projects, activities, ministers, service times and daily messages, managed
 // from the dashboard (AGENT_EXECUTION_PLAN.md, Task 5.3). The API checks everything
 // again; this file only describes the forms and lists.
 import { branchTag } from "./pageContent.mjs";
@@ -18,6 +18,15 @@ export const PROJECT_STATUSES = [
   { value: "ONGOING", label: "In progress" },
   { value: "COMPLETED", label: "Finished" },
 ];
+
+// Drafts and turned-down messages stay off the website. Phase 4's AI drafts arrive
+// as drafts for staff to check.
+export const MESSAGE_STATUSES = [
+  { value: "pending_review", label: "Draft (not on the website)" },
+  { value: "published", label: "Published" },
+  { value: "rejected", label: "Turned down (not on the website)" },
+];
+const MESSAGE_STATUS_SHORT = { pending_review: "Draft", published: "Published", rejected: "Turned down" };
 
 export const SECTIONS = {
   sermons: {
@@ -102,6 +111,28 @@ export const SECTIONS = {
       ORDER,
     ],
   },
+  messages: {
+    label: "Daily messages",
+    singular: "daily message",
+    adding: "Write a daily message",
+    intro: "Your home page shows the newest published message whose day has come, until the next one.",
+    canDelete: true,
+    publicPath: (branch) => `/${branch}`,
+    fields: [
+      // The page fills in the branch's ministers.
+      { key: "minister", label: "From", type: "select", choices: "ministers", required: true },
+      { key: "date", label: "Day", type: "date", required: true,
+        help: "It shows on your home page from this day." },
+      { key: "title", label: "Title", type: "text", max: 300, required: true },
+      { key: "reference_verse", label: "Bible verse", type: "text", max: 100, help: "For example Psalm 119:105." },
+      { key: "verse_text", label: "The verse itself", type: "textarea", max: 2000,
+        help: "Shown above the message. Leave empty to show your home page's usual verse." },
+      { key: "message", label: "Message", type: "textarea", max: 10000, required: true,
+        help: "Leave an empty line between paragraphs." },
+      { key: "status", label: "Status", type: "select", options: MESSAGE_STATUSES, required: true,
+        help: "Only published messages show on the website." },
+    ],
+  },
 };
 
 export const NEW_DEFAULTS = {
@@ -110,7 +141,24 @@ export const NEW_DEFAULTS = {
   activities: {},
   ministers: { order: "0" },
   services: { order: "0" },
+  messages: { status: "pending_review" },
 };
+
+// The calendar day in Zambia, as YYYY-MM-DD.
+export function todayInZambia(now = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+}
+
+// Choices for the minister box.
+export function ministerChoices(ministers = []) {
+  return (ministers || []).map(({ id, name }) => ({ value: String(id), label: name }));
+}
+
+// What a new row's boxes start with. A new message is a draft for today.
+export function newRowDefaults(name, { ministers = [], now = new Date() } = {}) {
+  if (name !== "messages") return NEW_DEFAULTS[name];
+  return { ...NEW_DEFAULTS.messages, date: todayInZambia(now), minister: ministers[0] ? String(ministers[0].id) : "" };
+}
 
 export function section(name) {
   return Object.hasOwn(SECTIONS, name) ? SECTIONS[name] : undefined;
@@ -227,6 +275,10 @@ export function rowSummary(name, row) {
     return `${status} · ${row.progress}%`;
   }
   if (name === "ministers") return `Order ${row.order} · ${row.photo ? "Has a photo" : "No photo yet"}`;
+  if (name === "messages") {
+    const day = row.date ? formatted(new Date(`${row.date}T12:00:00Z`), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
+    return [day, row.minister_name, MESSAGE_STATUS_SHORT[row.status] || row.status].filter(Boolean).join(" · ");
+  }
   if (name === "services") {
     const times = [row.start_time, row.end_time].filter(Boolean).map((t) => t.slice(0, 5)).join("–");
     return [row.day, times, row.location].filter(Boolean).join(" · ");
@@ -235,6 +287,14 @@ export function rowSummary(name, row) {
   const day = row.date ? formatted(new Date(`${row.date}T12:00:00Z`), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
   const times = [row.start_time, row.end_time].filter(Boolean).map((t) => t.slice(0, 5)).join("–");
   return [day, times, row.location].filter(Boolean).join(" · ");
+}
+
+// Shown above a published message's form.
+export function publishedNote({ published_at, reviewed_by_name }) {
+  const when = new Date(published_at);
+  const day = formatted(when, { day: "numeric", month: "short", year: "numeric" });
+  const time = formatted(when, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  return `Published on ${day} at ${time}${reviewed_by_name ? ` by ${reviewed_by_name}` : ""}.`;
 }
 
 // Which branches this person can manage. The API enforces the same rules.

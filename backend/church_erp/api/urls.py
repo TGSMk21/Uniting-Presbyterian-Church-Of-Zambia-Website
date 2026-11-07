@@ -4,6 +4,7 @@ from church_erp.core.views import BranchViewSet, MinisterViewSet
 from church_erp.content.views import SermonViewSet, ProjectViewSet, ActivityViewSet, PageViewSet
 from church_erp.media_library.views import MediaAssetViewSet
 from church_erp.ai_messages.views import DailyMessageViewSet
+from church_erp.ai_messages.staff_messages import StaffMessageViewSet
 from church_erp.finance.views import GivingRecordViewSet
 from church_erp.api.views import sync_youtube
 from church_erp.content.page_content_views import PageContentPageView, PageContentView, PageImageView
@@ -34,6 +35,7 @@ staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/projects', StaffProjectV
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/activities', StaffActivityViewSet, basename='staff-activities')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/ministers', StaffMinisterViewSet, basename='staff-ministers')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/services', StaffServiceTimeViewSet, basename='staff-services')
+staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/messages', StaffMessageViewSet, basename='staff-messages')
 
 urlpatterns = [
     path('', include(router.urls)),

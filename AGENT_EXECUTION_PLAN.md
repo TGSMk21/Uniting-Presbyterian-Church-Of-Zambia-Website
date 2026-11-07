@@ -392,7 +392,7 @@ Every branch currently renders Chilanga's home page.
 - [ ] Extend `ai_messages/admin.py`'s `DailyMessageAdmin` with an admin action `approve_and_publish` that sets `status='published'`, `reviewed_by=request.user`, `published_at=now()` — and a `reject` action setting `status='rejected'`.
 - [ ] Confirm the existing `DailyMessageViewSet.get_queryset` (already filters to `status='published'` for non-staff) is sufficient for the public site — it is, per the Phase 0 audit, so no change needed there.
 - [ ] Add the `BranchScopedAdmin` lookup from Task 0.2 (`branch_lookup = 'minister__branch_id'`) if not already applied.
-- [ ] **[rev]** Add a unique constraint on `DailyMessage(minister, date)` limited to `status='published'`, and pick which message the frontend shows per day (the home page currently shows `results[0]`, i.e. the newest by `-date`, across all ministers of the branch).
+- [x] **[rev]** Add a unique constraint on `DailyMessage(minister, date)` limited to `status='published'`, and pick which message the frontend shows per day (the home page currently shows `results[0]`, i.e. the newest by `-date`, across all ministers of the branch). **[rev] Done with Task 5.3's daily messages:** constraint `one_published_message_per_minister_day` (migration `ai_messages/0003`). The public list is ordered newest day first, then newest published, and leaves out days still to come, so the home page's `results[0]` is today's newest message. The approve and reject actions in the admin above are still to do; the dashboard's status box covers them for now.
 
 ### Task 4.6 — Pilot
 - [x] **[rev] Consent confirmed by the project owner (2026-11-06)**: the project is being done for the churches, and pastors will supply their sermons.
@@ -442,7 +442,7 @@ Most page wording is hard-coded today: on the national site, the landing page (h
 - [x] Branch details, including the exact map position that confirms a branch's pin. **[rev]** Contact email, phone, address and map position, at `/api/staff/<branch>/details/`. Staff click the church on a map or paste the position from Google Maps; positions outside Zambia, half a position and "confirmed" without one are refused. Name, web address and YouTube channel stay with superusers for now (branch creation is Task 5.4). Found while testing: refreshing the session of a deleted account crashed with a server error; it now asks them to sign in again.
 - [x] **[rev] Branch details live (verified 2026-11-07):** the owner confirmed Chilanga's pin on the production site and saw it in Find a Branch straight away.
 - [ ] Media library, using the existing private signed links; files must not become public through the dashboard.
-- [ ] Daily messages: list, edit and manual entry now; Phase 4 adds AI drafts and approval.
+- [x] Daily messages: list, edit and manual entry now; Phase 4 adds AI drafts and approval. **[rev]** Same addresses and rules as the other sections, at `/api/staff/<branch>/messages/`. Staff pick one of their branch's ministers and the day, and publish from the status box; publishing records who and when. One published message per minister per day, now a database rule too (the Task 4.5 constraint, done early). The public address is read-only and shows only published messages whose day has come, today's newest first, so messages can be written ahead. It no longer shows who published a message. Deleting a minister who has messages now says to move or delete the messages first.
 - [ ] CSV export, limited to the rows that person can see.
 - [ ] Commit per section.
 

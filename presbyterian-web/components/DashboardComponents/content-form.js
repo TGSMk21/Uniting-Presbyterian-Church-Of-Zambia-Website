@@ -7,7 +7,7 @@ import { SECTIONS } from "@/Utilities/branchContent.mjs";
 
 const INPUT_TYPES = { datetime: "datetime-local", date: "date", time: "time", number: "number" };
 
-function Box({ field, value, error }) {
+function Box({ field, value, error, choices }) {
   const invalid = error ? true : undefined;
   if (field.type === "checkbox") {
     return (
@@ -25,7 +25,7 @@ function Box({ field, value, error }) {
   } else if (field.type === "select") {
     input = (
       <select key={value} {...shared}>
-        {field.options.map((option) => (
+        {(field.options || choices[field.choices] || []).map((option) => (
           <option key={option.value} value={option.value}>{option.label}</option>
         ))}
       </select>
@@ -72,7 +72,8 @@ function DeleteButton({ branch, name, id }) {
   );
 }
 
-export default function ContentForm({ branch, name, id, values }) {
+// `choices` fills select boxes whose options come from the page, such as the branch's ministers.
+export default function ContentForm({ branch, name, id, values, choices = {} }) {
   const spec = SECTIONS[name];
   const isNew = id === null;
   const [state, action, pending] = useActionState(saveBranchContent.bind(null, branch, name, id), {
@@ -89,7 +90,7 @@ export default function ContentForm({ branch, name, id, values }) {
       <form action={action} className="dash-editor">
         <div className="dash-section">
           {fields.map((field) => (
-            <Box key={field.key} field={field} value={shown[field.key] ?? ""} error={state.fields[field.key]} />
+            <Box key={field.key} field={field} value={shown[field.key] ?? ""} error={state.fields[field.key]} choices={choices} />
           ))}
         </div>
         <div className="dash-savebar">
