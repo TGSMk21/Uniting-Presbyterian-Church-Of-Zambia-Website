@@ -1,7 +1,9 @@
+import BranchMap from "@/components/AboutComponents/branch-map";
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
 import RichText from "@/components/UniversalComponents/rich-text";
 import { getBranch, getMinisters, getPageContent } from "@/Services/api";
 import { listLines, pageFields } from "@/Utilities/pageContent.mjs";
+import { branchMapView, directionsUrl } from "@/Utilities/churchLocator";
 import { formatTime } from "@/Utilities/timeFormat";
 
 export const revalidate = 3600;
@@ -18,9 +20,8 @@ export default async function About({ params }) {
   const reverend = ministers[0];
   const bioParagraphs = (reverend?.bio || "").split(/\n\s*\n/).filter(Boolean);
   const services = branch?.service_times || [];
-  const mapUrl = branch?.address
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branch.address)}`
-    : null;
+  const mapView = branchMapView(branch);
+  const mapUrl = branch && (mapView || branch.address) ? directionsUrl(branch) : null;
   return (
     <div className="container mx-auto max-w-full overflow-hidden min-w-full min-h-screen w-full">
       {/* Page Banner */}
@@ -120,11 +121,15 @@ export default async function About({ params }) {
                 </div>
 
                 <div className="find-us-grid">
-                  <div className="map-placeholder">
-                    {mapUrl && (
-                      <a href={mapUrl} target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
-                    )}
-                  </div>
+                  {mapView ? (
+                    <BranchMap name={branch.name} view={mapView} directionsHref={mapUrl} />
+                  ) : (
+                    <div className="map-placeholder">
+                      {mapUrl && (
+                        <a href={mapUrl} target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+                      )}
+                    </div>
+                  )}
 
                   <div className="contact-cards">
                     <div className="contact-info-card">

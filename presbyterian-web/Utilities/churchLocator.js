@@ -57,3 +57,11 @@ export function directionsUrl(branch) {
   const query = [branch.name, branch.address].filter(Boolean).join(", ");
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
+
+// What a branch's own map shows: close in on a confirmed pin, or the wider area
+// around a position that isn't confirmed yet. Null when there's no position.
+export function branchMapView(branch) {
+  if (!hasLocation(branch)) return null;
+  const exact = Boolean(branch.location_confirmed);
+  return { centre: [Number(branch.latitude), Number(branch.longitude)], zoom: exact ? 16 : 14, exact };
+}

@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  branchMapView,
   directionsUrl,
   distanceKm,
   filterBranches,
@@ -76,4 +77,20 @@ test("directions use exact coordinates only once a location is confirmed", () =>
     directionsUrl(kabwata),
     "https://www.google.com/maps/search/?api=1&query=Kabwata%20Presbyterian%20Church%2C%20Lusaka%2C%20Zambia",
   );
+});
+
+test("a branch's own map zooms in on a confirmed pin", () => {
+  const view = branchMapView({ latitude: "-15.552348", longitude: "28.269743", location_confirmed: true });
+  assert.deepEqual(view, { centre: [-15.552348, 28.269743], zoom: 16, exact: true });
+});
+
+test("an unconfirmed position is shown as an area, not a pin", () => {
+  const view = branchMapView({ latitude: "-15.55", longitude: "28.27", location_confirmed: false });
+  assert.deepEqual(view, { centre: [-15.55, 28.27], zoom: 14, exact: false });
+});
+
+test("no position means no map", () => {
+  assert.equal(branchMapView({ latitude: null, longitude: null, location_confirmed: false }), null);
+  assert.equal(branchMapView(null), null);
+  assert.equal(branchMapView({ latitude: "-15.5", longitude: null }), null);
 });
