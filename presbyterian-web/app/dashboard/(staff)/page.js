@@ -38,7 +38,16 @@ export default async function DashboardHome() {
           )}
         </div>
       </div>
-      <p className="dash-text">Sections for managing pages and content will appear here as they&apos;re added.</p>
+      <div className="dash-panel">
+        <h2 className="dash-subheading">Manage the website</h2>
+        <p className="dash-text">Change the wording on your pages.</p>
+        <div className="dash-links dash-links-spaced">
+          <Link href="/dashboard/pages" className="dash-link" prefetch={false}>
+            Go to Pages
+          </Link>
+        </div>
+      </div>
+      <p className="dash-text">More sections will appear here as they&apos;re added.</p>
     </main>
   );
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { staffFetch } from "@/Services/staffApi";
@@ -14,6 +15,8 @@ import {
   cookieOptions,
   loginFailureMessage,
 } from "@/Utilities/staffSession.mjs";
+import { NATIONAL, branchTag, contentTag, fieldsFromForm, pageSchema, scopeKind } from "@/Utilities/pageContent.mjs";
+import { staffRequest } from "./session";
 
 async function forwardedFor() {
   return (await headers()).get("x-forwarded-for");
@@ -100,6 +103,31 @@ export async function confirmTwoFactor(previousState, formData) {
   if (status === 401 || status === 403) redirect("/dashboard/login");
   if (status === 400) return { error: "That code isn't right. Please try the newest one.", recoveryCodes: null };
   return { error: "Two-step login couldn't be turned on right now. Please try again in a moment.", recoveryCodes: null };
+}
+
+export async function savePageContent(scope, page, previousState, formData) {
+  const kind = scopeKind(scope);
+  if (!pageSchema[kind][page]) return { saved: false, error: "This page can't be edited.", fields: {} };
+
+  const { status, data } = await staffRequest(
+    `/page-content/${encodeURIComponent(scope)}/${encodeURIComponent(page)}/`,
+    { method: "PUT", body: { fields: fieldsFromForm(kind, page, formData) } },
+  );
+
+  if (status === 200) {
+    // Show the change on the public site straight away.
+    updateTag(contentTag(scope));
+    if (scope !== NATIONAL) updateTag(branchTag(scope));
+    return { saved: true, error: null, fields: {} };
+  }
+  if (status === 401) redirect("/dashboard/login");
+  if (status === 400 && data?.fields) return { saved: false, error: null, fields: data.fields };
+  if (status === 403) return { saved: false, error: "You can't edit this page.", fields: {} };
+  return {
+    saved: false,
+    error: "Your changes couldn't be saved right now. Please try again in a moment.",
+    fields: {},
+  };
 }
 
 export async function signOut() {

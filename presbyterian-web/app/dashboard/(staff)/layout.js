@@ -8,10 +8,14 @@ export default async function StaffLayout({ children }) {
   return (
     <>
       <header className="dash-header">
-        <Link href="/dashboard" className="dash-brand">
+        <Link href="/dashboard" className="dash-brand" prefetch={false}>
           <img src="/logo.png" alt="" width="32" height="32" />
           <span>Staff Dashboard</span>
         </Link>
+        <nav className="dash-nav" aria-label="Dashboard">
+          <Link href="/dashboard" prefetch={false}>Overview</Link>
+          <Link href="/dashboard/pages" prefetch={false}>Pages</Link>
+        </nav>
         <div className="dash-account">
           <span className="dash-account-name">{staff.name}</span>
           <form action={signOut}>

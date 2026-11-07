@@ -1,0 +1,260 @@
+{
+  "national": {
+    "home": {
+      "label": "Home page",
+      "path": "/",
+      "sections": [
+        {
+          "title": "Top of the page",
+          "fields": [
+            { "key": "hero_label", "label": "Small heading", "type": "line", "max": 80, "default": "Uniting Presbyterian Church In Zambia" },
+            { "key": "hero_title", "label": "Main heading", "type": "title", "max": 120, "default": "One family.\n*Many houses.*" },
+            { "key": "hero_text", "label": "Introduction", "type": "text", "max": 400, "default": "Wherever you are in Zambia, there is a branch of our family near you — a place to worship, to grow, and to belong." },
+            { "key": "hero_button", "label": "Button", "type": "line", "max": 40, "default": "Find a branch near you" },
+            { "key": "story_link", "label": "Link beside the button", "type": "line", "max": 40, "default": "Our story" },
+            { "key": "badge_label", "label": "Badge heading", "type": "line", "max": 40, "default": "Gathered" },
+            { "key": "badge_text", "label": "Badge text", "type": "line", "max": 80, "default": "Across Zambia, every week" }
+          ]
+        },
+        {
+          "title": "Welcome",
+          "fields": [
+            { "key": "welcome_label", "label": "Small heading", "type": "line", "max": 80, "default": "Welcome home" },
+            { "key": "welcome_text", "label": "Message", "type": "title", "max": 800, "default": "Faith is not a building you visit on a Sunday — it is a family you belong to every day. Across Zambia, our branches gather in cities and villages, in sanctuaries and living rooms, to worship, to serve, and to walk together. *And there is always room for one more.*" }
+          ]
+        },
+        {
+          "title": "Fellowships",
+          "fields": [
+            { "key": "fellowships_label", "label": "Small heading", "type": "line", "max": 80, "default": "Our Fellowships" },
+            { "key": "fellowships_title", "label": "Heading", "type": "title", "max": 120, "default": "Every generation, *every season*" },
+            { "key": "youth_title", "label": "Youth: name", "type": "line", "max": 80, "default": "Youth Fellowship" },
+            { "key": "youth_verse", "label": "Youth: verse", "type": "line", "max": 80, "default": "1 Timothy 4:12" },
+            { "key": "youth_text", "label": "Youth: description", "type": "text", "max": 400, "default": "Empowering young hearts to live boldly for Christ through worship, discipleship, and fellowship that transforms lives." },
+            { "key": "children_title", "label": "Children: name", "type": "line", "max": 80, "default": "Children's Fellowship" },
+            { "key": "children_verse", "label": "Children: verse", "type": "line", "max": 80, "default": "Matthew 19:14" },
+            { "key": "children_text", "label": "Children: description", "type": "text", "max": 400, "default": "Planting seeds of faith in young hearts through engaging Bible lessons, worship, and activities that make God's love real." },
+            { "key": "men_title", "label": "Men: name", "type": "line", "max": 80, "default": "Men's Fellowship" },
+            { "key": "men_verse", "label": "Men: verse", "type": "line", "max": 80, "default": "1 Corinthians 16:13" },
+            { "key": "men_text", "label": "Men: description", "type": "text", "max": 400, "default": "Building godly men of integrity through brotherhood, accountability, and purpose-driven discipleship in Christ." },
+            { "key": "women_title", "label": "Women: name", "type": "line", "max": 80, "default": "Women's Fellowship" },
+            { "key": "women_verse", "label": "Women: verse", "type": "line", "max": 80, "default": "Proverbs 31:25" },
+            { "key": "women_text", "label": "Women: description", "type": "text", "max": 400, "default": "Nurturing women of faith to discover their God-given purpose through prayer, study, and authentic community." }
+          ]
+        },
+        {
+          "title": "Nationwide events",
+          "fields": [
+            { "key": "events_label", "label": "Small heading", "type": "line", "max": 80, "default": "Nationwide events" },
+            { "key": "events_title", "label": "Heading", "type": "title", "max": 120, "default": "Gather *together*" },
+            { "key": "events_text", "label": "Introduction", "type": "text", "max": 400, "default": "Across the year, we come together as one family for conferences, assemblies, and celebrations." }
+          ]
+        },
+        {
+          "title": "Closing invitation",
+          "fields": [
+            { "key": "closing_label", "label": "Small heading", "type": "line", "max": 80, "default": "An open invitation" },
+            { "key": "closing_title", "label": "Heading", "type": "title", "max": 120, "default": "Come as you are.\n*Leave as family.*" },
+            { "key": "closing_text", "label": "Message", "type": "text", "max": 400, "default": "No matter your story, you are welcome at any of our branches this week." },
+            { "key": "closing_button", "label": "Button", "type": "line", "max": 40, "default": "Find your branch" }
+          ]
+        }
+      ]
+    },
+    "find-a-branch": {
+      "label": "Find a Branch page",
+      "path": "/find-a-branch",
+      "sections": [
+        {
+          "title": "Top of the page",
+          "fields": [
+            { "key": "banner_label", "label": "Small heading", "type": "line", "max": 80, "default": "Find a Branch" },
+            { "key": "banner_title", "label": "Main heading", "type": "title", "max": 120, "default": "There's a place for you *near you*" },
+            { "key": "banner_text", "label": "Introduction", "type": "text", "max": 400, "default": "Search by name or area, or find the branch closest to where you are." }
+          ]
+        }
+      ]
+    },
+    "contact": {
+      "label": "Contact page and footer",
+      "path": "/contact",
+      "sections": [
+        {
+          "title": "Top of the page",
+          "fields": [
+            { "key": "banner_label", "label": "Small heading", "type": "line", "max": 80, "default": "Contact Us" },
+            { "key": "banner_title", "label": "Main heading", "type": "title", "max": 120, "default": "We'd love to *hear* from you" },
+            { "key": "banner_text", "label": "Introduction", "type": "text", "max": 400, "default": "A question, a prayer request, or simply a hello — reach out and we'll be in touch." }
+          ]
+        },
+        {
+          "title": "Contact details",
+          "fields": [
+            { "key": "email", "label": "Email address", "type": "email", "max": 254, "default": "hello@upcz.org" },
+            { "key": "phone", "label": "Phone number", "type": "phone", "max": 30, "default": "+260 977 681 606" },
+            { "key": "office", "label": "Office", "type": "line", "max": 120, "default": "National Office, Lusaka, Zambia" },
+            { "key": "form_text", "label": "Text above the message form", "type": "text", "max": 400, "default": "Have a question, prayer request, or just want to say hello? Reach out to us." }
+          ]
+        },
+        {
+          "title": "Footer",
+          "fields": [
+            { "key": "footer_text", "label": "Footer description", "type": "text", "max": 400, "default": "A family of branches across Zambia, rooted in the Gospel. Wherever you are, there is a place for you here." }
+          ]
+        }
+      ]
+    }
+  },
+  "branch": {
+    "home": {
+      "label": "Home page",
+      "path": "",
+      "sections": [
+        {
+          "title": "Top of the page",
+          "fields": [
+            { "key": "hero_label", "label": "Small heading", "type": "line", "max": 80, "default": "Welcome to our family" },
+            { "key": "tagline", "label": "Main heading", "type": "title", "max": 200, "store": "branch", "default": "A place of *grace,* belonging & purpose." },
+            { "key": "welcome_text", "label": "Welcome message", "type": "text", "max": 1000, "store": "branch", "default": "Whether you are exploring faith or looking for a church home, you are welcome here at {branch}." },
+            { "key": "schedule_button", "label": "Button to the service times", "type": "line", "max": 40, "default": "Join Us This Sunday" },
+            { "key": "story_button", "label": "Button to the About page", "type": "line", "max": 40, "default": "Our Story" }
+          ]
+        },
+        {
+          "title": "Theme of the year",
+          "fields": [
+            { "key": "year_theme_title", "label": "Theme", "type": "line", "max": 200, "store": "branch", "default": "" },
+            { "key": "year_theme_text", "label": "About the theme", "type": "text", "max": 1000, "store": "branch", "default": "" }
+          ]
+        },
+        {
+          "title": "Scripture",
+          "fields": [
+            { "key": "verse_label", "label": "Small heading", "type": "line", "max": 80, "default": "Today's Scripture" },
+            { "key": "verse_text", "label": "Verse shown when there's no daily message", "type": "text", "max": 400, "default": "The Lord is my shepherd; I shall not want." },
+            { "key": "verse_ref", "label": "Where that verse is from", "type": "line", "max": 80, "default": "Psalm 23:1" }
+          ]
+        },
+        {
+          "title": "Daily devotion",
+          "fields": [
+            { "key": "devotion_label", "label": "Small heading", "type": "line", "max": 80, "default": "Daily Devotion" },
+            { "key": "devotion_title", "label": "Heading", "type": "title", "max": 120, "default": "Words to carry *through your day*" }
+          ]
+        },
+        {
+          "title": "Weekly schedule",
+          "fields": [
+            { "key": "schedule_label", "label": "Small heading", "type": "line", "max": 80, "default": "Weekly Schedule" },
+            { "key": "schedule_title", "label": "Heading", "type": "title", "max": 120, "default": "Gather with *us*" }
+          ]
+        },
+        {
+          "title": "Get in touch",
+          "fields": [
+            { "key": "contact_label", "label": "Small heading", "type": "line", "max": 80, "default": "Get In Touch" },
+            { "key": "contact_title", "label": "Heading", "type": "title", "max": 120, "default": "We'd love to *hear* from you" },
+            { "key": "contact_text", "label": "Text above the message form", "type": "text", "max": 400, "default": "Have a question, prayer request, or just want to say hello? Reach out to us." }
+          ]
+        },
+        {
+          "title": "Footer",
+          "fields": [
+            { "key": "footer_text", "label": "Footer description", "type": "text", "max": 400, "default": "Walking in Faith, Living in Love. A community of believers rooted in the Gospel." }
+          ]
+        }
+      ]
+    },
+    "about": {
+      "label": "About page",
+      "path": "/about",
+      "sections": [
+        {
+          "title": "Top of the page",
+          "fields": [
+            { "key": "banner_label", "label": "Small heading", "type": "line", "max": 80, "default": "About Us" },
+            { "key": "banner_title", "label": "Main heading", "type": "title", "max": 120, "default": "Our story, our *vision*" },
+            { "key": "banner_text", "label": "Introduction", "type": "text", "max": 600, "default": "Founded on faith and sustained by grace, {branch} is a community dedicated to worship, discipleship, and service." }
+          ]
+        },
+        {
+          "title": "Mission and vision",
+          "fields": [
+            { "key": "mission_title", "label": "Mission heading", "type": "line", "max": 80, "default": "Our Mission" },
+            { "key": "mission_text", "label": "Mission", "type": "text", "max": 800, "default": "To glorify God by making disciples of Jesus Christ through faithful teaching, loving fellowship, and selfless service to our community and beyond." },
+            { "key": "vision_title", "label": "Vision heading", "type": "line", "max": 80, "default": "Our Vision" },
+            { "key": "vision_text", "label": "Vision", "type": "text", "max": 800, "default": "We envision a vibrant, Christ-centered church where every believer is equipped to live out their faith and impact the world for God's kingdom." },
+            { "key": "vision_list", "label": "Vision points", "type": "list", "max": 800, "default": "A house of prayer for all nations\nGrowing together in spiritual maturity\nLoving our neighbours through tangible action\nRaising the next generation of godly leaders\nReaching the unreached with the gospel" }
+          ]
+        },
+        {
+          "title": "Minister",
+          "fields": [
+            { "key": "minister_label", "label": "Small heading", "type": "line", "max": 80, "default": "Meet Our Minister" },
+            { "key": "minister_title", "label": "Heading", "type": "title", "max": 120, "default": "Shepherding with *heart*" },
+            { "key": "minister_role", "label": "Minister's role", "type": "line", "max": 80, "default": "Lead Pastor" }
+          ]
+        },
+        {
+          "title": "Find us",
+          "fields": [
+            { "key": "find_label", "label": "Small heading", "type": "line", "max": 80, "default": "Find Us" },
+            { "key": "find_title", "label": "Heading", "type": "title", "max": 120, "default": "Join us *Sunday*" }
+          ]
+        }
+      ]
+    },
+    "sermons": {
+      "label": "Sermons page",
+      "path": "/sermons",
+      "sections": [
+        {
+          "title": "Top of the page",
+          "fields": [
+            { "key": "banner_label", "label": "Small heading", "type": "line", "max": 80, "default": "Sermons & Messages" },
+            { "key": "banner_title", "label": "Main heading", "type": "title", "max": 120, "default": "Teaching that *transforms*" },
+            { "key": "banner_text", "label": "Introduction", "type": "text", "max": 400, "default": "Explore biblical teaching and grow in your faith through the Word of God" }
+          ]
+        },
+        {
+          "title": "When nothing is live",
+          "fields": [
+            { "key": "offline_title", "label": "Heading", "type": "line", "max": 120, "default": "No Live Stream Currently" },
+            { "key": "offline_text", "label": "Message", "type": "text", "max": 400, "default": "Check back during service times or browse our sermon archive" },
+            { "key": "offline_button", "label": "Button", "type": "line", "max": 40, "default": "Browse Archive" }
+          ]
+        },
+        {
+          "title": "Archive",
+          "fields": [
+            { "key": "archive_label", "label": "Small heading", "type": "line", "max": 80, "default": "Archive" },
+            { "key": "archive_title", "label": "Heading", "type": "title", "max": 120, "default": "Past Sermons" }
+          ]
+        }
+      ]
+    },
+    "projects": {
+      "label": "Projects page",
+      "path": "/projects-and-activities",
+      "sections": [
+        {
+          "title": "Top of the page",
+          "fields": [
+            { "key": "banner_label", "label": "Small heading", "type": "line", "max": 80, "default": "Projects & Activities" },
+            { "key": "banner_title", "label": "Main heading", "type": "title", "max": 120, "default": "Faith in *action*" },
+            { "key": "banner_text", "label": "Introduction", "type": "text", "max": 600, "default": "We believe faith is made visible through service. From community development to spiritual growth, every initiative is an opportunity to live out the Gospel and transform lives." }
+          ]
+        },
+        {
+          "title": "Projects and activities",
+          "fields": [
+            { "key": "projects_label", "label": "Projects: small heading", "type": "line", "max": 80, "default": "Current Projects" },
+            { "key": "projects_title", "label": "Projects: heading", "type": "title", "max": 120, "default": "Making a *difference*" },
+            { "key": "activities_label", "label": "Activities: small heading", "type": "line", "max": 80, "default": "Upcoming Activities" },
+            { "key": "activities_title", "label": "Activities: heading", "type": "title", "max": 120, "default": "What's *happening*" }
+          ]
+        }
+      ]
+    }
+  }
+}

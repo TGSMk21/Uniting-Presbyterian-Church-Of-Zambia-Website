@@ -1,19 +1,38 @@
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
-import { getBranch, getDailyMessages } from "@/Services/api";
+import RichText from "@/components/UniversalComponents/rich-text";
+import { getBranch, getDailyMessages, getPageContent } from "@/Services/api";
+import { pageFields } from "@/Utilities/pageContent.mjs";
 import ContactForm from "@/components/UniversalComponents/contact-form";
 import { dateFormat } from "@/Utilities/DateFormatter";
 import { formatTime } from "@/Utilities/timeFormat";
 
 export const revalidate = 3600;
 
-const DEFAULT_VERSE = { text: "The Lord is my shepherd; I shall not want.", ref: "Psalm 23:1" };
-
 export default async function BranchHome({ params }) {
   const { branch: slug } = await params;
   // The layout already 404s unknown branches; both requests are deduplicated by Next.
-  const [branch, messages] = await Promise.all([getBranch(slug), getDailyMessages(slug)]);
+  const [branch, messages, content] = await Promise.all([
+    getBranch(slug),
+    getDailyMessages(slug),
+    getPageContent(slug),
+  ]);
+  // The tagline, welcome text and year theme are stored on the branch itself.
+  const f = pageFields(
+    "branch",
+    "home",
+    {
+      ...content?.pages?.home,
+      tagline: branch?.tagline,
+      welcome_text: branch?.welcome_text,
+      year_theme_title: branch?.year_theme_title,
+      year_theme_text: branch?.year_theme_text,
+    },
+    { branchName: branch?.name },
+  );
   const msg = messages?.results?.[0] || null;
-  const verse = msg?.verse_text ? { text: msg.verse_text, ref: msg.reference_verse } : DEFAULT_VERSE;
+  const verse = msg?.verse_text
+    ? { text: msg.verse_text, ref: msg.reference_verse }
+    : { text: f.verse_text, ref: f.verse_ref };
   const formattedDate = msg?.date ? dateFormat(msg.date) : null;
   const services = branch?.service_times || [];
   const heroImages = [branch?.hero_image, branch?.hero_image_secondary].filter(Boolean);
@@ -27,17 +46,14 @@ export default async function BranchHome({ params }) {
         <div className="hero-blob-2" />
         <div className="hero-grid">
           <div>
-            <div className="hero-eyebrow">Welcome to our family</div>
+            <div className="hero-eyebrow">{f.hero_label}</div>
             <h1 style={{ fontFamily: "var(--font-playfair)" }}>
-              {branch?.tagline || <>A place of <em>grace,</em> belonging & purpose.</>}
+              <RichText text={f.tagline} />
             </h1>
-            <p className="hero-desc">
-              {branch?.welcome_text ||
-                `Whether you are exploring faith or looking for a church home, you are welcome here at ${branch?.name || "our church"}.`}
-            </p>
+            <p className="hero-desc">{f.welcome_text}</p>
             <div className="hero-actions">
-              {services.length > 0 && <a href="#schedule" className="btn-primary">Join Us This Sunday</a>}
-              <a href={`/${slug}/about`} className="btn-ghost">Our Story</a>
+              {services.length > 0 && <a href="#schedule" className="btn-primary">{f.schedule_button}</a>}
+              <a href={`/${slug}/about`} className="btn-ghost">{f.story_button}</a>
             </div>
           </div>
           {heroImages.length > 0 && (
@@ -50,10 +66,10 @@ export default async function BranchHome({ params }) {
                   <img src={heroImages[1]} alt={`${branch.name} community`} />
                 </div>
               )}
-              {branch.year_theme_title && (
+              {f.year_theme_title && (
                 <div className="hero-floating">
                   <div className="hero-floating-label">{year} Theme</div>
-                  <div className="hero-floating-text">{branch.year_theme_title}</div>
+                  <div className="hero-floating-text">{f.year_theme_title}</div>
                 </div>
               )}
             </div>
@@ -61,18 +77,18 @@ export default async function BranchHome({ params }) {
         </div>
       </section>
 
-      {branch?.year_theme_title && (
+      {f.year_theme_title && (
         <section className="year-theme">
           <div className="year-theme-inner">
             <div className="year-theme-label">{year} Church Theme</div>
             <h2 className="year-theme-title" style={{ fontFamily: "var(--font-playfair)" }}>
-              {branch.year_theme_title}
+              {f.year_theme_title}
             </h2>
-            {branch.year_theme_text && (
+            {f.year_theme_text && (
               <>
                 <div className="year-theme-divider" />
                 <p className="year-theme-desc" style={{ fontFamily: "var(--font-cormorant)" }}>
-                  {branch.year_theme_text}
+                  {f.year_theme_text}
                 </p>
               </>
             )}
@@ -83,7 +99,7 @@ export default async function BranchHome({ params }) {
       <ScrollReveal>
         <section className="daily-verse">
           <div className="daily-verse-inner">
-            <div className="daily-verse-badge">Today&apos;s Scripture</div>
+            <div className="daily-verse-badge">{f.verse_label}</div>
             <p className="daily-verse-text" style={{ fontFamily: "var(--font-cormorant)" }}>
               {verse.text}
             </p>
@@ -97,9 +113,9 @@ export default async function BranchHome({ params }) {
           <div className="section-inner">
             <div className="section-header">
               <div>
-                <div className="section-label">Daily Devotion</div>
+                <div className="section-label">{f.devotion_label}</div>
                 <h2 className="section-title" style={{ fontFamily: "var(--font-playfair)" }}>
-                  Words to carry <em>through your day</em>
+                  <RichText text={f.devotion_title} />
                 </h2>
               </div>
             </div>
@@ -107,7 +123,7 @@ export default async function BranchHome({ params }) {
               <div className="devotion-grid">
                 <div className="devotion-visual">
                   <div>
-                    <div className="devotion-badge">Daily Devotion</div>
+                    <div className="devotion-badge">{f.devotion_label}</div>
                     <h3 className="devotion-title" style={{ fontFamily: "var(--font-playfair)" }}>
                       {msg.title}
                     </h3>
@@ -141,9 +157,9 @@ export default async function BranchHome({ params }) {
           <div className="section-inner">
             <div className="section-header">
               <div>
-                <div className="section-label">Weekly Schedule</div>
+                <div className="section-label">{f.schedule_label}</div>
                 <h2 className="section-title" style={{ fontFamily: "var(--font-playfair)" }}>
-                  Gather with <em>us</em>
+                  <RichText text={f.schedule_title} />
                 </h2>
               </div>
             </div>
@@ -192,17 +208,15 @@ export default async function BranchHome({ params }) {
         <div className="section-inner">
           <div className="section-header" style={{ justifyContent: "center", textAlign: "center" }}>
             <div>
-              <div className="section-label" style={{ justifyContent: "center" }}>Get In Touch</div>
+              <div className="section-label" style={{ justifyContent: "center" }}>{f.contact_label}</div>
               <h2 className="section-title" style={{ fontFamily: "var(--font-playfair)", maxWidth: "none" }}>
-                We&apos;d love to <em>hear</em> from you
+                <RichText text={f.contact_title} />
               </h2>
             </div>
           </div>
           <ScrollReveal>
             <div className="contact-card">
-              <p className="contact-sub">
-                Have a question, prayer request, or just want to say hello? Reach out to us.
-              </p>
+              <p className="contact-sub">{f.contact_text}</p>
               <ContactForm branch={slug} />
             </div>
           </ScrollReveal>

@@ -1,15 +1,19 @@
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
-import { getBranch, getMinisters } from "@/Services/api";
+import RichText from "@/components/UniversalComponents/rich-text";
+import { getBranch, getMinisters, getPageContent } from "@/Services/api";
+import { listLines, pageFields } from "@/Utilities/pageContent.mjs";
 import { formatTime } from "@/Utilities/timeFormat";
 
 export const revalidate = 3600;
 
 export default async function About({ params }) {
   const { branch: branchSlug } = await params;
-  const [branch, ministersData] = await Promise.all([
+  const [branch, ministersData, content] = await Promise.all([
     getBranch(branchSlug),
     getMinisters(branchSlug),
+    getPageContent(branchSlug),
   ]);
+  const f = pageFields("branch", "about", content?.pages?.about, { branchName: branch?.name });
   const ministers = ministersData?.results || [];
   const reverend = ministers[0];
   const bioParagraphs = (reverend?.bio || "").split(/\n\s*\n/).filter(Boolean);
@@ -23,18 +27,15 @@ export default async function About({ params }) {
       <section className="page-banner">
         <div className="page-banner-inner">
           <ScrollReveal>
-            <span className="page-banner-label">About Us</span>
+            <span className="page-banner-label">{f.banner_label}</span>
           </ScrollReveal>
           <ScrollReveal delay={1}>
             <h1 style={{ fontFamily: "var(--font-playfair)" }}>
-              Our story, our <em>vision</em>
+              <RichText text={f.banner_title} />
             </h1>
           </ScrollReveal>
           <ScrollReveal delay={2}>
-            <p className="page-banner-desc">
-              Founded on faith and sustained by grace, {branch?.name || "our church"} is a
-              community dedicated to worship, discipleship, and service.
-            </p>
+            <p className="page-banner-desc">{f.banner_text}</p>
           </ScrollReveal>
         </div>
       </section>
@@ -46,26 +47,16 @@ export default async function About({ params }) {
             <ScrollReveal>
               <div className="mission-vision">
                 <div className="mission-card">
-                  <h3 style={{ fontFamily: "var(--font-playfair)" }}>Our Mission</h3>
-                  <p>
-                    To glorify God by making disciples of Jesus Christ through
-                    faithful teaching, loving fellowship, and selfless service
-                    to our community and beyond.
-                  </p>
+                  <h3 style={{ fontFamily: "var(--font-playfair)" }}>{f.mission_title}</h3>
+                  <p>{f.mission_text}</p>
                 </div>
                 <div className="vision-card">
-                  <h3 style={{ fontFamily: "var(--font-playfair)" }}>Our Vision</h3>
-                  <p>
-                    We envision a vibrant, Christ-centered church where every
-                    believer is equipped to live out their faith and impact the
-                    world for God&apos;s kingdom.
-                  </p>
+                  <h3 style={{ fontFamily: "var(--font-playfair)" }}>{f.vision_title}</h3>
+                  <p>{f.vision_text}</p>
                   <ul className="vision-list">
-                    <li>A house of prayer for all nations</li>
-                    <li>Growing together in spiritual maturity</li>
-                    <li>Loving our neighbours through tangible action</li>
-                    <li>Raising the next generation of godly leaders</li>
-                    <li>Reaching the unreached with the gospel</li>
+                    {listLines(f.vision_list).map((point) => (
+                      <li key={point}>{point}</li>
+                    ))}
                   </ul>
                 </div>
               </div>
@@ -77,12 +68,12 @@ export default async function About({ params }) {
               <div className="reverend-section">
                 <div className="section-header">
                   <div>
-                    <span className="section-label">Meet Our Minister</span>
+                    <span className="section-label">{f.minister_label}</span>
                     <h2
                       className="section-title"
                       style={{ fontFamily: "var(--font-playfair)" }}
                     >
-                      Shepherding with <em>heart</em>
+                      <RichText text={f.minister_title} />
                     </h2>
                   </div>
                 </div>
@@ -96,7 +87,7 @@ export default async function About({ params }) {
                       <h3 className="reverend-portrait-name" style={{ fontFamily: "var(--font-playfair)" }}>
                         Rev. {reverend.name}
                       </h3>
-                      <p className="reverend-portrait-role">Lead Pastor</p>
+                      <p className="reverend-portrait-role">{f.minister_role}</p>
                     </div>
                   </div>
 
@@ -118,12 +109,12 @@ export default async function About({ params }) {
               <div className="find-us-section">
                 <div className="section-header">
                   <div>
-                    <span className="section-label">Find Us</span>
+                    <span className="section-label">{f.find_label}</span>
                     <h2
                       className="section-title"
                       style={{ fontFamily: "var(--font-playfair)" }}
                     >
-                      Join us <em>Sunday</em>
+                      <RichText text={f.find_title} />
                     </h2>
                   </div>
                 </div>

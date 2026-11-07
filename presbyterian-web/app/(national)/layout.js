@@ -1,12 +1,15 @@
 import NavClient from "@/components/UniversalComponents/nav-client";
 import FooterClient from "@/components/UniversalComponents/footer-client";
+import { getPageContent } from "@/Services/api";
+import { pageFields } from "@/Utilities/pageContent.mjs";
 
-export default function NationalLayout({ children }) {
+export default async function NationalLayout({ children }) {
+  const content = await getPageContent("national");
+  const f = pageFields("national", "contact", content?.pages?.contact);
   const brand = {
     name: "Uniting Presbyterian Church In Zambia",
     href: "/",
-    description:
-      "A family of branches across Zambia, rooted in the Gospel. Wherever you are, there is a place for you here.",
+    description: f.footer_text,
   };
   const links = [
     { label: "Home", href: "/" },
@@ -15,7 +18,7 @@ export default function NationalLayout({ children }) {
     { label: "Find a Branch", href: "/find-a-branch" },
     { label: "Contact", href: "/contact" },
   ];
-  const contact = { email: "hello@upcz.org", phone: "+260 977 681 606" };
+  const contact = { email: f.email, phone: f.phone };
 
   return (
     <>

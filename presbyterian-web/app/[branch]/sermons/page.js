@@ -1,24 +1,25 @@
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
-import { getSermons } from "@/Services/api";
+import RichText from "@/components/UniversalComponents/rich-text";
+import { getPageContent, getSermons } from "@/Services/api";
+import { pageFields } from "@/Utilities/pageContent.mjs";
 
 export const revalidate = 3600;
 
 export default async function Sermons({ params, searchParams }) {
   const { branch } = await params;
   const page = Math.max(1, parseInt((await searchParams)?.page, 10) || 1);
-  const data = await getSermons(branch, page);
+  const [data, content] = await Promise.all([getSermons(branch, page), getPageContent(branch)]);
+  const f = pageFields("branch", "sermons", content?.pages?.sermons);
   const archives = data?.results || [];
   return (
     <div className="container mx-auto max-w-full overflow-hidden min-w-full min-h-screen w-full">
       <section className="page-banner">
         <div className="page-banner-inner">
-          <span className="page-banner-label">Sermons &amp; Messages</span>
+          <span className="page-banner-label">{f.banner_label}</span>
           <h1 style={{ fontFamily: "var(--font-playfair)" }}>
-            Teaching that <em>transforms</em>
+            <RichText text={f.banner_title} />
           </h1>
-          <p className="page-banner-desc">
-            Explore biblical teaching and grow in your faith through the Word of God
-          </p>
+          <p className="page-banner-desc">{f.banner_text}</p>
         </div>
       </section>
 
@@ -59,9 +60,9 @@ export default async function Sermons({ params, searchParams }) {
               return (
                 <div className="live-card live-card-offline">
                   <div>
-                    <h3 className="live-title">No Live Stream Currently</h3>
-                    <p className="live-preacher">Check back during service times or browse our sermon archive</p>
-                    <a className="live-cta" href="#archive">Browse Archive</a>
+                    <h3 className="live-title">{f.offline_title}</h3>
+                    <p className="live-preacher">{f.offline_text}</p>
+                    <a className="live-cta" href="#archive">{f.offline_button}</a>
                   </div>
                 </div>
               );
@@ -70,8 +71,8 @@ export default async function Sermons({ params, searchParams }) {
 
           <div className="section-header" id="archive">
             <div>
-              <span className="section-label">Archive</span>
-              <h2 className="section-title">Past Sermons</h2>
+              <span className="section-label">{f.archive_label}</span>
+              <h2 className="section-title"><RichText text={f.archive_title} /></h2>
             </div>
           </div>
 

@@ -62,6 +62,26 @@
   font-weight: 400;
   font-size: 1rem;
 }
+.dash-field textarea {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.45;
+  resize: vertical;
+}
+.dash-field [aria-invalid="true"] { border-color: #a50d26; }
+.dash-field-error {
+  color: #a50d26;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+.dash-field textarea:focus-visible,
 .dash-field input:focus-visible {
   outline: 2px solid var(--navy);
   outline-offset: 1px;
@@ -196,6 +216,79 @@
   gap: 0.75rem 1.5rem;
 }
 
+/* Page editing */
+.dash-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  order: 3;
+  width: 100%;
+}
+.dash-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: white;
+  font-size: 0.95rem;
+}
+.dash-nav a:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+.dash-heading-spaced { margin-top: 0.75rem; }
+.dash-links-spaced { margin-top: 0.75rem; }
+.dash-page-list {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.25rem;
+}
+.dash-page-list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--navy);
+}
+.dash-editor { margin-top: 1.25rem; }
+.dash-section {
+  margin: 0 0 1.25rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  min-width: 0;
+  background: var(--warm-white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.dash-section legend {
+  padding: 0 0.4rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+.dash-savebar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 0;
+  background: var(--cream);
+  border-top: 1px solid var(--line);
+}
+.dash-savebar .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
+  background: var(--navy);
+  box-shadow: none;
+}
+.dash-savebar-status {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.dash-savebar-status a { color: var(--navy); }
+
 /* Two-step login */
 .dash-steps {
   margin: 1rem 0 0;
@@ -242,6 +335,7 @@
 }
 
 @media (min-width: 640px) {
+  .dash-nav { order: 0; width: auto; }
   .dash-header { padding: 0.75rem 2rem; }
   .dash-main { padding: 2.5rem 2rem 4rem; }
   .dash-details { grid-template-columns: repeat(4, 1fr); }

@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
-import { getUpcomingActivities } from "@/Services/api";
+import RichText from "@/components/UniversalComponents/rich-text";
+import { getPageContent, getUpcomingActivities } from "@/Services/api";
+import { pageFields } from "@/Utilities/pageContent.mjs";
 
 const EVENTS_SHOWN = 6;
 
 const fellowships = [
-  { id: "1", title: "Youth Fellowship", img: "/youthMin.png", ref: "1 Timothy 4:12", desc: "Empowering young hearts to live boldly for Christ through worship, discipleship, and fellowship that transforms lives." },
-  { id: "2", title: "Children's Fellowship", img: "/cm.png", ref: "Matthew 19:14", desc: "Planting seeds of faith in young hearts through engaging Bible lessons, worship, and activities that make God's love real." },
-  { id: "3", title: "Men's Fellowship", img: "/mm.png", ref: "1 Corinthians 16:13", desc: "Building godly men of integrity through brotherhood, accountability, and purpose-driven discipleship in Christ." },
-  { id: "4", title: "Women's Fellowship", img: "/wm.png", ref: "Proverbs 31:25", desc: "Nurturing women of faith to discover their God-given purpose through prayer, study, and authentic community." },
+  { id: "youth", img: "/youthMin.png" },
+  { id: "children", img: "/cm.png" },
+  { id: "men", img: "/mm.png" },
+  { id: "women", img: "/wm.png" },
 ];
 
 // "2026-12-06" → { day: "06", month: "Dec", year: "2026" }, without timezone shifts.
@@ -24,7 +26,8 @@ export default async function NationalLanding() {
   // Render on request, not at build time: a build that misses the API would
   // publish the page without its events. Good answers are still cached.
   await connection();
-  const activities = await getUpcomingActivities();
+  const [activities, content] = await Promise.all([getUpcomingActivities(), getPageContent("national")]);
+  const f = pageFields("national", "home", content?.pages?.home);
   const events = (activities?.results || []).slice(0, EVENTS_SHOWN).map((a) => ({
     id: a.id,
     title: a.title,
@@ -38,22 +41,17 @@ export default async function NationalLanding() {
       <section className="nat-hero">
         <div className="nat-hero-inner">
           <div className="nat-hero-copy">
-            <span className="nat-eyebrow">Uniting Presbyterian Church In Zambia</span>
+            <span className="nat-eyebrow">{f.hero_label}</span>
             <h1 className="nat-h1">
-              One family.
-              <br />
-              <em>Many houses.</em>
+              <RichText text={f.hero_title} />
             </h1>
-            <p className="nat-lede">
-              Wherever you are in Zambia, there is a branch of our family near
-              you — a place to worship, to grow, and to belong.
-            </p>
+            <p className="nat-lede">{f.hero_text}</p>
             <div className="nat-hero-actions">
               <Link href="/find-a-branch" className="btn-primary">
-                Find a branch near you
+                {f.hero_button}
               </Link>
               <a href="#welcome" className="nat-link-quiet">
-                Our story <span aria-hidden="true">→</span>
+                {f.story_link} <span aria-hidden="true">→</span>
               </a>
             </div>
           </div>
@@ -75,8 +73,8 @@ export default async function NationalLanding() {
                 </svg>
               </div>
               <div className="nat-arch-tag">
-                <div className="nat-arch-tag-label">Gathered</div>
-                <div className="nat-arch-tag-text">Across Zambia, every week</div>
+                <div className="nat-arch-tag-label">{f.badge_label}</div>
+                <div className="nat-arch-tag-text">{f.badge_text}</div>
               </div>
             </div>
           </div>
@@ -86,13 +84,10 @@ export default async function NationalLanding() {
       {/* ===== MANIFESTO / WELCOME ===== */}
       <section className="nat-manifesto" id="welcome">
         <div className="nat-manifesto-inner">
-          <span className="nat-eyebrow">Welcome home</span>
+          <span className="nat-eyebrow">{f.welcome_label}</span>
           <ScrollReveal>
             <p className="nat-manifesto-text">
-              Faith is not a building you visit on a Sunday — it is a family you
-              belong to every day. Across Zambia, our branches gather in cities
-              and villages, in sanctuaries and living rooms, to worship, to
-              serve, and to walk together. <em>And there is always room for one more.</em>
+              <RichText text={f.welcome_text} />
             </p>
           </ScrollReveal>
         </div>
@@ -103,9 +98,9 @@ export default async function NationalLanding() {
         <div className="section-inner">
           <div className="section-header">
             <div>
-              <div className="section-label">Our Fellowships</div>
+              <div className="section-label">{f.fellowships_label}</div>
               <h2 className="section-title" style={{ fontFamily: "var(--font-playfair)" }}>
-                Every generation, <em>every season</em>
+                <RichText text={f.fellowships_title} />
               </h2>
             </div>
           </div>
@@ -114,12 +109,12 @@ export default async function NationalLanding() {
               <ScrollReveal key={item.id} delay={i + 1}>
                 <div className="ministry-card">
                   <div className="ministry-img">
-                    <img loading="lazy" src={item.img} alt={item.title} />
+                    <img loading="lazy" src={item.img} alt={f[`${item.id}_title`]} />
                   </div>
                   <div className="ministry-body">
-                    <h3 className="ministry-title">{item.title}</h3>
-                    <p className="ministry-verse">{item.ref}</p>
-                    <p className="ministry-desc">{item.desc}</p>
+                    <h3 className="ministry-title">{f[`${item.id}_title`]}</h3>
+                    <p className="ministry-verse">{f[`${item.id}_verse`]}</p>
+                    <p className="ministry-desc">{f[`${item.id}_text`]}</p>
                   </div>
                 </div>
               </ScrollReveal>
@@ -133,14 +128,11 @@ export default async function NationalLanding() {
       <section className="nat-events" id="events">
         <div className="nat-events-inner">
           <div className="nat-events-head">
-            <span className="nat-eyebrow">Nationwide events</span>
+            <span className="nat-eyebrow">{f.events_label}</span>
             <h2 className="nat-h2">
-              Gather <em>together</em>
+              <RichText text={f.events_title} />
             </h2>
-            <p className="nat-events-sub">
-              Across the year, we come together as one family for conferences,
-              assemblies, and celebrations.
-            </p>
+            <p className="nat-events-sub">{f.events_text}</p>
           </div>
 
           <div className="nat-event-list">
@@ -167,18 +159,13 @@ export default async function NationalLanding() {
       {/* ===== CLOSING ===== */}
       <section className="nat-closing">
         <div className="nat-closing-inner">
-          <span className="nat-eyebrow light">An open invitation</span>
+          <span className="nat-eyebrow light">{f.closing_label}</span>
           <h2 className="nat-closing-title">
-            Come as you are.
-            <br />
-            <em>Leave as family.</em>
+            <RichText text={f.closing_title} />
           </h2>
-          <p className="nat-closing-sub">
-            No matter your story, you are welcome at any of our branches this
-            week.
-          </p>
+          <p className="nat-closing-sub">{f.closing_text}</p>
           <Link href="/find-a-branch" className="btn-primary">
-            Find your branch
+            {f.closing_button}
           </Link>
         </div>
       </section>

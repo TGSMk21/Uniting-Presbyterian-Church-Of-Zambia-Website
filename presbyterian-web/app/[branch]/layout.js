@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import NavClient from "@/components/UniversalComponents/nav-client";
 import FooterClient from "@/components/UniversalComponents/footer-client";
-import { getBranch } from "@/Services/api";
+import { getBranch, getPageContent } from "@/Services/api";
+import { pageFields } from "@/Utilities/pageContent.mjs";
 
 export async function generateMetadata({ params }) {
   const { branch } = await params;
@@ -17,15 +18,16 @@ export async function generateMetadata({ params }) {
 
 export default async function BranchLayout({ children, params }) {
   const { branch } = await params;
-  const data = await getBranch(branch);
+  const [data, content] = await Promise.all([getBranch(branch), getPageContent(branch)]);
   if (!data) notFound();
+  const { footer_text } = pageFields("branch", "home", content?.pages?.home, { branchName: data.name });
 
   const base = `/${branch}`;
   const brand = {
     name: data.name,
     sub: "Church",
     href: base,
-    description: "Walking in Faith, Living in Love. A community of believers rooted in the Gospel.",
+    description: footer_text,
   };
   const links = [
     { label: "Home", href: base },

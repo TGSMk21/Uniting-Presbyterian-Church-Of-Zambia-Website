@@ -1,19 +1,24 @@
+import { connection } from "next/server";
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
 import ContactForm from "@/components/UniversalComponents/contact-form";
+import RichText from "@/components/UniversalComponents/rich-text";
+import { getPageContent } from "@/Services/api";
+import { pageFields, phoneHref } from "@/Utilities/pageContent.mjs";
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  await connection();
+  const content = await getPageContent("national");
+  const f = pageFields("national", "contact", content?.pages?.contact);
+
   return (
     <main>
       <section className="page-banner">
         <div className="page-banner-inner">
-          <span className="page-banner-label">Contact Us</span>
+          <span className="page-banner-label">{f.banner_label}</span>
           <h1 style={{ fontFamily: "var(--font-playfair)" }}>
-            We&apos;d love to <em>hear</em> from you
+            <RichText text={f.banner_title} />
           </h1>
-          <p className="page-banner-desc">
-            A question, a prayer request, or simply a hello — reach out and
-            we&apos;ll be in touch.
-          </p>
+          <p className="page-banner-desc">{f.banner_text}</p>
         </div>
       </section>
 
@@ -24,28 +29,25 @@ export default function ContactPage() {
               <div className="contact-info-card">
                 <p className="contact-info-label">Email</p>
                 <p className="contact-info-value">
-                  <a href="mailto:hello@upcz.org">hello@upcz.org</a>
+                  <a href={`mailto:${f.email}`}>{f.email}</a>
                 </p>
               </div>
               <div className="contact-info-card">
                 <p className="contact-info-label">Phone</p>
                 <p className="contact-info-value">
-                  <a href="tel:+260977681606">+260 977 681 606</a>
+                  <a href={phoneHref(f.phone)}>{f.phone}</a>
                 </p>
               </div>
               <div className="contact-info-card">
                 <p className="contact-info-label">Office</p>
-                <p className="contact-info-value">National Office, Lusaka, Zambia</p>
+                <p className="contact-info-value">{f.office}</p>
               </div>
             </div>
           </ScrollReveal>
 
           <ScrollReveal>
             <div className="contact-card">
-              <p className="contact-sub">
-                Have a question, prayer request, or just want to say hello?
-                Reach out to us.
-              </p>
+              <p className="contact-sub">{f.form_text}</p>
               <ContactForm />
             </div>
           </ScrollReveal>

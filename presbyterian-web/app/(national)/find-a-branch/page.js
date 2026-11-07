@@ -1,6 +1,8 @@
 import { connection } from "next/server";
 import ChurchLocator from "@/components/LocatorComponents/church-locator";
-import { getBranches } from "@/Services/api";
+import RichText from "@/components/UniversalComponents/rich-text";
+import { getBranches, getPageContent } from "@/Services/api";
+import { pageFields } from "@/Utilities/pageContent.mjs";
 
 export const metadata = {
   title: "Find a Branch — Uniting Presbyterian Church In Zambia",
@@ -11,19 +13,18 @@ export default async function FindABranch() {
   // Render on request, not at build time: a build that misses the API would
   // publish an empty page. getBranches() still caches good answers for an hour.
   await connection();
-  const data = await getBranches();
+  const [data, content] = await Promise.all([getBranches(), getPageContent("national")]);
+  const f = pageFields("national", "find-a-branch", content?.pages?.["find-a-branch"]);
 
   return (
     <main>
       <section className="page-banner">
         <div className="page-banner-inner">
-          <span className="page-banner-label">Find a Branch</span>
+          <span className="page-banner-label">{f.banner_label}</span>
           <h1 style={{ fontFamily: "var(--font-playfair)" }}>
-            There&apos;s a place for you <em>near you</em>
+            <RichText text={f.banner_title} />
           </h1>
-          <p className="page-banner-desc">
-            Search by name or area, or find the branch closest to where you are.
-          </p>
+          <p className="page-banner-desc">{f.banner_text}</p>
         </div>
       </section>
 

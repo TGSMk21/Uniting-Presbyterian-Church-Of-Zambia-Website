@@ -31,7 +31,8 @@ test("any page without a [segment] that reads the API renders on request", () =>
   for (const path of prerendered) {
     const source = readFileSync(path, "utf8");
     if (!source.includes("@/Services/api")) continue;
-    assert.match(source, /await connection\(\)/, `${path} would be frozen at build time`);
+    // requireStaff reads the sign-in cookies, which also makes a page render on request.
+    assert.match(source, /await (connection|requireStaff)\(/, `${path} would be frozen at build time`);
   }
 });
 

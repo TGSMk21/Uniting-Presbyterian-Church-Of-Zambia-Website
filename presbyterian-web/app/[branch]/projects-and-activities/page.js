@@ -1,5 +1,7 @@
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
-import { getProjects, getActivities } from "@/Services/api";
+import RichText from "@/components/UniversalComponents/rich-text";
+import { getProjects, getActivities, getPageContent } from "@/Services/api";
+import { pageFields } from "@/Utilities/pageContent.mjs";
 
 export const revalidate = 3600;
 
@@ -15,25 +17,23 @@ function formatTime12(t) {
 
 export default async function ProjectsAndActivities({ params }) {
   const { branch } = await params;
-  const [projectsData, activitiesData] = await Promise.all([
+  const [projectsData, activitiesData, content] = await Promise.all([
     getProjects(branch),
     getActivities(branch),
+    getPageContent(branch),
   ]);
+  const f = pageFields("branch", "projects", content?.pages?.projects);
   const projects = projectsData?.results || [];
   const activities = activitiesData?.results || [];
   return (
     <div>
       <section className="page-banner">
         <div className="page-banner-inner">
-          <div className="page-banner-label">Projects & Activities</div>
+          <div className="page-banner-label">{f.banner_label}</div>
           <h1 style={{ fontFamily: "var(--font-playfair)" }}>
-            Faith in <em>action</em>
+            <RichText text={f.banner_title} />
           </h1>
-          <p className="page-banner-desc">
-            We believe faith is made visible through service. From community
-            development to spiritual growth, every initiative is an opportunity
-            to live out the Gospel and transform lives.
-          </p>
+          <p className="page-banner-desc">{f.banner_text}</p>
         </div>
       </section>
 
@@ -42,12 +42,12 @@ export default async function ProjectsAndActivities({ params }) {
           <ScrollReveal>
             <div className="section-header">
               <div>
-                <div className="section-label">Current Projects</div>
+                <div className="section-label">{f.projects_label}</div>
                 <h2
                   className="section-title"
                   style={{ fontFamily: "var(--font-playfair)" }}
                 >
-                  Making a <em>difference</em>
+                  <RichText text={f.projects_title} />
                 </h2>
               </div>
             </div>
@@ -88,12 +88,12 @@ export default async function ProjectsAndActivities({ params }) {
           <ScrollReveal>
             <div className="section-header">
               <div>
-                <div className="section-label">Upcoming Activities</div>
+                <div className="section-label">{f.activities_label}</div>
                 <h2
                   className="section-title"
                   style={{ fontFamily: "var(--font-playfair)" }}
                 >
-                  What&apos;s <em>happening</em>
+                  <RichText text={f.activities_title} />
                 </h2>
               </div>
             </div>

@@ -12,6 +12,13 @@ export const currentStaff = cache(async () => {
   return staffFetch("/auth/me/", { access, forwardedFor });
 });
 
+// A call to the API as the person signed in.
+export async function staffRequest(path, options = {}) {
+  const access = (await cookies()).get(ACCESS_COOKIE)?.value;
+  const forwardedFor = (await headers()).get("x-forwarded-for");
+  return staffFetch(path, { ...options, access, forwardedFor });
+}
+
 // For signed-in pages. Sends people to sign-in, or to finish their first-time steps
 // (a new password, then two-step login). An API outage shows the error page
 // instead of signing them out.

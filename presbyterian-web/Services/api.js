@@ -1,3 +1,5 @@
+import { branchTag, contentTag } from '@/Utilities/pageContent.mjs'
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
 const TIMEOUT_MS = 10000
@@ -27,7 +29,13 @@ export async function getBranches() {
 }
 
 export async function getBranch(slug) {
-  return fetchAPI(`/branches/${encodeURIComponent(slug)}/`)
+  return fetchAPI(`/branches/${encodeURIComponent(slug)}/`, { next: { revalidate: 3600, tags: [branchTag(slug)] } })
+}
+
+// Changed page wording for "national" or a branch slug. The dashboard clears the
+// tag on save, so edits show straight away.
+export async function getPageContent(scope) {
+  return fetchAPI(`/page-content/${encodeURIComponent(scope)}/`, { next: { revalidate: 3600, tags: [contentTag(scope)] } })
 }
 
 // --- Branch-scoped content ---
