@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { addPerson, savePerson } from "@/app/dashboard/staff-actions";
 import { STAFF_ROLES, ministerGroups } from "@/Utilities/staffAdmin.mjs";
+import { LinkMessage } from "./link-message";
 
 function Field({ label, help, error, optional, children }) {
   return (
@@ -16,19 +17,16 @@ function Field({ label, help, error, optional, children }) {
   );
 }
 
-// The username and temporary password, shown once after adding someone.
+// The username and set-password link, shown once after adding someone (Task 7.2).
 function Added({ added }) {
   return (
     <div className="dash-panel dash-handover" role="status">
-      <h2 className="dash-subheading">Account made</h2>
+      <h2 className="dash-subheading">Account made: {added.username}</h2>
       <p className="dash-text">
-        Give these to them privately, in person or by phone, not by plain email. They&apos;ll choose their own
-        password when they first sign in at <strong>/dashboard</strong>. This password won&apos;t be shown again.
+        Send them this message by WhatsApp or SMS. The link works once and stops working after 3 days; it won&apos;t be
+        shown again. If it&apos;s lost, make a new one from their page.
       </p>
-      <dl className="dash-details">
-        <div><dt>Username</dt><dd><code>{added.username}</code></dd></div>
-        <div><dt>Temporary password</dt><dd><code className="dash-secret">{added.password}</code></dd></div>
-      </dl>
+      <LinkMessage message={added.message} />
       <div className="dash-links">
         <Link href={`/dashboard/staff/${added.id}`} className="dash-link" prefetch={false}>See their account</Link>
         <Link href="/dashboard/staff" className="dash-link" prefetch={false}>Back to Staff</Link>

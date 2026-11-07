@@ -12,6 +12,7 @@ from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, Ou
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from church_erp.accounts.models import User
+from church_erp.core.models import StaffChange
 from church_erp.core.tests.helpers import make_branch
 
 
@@ -120,17 +121,19 @@ class AddTests(PeopleTestCase):
         self.assertTrue(newbie.is_staff)
         self.assertTrue(newbie.is_active)
         self.assertFalse(newbie.is_superuser)
-        self.assertTrue(newbie.must_change_password)
+        # They choose their own password from a link (Task 7.2); nobody else ever knows it.
+        self.assertFalse(newbie.has_usable_password())
         self.assertEqual(list(newbie.groups.values_list("name", flat=True)), ["Content Editor"])
 
-    def test_the_temporary_password_is_shown_once_and_works(self):
+    def test_a_set_password_link_is_shown_once_and_works(self):
+        from church_erp.accounts.password_links import usable_link
         self.client.force_authenticate(self.admin_a)
         response = self.client.post(LIST, self.new(), format="json")
-        temporary = response.data["temporary_password"]
-        self.assertGreaterEqual(len(temporary), 14)
-        self.assertTrue(User.objects.get(username="newbie").check_password(temporary))
+        token = response.data["link_token"]
+        self.assertNotIn("temporary_password", response.data)
+        self.assertEqual(usable_link(token).user.username, "newbie")
         row = self.client.get(detail(response.data["id"])).data
-        self.assertNotIn("temporary_password", row)
+        self.assertNotIn("link_token", row)
 
     def test_superuser_adds_a_branch_admin_anywhere(self):
         self.client.force_authenticate(self.boss)
@@ -267,16 +270,18 @@ class SuspendTests(PeopleTestCase):
 
 
 class ResetTests(PeopleTestCase):
-    def test_password_reset_gives_a_new_temporary_password_and_signs_them_out(self):
+    def test_password_reset_makes_a_new_link_stops_the_old_password_and_signs_them_out(self):
+        from church_erp.accounts.password_links import usable_link
         token = OutstandingToken.objects.get(jti=RefreshToken.for_user(self.editor_a)["jti"])
         self.client.force_authenticate(self.admin_a)
         response = self.client.post(act(self.editor_a.pk, "reset-password"))
         self.assertEqual(response.status_code, 200, response.data)
         self.editor_a.refresh_from_db()
-        self.assertTrue(self.editor_a.check_password(response.data["temporary_password"]))
-        self.assertFalse(self.editor_a.check_password("pw-Long-enough-1"))
-        self.assertTrue(self.editor_a.must_change_password)
+        self.assertEqual(usable_link(response.data["link_token"]).user, self.editor_a)
+        self.assertFalse(self.editor_a.has_usable_password())
         self.assertTrue(BlacklistedToken.objects.filter(token=token).exists())
+        actions = [c.action for c in StaffChange.objects.filter(target=self.editor_a.username)]
+        self.assertEqual(actions.count("password reset"), 1)
 
     def test_two_step_reset_is_for_superusers(self):
         TOTPDevice.objects.create(user=self.admin_b, name="phone", confirmed=True)

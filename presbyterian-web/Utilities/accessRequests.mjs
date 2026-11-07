@@ -51,11 +51,12 @@ export function setPasswordAddress(origin, token) {
 }
 
 // What the approver sends by WhatsApp or SMS (decision D3).
-export function shareMessage({ firstName, username, link }) {
+export function shareMessage({ firstName, username, link, reset = false }) {
   return [
     `Hello ${firstName || "there"},`,
-    `Your UPCZ staff dashboard account is ready. Your username is ${username}.`,
-    `Open this link to choose your password: ${link}`,
+    reset
+      ? `Here is a link to choose a new password for your UPCZ staff dashboard account (username ${username}): ${link}`
+      : `Your UPCZ staff dashboard account is ready. Your username is ${username}.\nOpen this link to choose your password: ${link}`,
     "The link works once and stops working after 3 days.",
   ].join("\n");
 }

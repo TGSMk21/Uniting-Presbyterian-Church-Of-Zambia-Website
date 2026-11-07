@@ -3,11 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { personAction } from "@/app/dashboard/staff-actions";
+import { LinkMessage } from "./link-message";
 
 const QUESTIONS = {
   suspend: "Suspend this account? They'll be signed out straight away and can't sign in until it's restored.",
   restore: "Restore this account? They'll be able to sign in again.",
-  "reset-password": "Give them a new temporary password? Their current password stops working and they're signed out.",
+  "reset-password": "Make a new set-password link? Their current password stops working and they're signed out until they use it.",
   "reset-two-factor": "Turn off their two-step login? They'll set it up again on their phone when they next sign in.",
 };
 const DONE = {
@@ -41,7 +42,7 @@ export default function PersonActions({ id, username, isActive, superuser, twoFa
           <button type="button" className="dash-quiet-button" disabled={pending} onClick={() => run("restore")}>Restore</button>
         )}
         <button type="button" className="dash-quiet-button" disabled={pending} onClick={() => run("reset-password")}>
-          Give a new temporary password
+          Make a new set-password link
         </button>
         {superuser && twoFactor && (
           <button type="button" className="dash-quiet-button" disabled={pending} onClick={() => run("reset-two-factor")}>
@@ -51,12 +52,13 @@ export default function PersonActions({ id, username, isActive, superuser, twoFa
       </div>
       <div role="status">
         {outcome?.error && <p className="dash-error">{outcome.error}</p>}
-        {outcome?.password && (
+        {outcome?.handover && (
           <div className="dash-handover">
             <p className="dash-text">
-              New temporary password for <strong>{username}</strong>. Give it to them privately; it won&apos;t be shown again.
+              New set-password link for <strong>{username}</strong>. Send them this message; the link works once, for 3 days,
+              and won&apos;t be shown again.
             </p>
-            <p><code className="dash-secret">{outcome.password}</code></p>
+            <LinkMessage message={outcome.handover.message} />
           </div>
         )}
         {outcome?.done && DONE[outcome.done] && <p className="dash-notice">{DONE[outcome.done]}</p>}

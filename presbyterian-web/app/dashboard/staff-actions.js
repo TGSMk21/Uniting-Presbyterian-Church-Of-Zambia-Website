@@ -4,8 +4,10 @@ import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { BRANCH_LIST_TAG, isBranchSlug, isRowId } from "@/Utilities/branchContent.mjs";
 import { branchTag } from "@/Utilities/pageContent.mjs";
+import { setPasswordAddress, shareMessage } from "@/Utilities/accessRequests.mjs";
 import { branchFailure, branchFromForm, personFailure, personFromForm } from "@/Utilities/staffAdmin.mjs";
 import { currentStaff, staffRequest } from "./session";
+import { siteOrigin } from "./site-origin";
 
 const PERSON_ACTIONS = new Set(["suspend", "restore", "reset-password", "reset-two-factor"]);
 
@@ -18,12 +20,18 @@ function typed(formData) {
   return Object.fromEntries([...formData.keys()].filter((key) => !key.startsWith("$")).map((key) => [key, String(formData.get(key) ?? "")]));
 }
 
-// Adds someone. Their temporary password comes back once, to be shown and passed on.
+// The set-password link and the message to send with it, shown once (Task 7.2).
+async function handover(person, { reset = false } = {}) {
+  const link = setPasswordAddress(await siteOrigin(), person.link_token);
+  return { link, message: shareMessage({ firstName: person.first_name, username: person.username, link, reset }) };
+}
+
+// Adds someone. Their set-password link comes back once, to be shown and passed on.
 export async function addPerson(previousState, formData) {
   const values = personFromForm(formData, { superuser: await isSuperuser(), isNew: true });
   const { status, data } = await staffRequest("/staff-people/", { method: "POST", body: values });
   if (status === 201) {
-    return { added: { id: data.id, username: data.username, password: data.temporary_password }, error: null, fields: {}, values: {} };
+    return { added: { id: data.id, username: data.username, ...(await handover(data)) }, error: null, fields: {}, values: {} };
   }
   const outcome = personFailure(status, data);
   if (outcome.signedOut) redirect("/dashboard/login");
@@ -44,7 +52,7 @@ export async function savePerson(id, previousState, formData) {
 export async function personAction(id, kind) {
   if (!isRowId(id) || !PERSON_ACTIONS.has(kind)) return { error: "This can't be done." };
   const { status, data } = await staffRequest(`/staff-people/${id}/${kind}/`, { method: "POST" });
-  if (status === 200) return { done: kind, password: data.temporary_password || null };
+  if (status === 200) return { done: kind, handover: data.link_token ? await handover(data, { reset: true }) : null };
   const outcome = personFailure(status, data);
   if (outcome.signedOut) redirect("/dashboard/login");
   return { error: outcome.error || "It couldn't be done right now. Please try again in a moment." };

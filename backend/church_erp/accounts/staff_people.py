@@ -5,8 +5,9 @@
 - Superusers see everyone and manage every branch's admins and editors.
 - Superusers, finance and national roles, and your own account stay in the
   Django admin, so nobody can lock themselves out or hand out more power here.
+- New accounts and password resets get a single-use link to choose a password
+  (Task 7.2), shown once to whoever made it; nobody else ever knows the password.
 """
-import secrets
 
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import transaction
@@ -21,18 +22,10 @@ from church_erp.core.models import Branch, Minister, account_link_problem
 from . import two_factor
 from .auth_views import IsStaff
 from .models import User
+from .password_links import make_link
 
 # The roles given out here.
 MANAGED_ROLES = ("branch_admin", "content_editor")
-# Easy to read out or copy: no 0/O, 1/l/I.
-PASSWORD_LETTERS = "abcdefghjkmnpqrstuvwxyz23456789"
-
-
-def temporary_password():
-    """Four groups of four, such as k7dm-q2xa-9fph-wr3c. They choose their own when they sign in."""
-    return "-".join("".join(secrets.choice(PASSWORD_LETTERS) for _ in range(4)) for _ in range(4))
-
-
 def linked_minister(person):
     try:
         return person.minister_profile
@@ -207,16 +200,16 @@ class StaffPeopleViewSet(viewsets.ModelViewSet):
         minister = values.pop("minister", None)
         if not viewer.is_superuser:
             values.update(role="content_editor", branch=viewer.branch)
-        password = temporary_password()
-        person = User(**values, is_staff=True, is_active=True, is_superuser=False, must_change_password=True)
-        person.set_password(password)
+        person = User(**values, is_staff=True, is_active=True, is_superuser=False)
+        person.set_unusable_password()
         with transaction.atomic():
             person.save()
             if minister is not None:
                 link_minister(person, minister)
-        self.note(person, "added")
+            self.note(person, "added")
+            token = make_link(person, made_by=viewer)
         # Shown once, for them to pass on; only its hash is kept.
-        return Response({**self.get_serializer(person).data, "temporary_password": password}, status=201)
+        return Response({**self.get_serializer(person).data, "link_token": token}, status=201)
 
     def partial_update(self, request, *args, **kwargs):
         person = self.managed()
@@ -261,14 +254,15 @@ class StaffPeopleViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="reset-password")
     def reset_password(self, request, *args, **kwargs):
         person = self.managed()
-        password = temporary_password()
         with transaction.atomic():
-            person.set_password(password)
-            person.must_change_password = True
+            # The old password stops working now; they choose a new one from the link.
+            person.set_unusable_password()
+            person.must_change_password = False
             person.save(update_fields=["password", "must_change_password"])
             two_factor.end_sessions(person)
-        self.note(person, "password reset")
-        return self.answer(person, temporary_password=password)
+            self.note(person, "password reset")
+            token = make_link(person, made_by=request.user)
+        return self.answer(person, link_token=token)
 
     @action(detail=True, methods=["post"], url_path="reset-two-factor")
     def reset_two_factor(self, request, *args, **kwargs):

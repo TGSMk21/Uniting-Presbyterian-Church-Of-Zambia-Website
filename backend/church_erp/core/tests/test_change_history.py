@@ -147,18 +147,23 @@ class PeopleAndBranchesTests(HistoryTestCase):
         self.client.force_authenticate(self.admin_a)
         response = self.client.post(reverse("staff-people-list"), {"username": "newbie"}, format="json")
         pk = response.data["id"]
-        passwords = [response.data["temporary_password"]]
-        self.assertEqual(self.entry(self.last()), ("admin_a", "alpha", "people", "added", "newbie", []))
-        for name, action in (("suspend", "suspended"), ("restore", "restored"), ("reset-password", "password reset")):
+        secrets = [response.data["link_token"]]
+        self.assertEqual(
+            [self.entry(c) for c in StaffChange.objects.order_by("-pk")[:2]][::-1],
+            [("admin_a", "alpha", "people", "added", "newbie", []),
+             ("admin_a", "alpha", "people", "set-password link made", "newbie", [])],
+        )
+        for name, action in (("suspend", "suspended"), ("restore", "restored"), ("reset-password", "set-password link made")):
             answer = self.client.post(reverse(f"staff-people-{name}", args=[pk]))
             self.assertEqual(self.last().action, action)
-        passwords.append(answer.data["temporary_password"])
+        self.assertTrue(StaffChange.objects.filter(action="password reset", target="newbie").exists())
+        secrets.append(answer.data["link_token"])
         self.client.patch(reverse("staff-people-detail", args=[pk]), {"first_name": "Grace"}, format="json")
         self.assertEqual(self.entry(self.last()), ("admin_a", "alpha", "people", "changed", "newbie", ["first_name"]))
-        # The temporary passwords are never kept anywhere readable.
+        # Link secrets are never kept anywhere readable.
         for change in StaffChange.objects.all():
-            for password in passwords:
-                self.assertNotIn(password, f"{change.target} {change.changes} {change.target_id}")
+            for secret in secrets:
+                self.assertNotIn(secret, f"{change.target} {change.changes} {change.target_id}")
 
     def test_two_step_reset(self):
         self.client.force_authenticate(self.boss)

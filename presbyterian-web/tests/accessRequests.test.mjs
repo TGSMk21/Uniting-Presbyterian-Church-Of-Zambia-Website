@@ -89,3 +89,9 @@ test("the list says who, where and what happened", () => {
     "Minister · Alpha · Turned down by tmk",
   );
 });
+
+test("a password reset's message says so", () => {
+  const text = shareMessage({ firstName: "Grace", username: "grace", link: "https://x/l", reset: true });
+  assert.match(text, /choose a new password for your UPCZ staff dashboard account \(username grace\)/);
+  assert.doesNotMatch(text, /is ready/);
+});

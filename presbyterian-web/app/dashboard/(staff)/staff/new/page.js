@@ -15,7 +15,7 @@ export default async function AddPerson() {
     <main className="dash-main">
       <Link href="/dashboard/staff" className="dash-link" prefetch={false}>← Staff</Link>
       <h1 className="dash-heading dash-heading-spaced">Add someone</h1>
-      <p className="dash-text">They get a temporary password to sign in with, and choose their own straight away.</p>
+      <p className="dash-text">They get a link to choose their own password, for you to send them by WhatsApp or SMS.</p>
       <PersonForm
         id={null}
         values={{ role: "content_editor" }}

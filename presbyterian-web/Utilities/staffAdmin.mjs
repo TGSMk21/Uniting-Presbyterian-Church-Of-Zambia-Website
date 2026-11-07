@@ -112,7 +112,8 @@ export function branchFailure(status, data) {
 }
 
 const ACTION_WORDS = {
-  "password reset": "gave a new temporary password to",
+  "password reset": "reset the password of",
+  "set-password link made": "made a set-password link for",
   "two-step login reset": "reset two-step login for",
 };
 const FIELD_WORDS = { is_active: "shown on the website", youtube_channel_id: "YouTube channel" };

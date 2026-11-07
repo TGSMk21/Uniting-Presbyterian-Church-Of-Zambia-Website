@@ -97,7 +97,11 @@ test("history lines read as sentences", () => {
   );
   assert.equal(
     changeSummary({ username: "grace", action: "password reset", section: "people", target: "newbie", changes: [] }),
-    "grace gave a new temporary password to the account “newbie”",
+    "grace reset the password of the account “newbie”",
+  );
+  assert.equal(
+    changeSummary({ username: "grace", action: "set-password link made", section: "people", target: "newbie", changes: [] }),
+    "grace made a set-password link for the account “newbie”",
   );
   assert.equal(
     changeSummary({ username: "boss", action: "two-step login reset", section: "people", target: "admin", changes: [] }),

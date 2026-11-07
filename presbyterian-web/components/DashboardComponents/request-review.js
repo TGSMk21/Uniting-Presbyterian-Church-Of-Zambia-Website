@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import Link from "next/link";
 import { approveRequest, turnDownRequest } from "@/app/dashboard/access-actions";
 import { STAFF_ROLES } from "@/Utilities/staffAdmin.mjs";
+import { LinkMessage } from "./link-message";
 
 function Field({ label, help, error, children }) {
   return (
@@ -16,23 +17,6 @@ function Field({ label, help, error, children }) {
   );
 }
 
-function CopyButton({ text, label }) {
-  const [copied, setCopied] = useState(false);
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  }
-  return (
-    <button type="button" className="btn-ghost dash-copy" onClick={copy}>
-      {copied ? "Copied" : label}
-    </button>
-  );
-}
-
 // The link, shown once after approving (decision D3). It isn't kept anywhere readable.
 function Handover({ approved }) {
   return (
@@ -42,12 +26,8 @@ function Handover({ approved }) {
         Send them this message by WhatsApp or SMS. The link works once and stops working after 3 days; it won&apos;t be
         shown again. If it&apos;s lost, make a new one from their page under Staff.
       </p>
-      <textarea readOnly rows={6} value={approved.message} aria-label="Message to send" />
+      <LinkMessage message={approved.message} />
       <div className="dash-links">
-        <CopyButton text={approved.message} label="Copy message" />
-        <a href={`https://wa.me/?text=${encodeURIComponent(approved.message)}`} target="_blank" rel="noopener noreferrer" className="dash-link">
-          Open in WhatsApp
-        </a>
         <Link href="/dashboard/requests" className="dash-link" prefetch={false}>Back to requests</Link>
       </div>
     </div>

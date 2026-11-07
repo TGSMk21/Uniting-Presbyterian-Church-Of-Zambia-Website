@@ -16,20 +16,13 @@ import {
 } from "@/Utilities/accessRequests.mjs";
 import { isRowId } from "@/Utilities/branchContent.mjs";
 import { staffRequest } from "./session";
+import { siteOrigin } from "./site-origin";
 
 const LINK_GONE = "This link has expired or has already been used. Please ask whoever approved your account for a new one.";
 const TRY_AGAIN = "This isn't working right now. Please try again in a few minutes.";
 
 async function forwardedFor() {
   return (await headers()).get("x-forwarded-for");
-}
-
-// This website's own address, for the link the approver sends on.
-async function siteOrigin() {
-  const list = await headers();
-  const host = list.get("x-forwarded-host") || list.get("host");
-  const proto = list.get("x-forwarded-proto") || (host?.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
 }
 
 export async function requestAccess(previousState, formData) {
