@@ -188,3 +188,46 @@ class BackupCommandTests(TestCase):
         with mock.patch.object(backups.timezone, "now", return_value=at(2026, 11, 8)):
             call_command("backup_database", stdout=open(os.devnull, "w"))
         self.assertTrue(storages["private"].exists("backups/upcz-2026-11-08.json.gz"))
+
+
+@override_settings(STORAGES=IN_MEMORY)
+class BackupSpeedTests(TestCase):
+    """Each query is a round trip from Render to Supabase, so a backup that asks once
+    per row gets slow as the history grows (the first live run took 35 seconds)."""
+
+    def queries_with(self, rows):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        from church_erp.core.models import StaffChange
+        branch = Branch.objects.first() or make_branch("alpha")
+        minister = Minister.objects.first() or Minister.objects.create(branch=branch, name="Banda")
+        person = User.objects.first() or User.objects.create_user("editor", password="pw", is_staff=True, branch=branch)
+        for _ in range(rows - StaffChange.objects.count()):
+            StaffChange.objects.create(user=person, username="editor", branch=branch, section="pages", action="changed")
+            DailyMessage.objects.create(minister=minister, title="T", message="m", date=date(2026, 11, 8), reviewed_by=person)
+        with CaptureQueriesContext(connection) as queries:
+            backups.make_backup(now=at(2026, 11, 8))
+        return len(queries)
+
+    def test_the_number_of_queries_doesnt_grow_with_the_number_of_rows(self):
+        few = self.queries_with(20)
+        many = self.queries_with(200)
+        self.assertLessEqual(many - few, 5, f"{few} queries for 20 rows, {many} for 200")
+
+    def test_it_saves_exactly_what_djangos_own_dumpdata_would(self):
+        from io import StringIO
+        self.queries_with(30)
+        DailyMessage.objects.first().source_documents.set(
+            [SermonDocument.objects.create(minister=Minister.objects.first(), title="G", text="w")],
+        )
+        call_command("setup_roles", stdout=open(os.devnull, "w"))
+        User.objects.first().groups.set(__import__("django.contrib.auth.models", fromlist=["Group"]).Group.objects.all())
+        ours = read_backup(backups.make_backup(now=at(2026, 11, 8))["file"])
+        out = StringIO()
+        call_command(
+            "dumpdata", natural_foreign=True, natural_primary=True, stdout=out,
+            exclude=[*backups.LEFT_OUT_APPS, *backups.LEFT_OUT_MODELS],
+        )
+        theirs = json.loads(out.getvalue())
+        self.assertEqual(ours, theirs)

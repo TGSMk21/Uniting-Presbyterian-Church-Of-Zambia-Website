@@ -1,7 +1,7 @@
 """Nightly database backups to the private bucket (AGENT_EXECUTION_PLAN.md, Phase 6).
 
 Supabase's free plan keeps no backups we can restore, so the site copies its
-own data: Django's `dumpdata`, gzipped, as backups/upcz-YYYY-MM-DD.json.gz in
+own data in Django's `dumpdata` format (natural keys), gzipped, as backups/upcz-YYYY-MM-DD.json.gz in
 the private bucket (the day in Zambia), the newest 30 kept. It needs no extra
 programs on the host. To restore into an empty database: `migrate`, then
 `loaddata upcz-YYYY-MM-DD.json.gz` (backend/README.md, "Backups").
@@ -19,21 +19,58 @@ import re
 import shutil
 import tempfile
 
+from django.apps import apps
+from django.core import serializers
 from django.core.files import File
 from django.core.files.storage import storages
-from django.core.management import call_command
+from django.db.models import ForeignKey, OneToOneField, Prefetch
 from django.utils import timezone
 
 FOLDER = "backups"
 KEEP = 30
 NAME = re.compile(r"upcz-\d{4}-\d{2}-\d{2}\.json\.gz")
-LEFT_OUT = [
-    "contenttypes",
-    "auth.permission",
-    "sessions",
-    "token_blacklist",
-    "ai_messages.sermonembedding",
-]
+LEFT_OUT_APPS = {"contenttypes", "sessions", "token_blacklist"}
+LEFT_OUT_MODELS = {"auth.permission", "ai_messages.sermonembedding"}
+
+
+def _natural_links(model):
+    """Names of `model`'s foreign keys to models saved by name (natural keys)."""
+    return [
+        field.name for field in model._meta.concrete_fields
+        if isinstance(field, (ForeignKey, OneToOneField)) and hasattr(field.related_model, "natural_key")
+    ]
+
+
+def _rows(model):
+    """Every row, with linked rows fetched in bulk rather than one query per row.
+    Each query is a round trip from Render to Supabase; per-row lookups made the
+    first live backup take 35 seconds."""
+    rows = model._base_manager.select_related(*_natural_links(model))
+    prefetches = [
+        # A permission is saved by name together with its content type's name.
+        Prefetch(field.name, queryset=field.related_model._base_manager.select_related(*_natural_links(field.related_model)))
+        for field in model._meta.many_to_many
+        if field.remote_field.through._meta.auto_created
+    ]
+    return rows.prefetch_related(*prefetches).order_by(model._meta.pk.name)
+
+
+def _models():
+    """The same models, in the same order, as `dumpdata --natural-foreign` would save."""
+    configs = [
+        (config, None) for config in apps.get_app_configs()
+        if config.label not in LEFT_OUT_APPS and config.models_module is not None
+    ]
+    return [
+        model for model in serializers.sort_dependencies(configs, allow_cycles=True)
+        if not model._meta.proxy and model._meta.label_lower not in LEFT_OUT_MODELS
+    ]
+
+
+def _objects():
+    for model in _models():
+        # In chunks, so memory stays small; links are still fetched in bulk for each chunk.
+        yield from _rows(model).iterator(chunk_size=500)
 
 
 def make_backup(now=None):
@@ -45,10 +82,11 @@ def make_backup(now=None):
 
     with tempfile.TemporaryDirectory() as folder:
         plain = os.path.join(folder, "upcz.json")
-        call_command(
-            "dumpdata", natural_foreign=True, natural_primary=True,
-            exclude=LEFT_OUT, output=plain, verbosity=0,
-        )
+        with open(plain, "w", encoding="utf-8") as out:
+            # Django's own format, so `loaddata` restores it.
+            serializers.serialize(
+                "json", _objects(), stream=out, use_natural_foreign_keys=True, use_natural_primary_keys=True,
+            )
         packed = plain + ".gz"
         with open(plain, "rb") as source, gzip.open(packed, "wb") as target:
             shutil.copyfileobj(source, target)
