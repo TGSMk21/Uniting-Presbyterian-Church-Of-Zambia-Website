@@ -13,3 +13,18 @@ export async function allBranches() {
   }
   return branches;
 }
+
+// Every branch's ministers, for a superuser choosing which minister an account belongs to (Task 7.1).
+export async function allMinisters(branches) {
+  const lists = await Promise.all(branches.map(async ({ slug }) => {
+    const ministers = [];
+    for (let page = 1; page <= MOST_PAGES; page++) {
+      const { status, data } = await staffRequest(`/staff/${encodeURIComponent(slug)}/ministers/?page=${page}`);
+      if (status !== 200) break;
+      ministers.push(...(data.results || []).map((minister) => ({ ...minister, branch: slug })));
+      if (!data.next) break;
+    }
+    return ministers;
+  }));
+  return lists.flat();
+}

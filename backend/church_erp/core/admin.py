@@ -69,6 +69,13 @@ class BranchAdmin(BranchScopedAdmin):
 
 @admin.register(Minister)
 class MinisterAdmin(BranchScopedAdmin):
-    list_display = ('name', 'branch', 'order', 'created_at')
+    list_display = ('name', 'branch', 'order', 'account', 'created_at')
     search_fields = ('name', 'branch__name')
     list_filter = ('branch',)
+
+    def get_readonly_fields(self, request, obj=None):
+        # Which login a minister uses is the developer's decision (Task 7.1).
+        fields = list(super().get_readonly_fields(request, obj))
+        if not request.user.is_superuser:
+            fields.append('account')
+        return fields

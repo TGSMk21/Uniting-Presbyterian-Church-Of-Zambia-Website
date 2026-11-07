@@ -215,10 +215,12 @@ class StaffActivityViewSet(BranchContentViewSet):
 class MinisterSerializer(serializers.ModelSerializer):
     bio = serializers.CharField(max_length=LONG_TEXT, allow_blank=True, required=False)
     style_notes = serializers.CharField(max_length=LONG_TEXT, allow_blank=True, required=False)
+    # Which login they use (Task 7.1); linked by superusers on the staff page.
+    account_username = serializers.CharField(source="account.username", read_only=True, default="")
 
     class Meta:
         model = Minister
-        fields = ["id", "name", "bio", "order", "photo", "ai_drafts", "style_notes"]
+        fields = ["id", "name", "bio", "order", "photo", "ai_drafts", "style_notes", "account_username"]
         # Photos change through their own upload, which checks them.
         read_only_fields = ["photo"]
         extra_kwargs = {"order": {"min_value": 0, "max_value": MAX_ORDER}}

@@ -46,6 +46,13 @@ export default async function EditRow({ params }) {
         </p>
       )}
       {name === "ministers" && (
+        <p className="dash-text">
+          {data.account_username
+            ? <>Signs in to the dashboard as <strong>{data.account_username}</strong>.</>
+            : "Has no dashboard account yet. The developer links one from the Staff page."}
+        </p>
+      )}
+      {name === "ministers" && (
         <MinisterPhoto branch={branch} id={id} value={data.photo || ""} viewHref={spec.publicPath(branch)} />
       )}
       {name === "messages" && aiDraftNote(data) && (

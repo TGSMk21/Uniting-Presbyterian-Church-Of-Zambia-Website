@@ -55,6 +55,9 @@ class AccessMatrixTests(APITestCase):
 
         cls.editor_a = user("editor_a", cls.alpha, "content_editor")
         cls.admin_a = user("admin_a", cls.alpha, "branch_admin")
+        # A minister's own account (Task 7.1) is a Branch Admin linked to their profile;
+        # being linked must not reach any further than that.
+        Minister.objects.create(branch=cls.alpha, name="Alpha minister", account=cls.admin_a)
         cls.finance_a = user("finance_a", cls.alpha, "finance_admin")
         cls.editor_b = user("editor_b", cls.beta, "content_editor")
         cls.admin_b = user("admin_b", cls.beta, "branch_admin")

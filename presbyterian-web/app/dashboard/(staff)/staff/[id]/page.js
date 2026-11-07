@@ -5,7 +5,7 @@ import PersonForm from "@/components/DashboardComponents/person-form";
 import { isRowId } from "@/Utilities/branchContent.mjs";
 import { canManageStaff, personSummary } from "@/Utilities/staffAdmin.mjs";
 import { requireStaff, staffRequest } from "../../../session";
-import { allBranches } from "../../../staff-data";
+import { allBranches, allMinisters } from "../../../staff-data";
 
 function when(value) {
   if (!value) return "Never";
@@ -29,6 +29,9 @@ export default async function Person({ params, searchParams }) {
   if (status === 403 || status === 404) notFound();
   if (status !== 200) throw new Error(`The staff API answered ${status}`);
 
+  const usable = branches.filter((branch) => branch.is_active || branch.slug === person.branch);
+  const ministers = staff.is_superuser && person.can_manage ? await allMinisters(usable) : [];
+
   const name = [person.first_name, person.last_name].filter(Boolean).join(" ") || person.username;
   return (
     <main className="dash-main">
@@ -48,9 +51,11 @@ export default async function Person({ params, searchParams }) {
             values={{
               first_name: person.first_name, last_name: person.last_name, email: person.email,
               role: person.role, branch: person.branch || "",
+              minister: person.minister ? String(person.minister) : "", username: person.username,
             }}
             superuser={staff.is_superuser}
-            branches={branches.filter((branch) => branch.is_active || branch.slug === person.branch)}
+            branches={usable}
+            ministers={ministers}
           />
           <PersonActions
             id={id}

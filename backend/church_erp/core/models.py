@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from .validators import validate_not_reserved
@@ -36,6 +37,22 @@ class Branch(models.Model):
         return self.name
 
 
+MINISTER_ROLE = "branch_admin"
+
+
+def account_link_problem(account, branch_id):
+    """Why `account` can't be a minister's login for `branch_id`, or None if it can (decision D1)."""
+    if account is None:
+        return None
+    if account.is_superuser:
+        return "Superusers are for the developer and can't be a minister's account."
+    if account.role != MINISTER_ROLE:
+        return "A minister's account must be a Branch Admin."
+    if account.branch_id != branch_id:
+        return "A minister's account must belong to the minister's own branch."
+    return None
+
+
 class Minister(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='ministers')
     name = models.CharField(max_length=200)
@@ -50,6 +67,11 @@ class Minister(models.Model):
         default=False, help_text="Write a draft daily message from their written sermons each day, for staff to check.",
     )
     style_notes = models.TextField(blank=True, help_text="How they like to write, for the daily message drafts")
+    # The login this minister uses (AGENT_EXECUTION_PLAN.md, Task 7.1): a Branch Admin of the same branch.
+    account = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='minister_profile',
+        help_text="The login this minister uses. It must be a Branch Admin of the same branch.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -57,6 +79,12 @@ class Minister(models.Model):
 
     def __str__(self):
         return f"{self.name} — {self.branch.name}"
+
+    def clean(self):
+        super().clean()
+        problem = account_link_problem(self.account, self.branch_id)
+        if problem:
+            raise ValidationError({"account": problem})
 
 
 class ServiceTime(models.Model):

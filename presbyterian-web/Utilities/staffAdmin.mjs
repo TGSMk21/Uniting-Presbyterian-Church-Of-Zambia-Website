@@ -35,6 +35,9 @@ export function personFromForm(formData, { superuser, isNew }) {
   if (superuser) {
     values.role = text(formData, "role");
     values.branch = text(formData, "branch");
+    // The minister this login belongs to (Task 7.1), or none.
+    const minister = text(formData, "minister");
+    values.minister = /^[1-9][0-9]{0,9}$/.test(minister) ? Number(minister) : null;
   }
   return values;
 }
@@ -60,7 +63,7 @@ export function personFailure(status, data) {
   return failure(status, data, {
     notFound: "This person couldn't be found.",
     refused: "You can't change this person's account.",
-    boxes: ["username", "first_name", "last_name", "email", "role", "branch"],
+    boxes: ["username", "first_name", "last_name", "email", "role", "branch", "minister"],
   });
 }
 
@@ -68,10 +71,27 @@ export function personSummary(person) {
   return [
     person.role_label,
     person.branch_name,
+    person.minister_name && `Minister: ${person.minister_name}`,
     !person.is_active && "Suspended",
     person.is_active && person.must_change_password && "Hasn't chosen their own password yet",
     person.two_factor_enabled && "Two-step login on",
   ].filter(Boolean).join(" · ");
+}
+
+// The minister choices for a superuser, by branch. `username` is the account being
+// edited, so its own minister isn't marked as taken.
+export function ministerGroups(ministers = [], branches = [], username = "") {
+  return branches
+    .map(({ slug, name }) => ({
+      label: name,
+      options: ministers
+        .filter((minister) => minister.branch === slug)
+        .map(({ id, name: ministerName, account_username: account }) => ({
+          value: String(id),
+          label: account && account !== username ? `${ministerName} (has an account)` : ministerName,
+        })),
+    }))
+    .filter((group) => group.options.length > 0);
 }
 
 export function branchFromForm(formData, { isNew }) {

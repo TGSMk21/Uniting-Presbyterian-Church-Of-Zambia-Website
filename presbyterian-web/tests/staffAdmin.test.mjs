@@ -10,6 +10,7 @@ import {
   changeSummary,
   historyQuery,
   personFailure,
+  ministerGroups,
   personFromForm,
   personSummary,
 } from "../Utilities/staffAdmin.mjs";
@@ -36,6 +37,7 @@ test("a branch admin's form sends no role or branch; a superuser's does", () => 
   });
   assert.deepEqual(personFromForm(data, { superuser: true, isNew: true }), {
     username: "newbie", first_name: "Grace", last_name: "Phiri", email: "g@example.org", role: "branch_admin", branch: "beta",
+    minister: null,
   });
   // Usernames can't change after.
   assert.equal("username" in personFromForm(data, { superuser: true, isNew: false }), false);
@@ -116,4 +118,38 @@ test("only safe filters reach the API", () => {
   assert.equal(historyQuery({ page: "2", branch: "chilanga", person: " grace ", section: "projects" }),
     "?page=2&branch=chilanga&person=grace&section=projects");
   assert.equal(historyQuery({ branch: "../x", section: "nope", page: "x" }), "?page=1");
+});
+
+// Task 7.1: a minister's account is linked to their minister profile, by superusers only.
+test("superusers choose the minister an account belongs to, or none", () => {
+  const base = { username: "rev", role: "branch_admin", branch: "alpha" };
+  assert.equal(personFromForm(form({ ...base, minister: "7" }), { superuser: true, isNew: true }).minister, 7);
+  assert.equal(personFromForm(form({ ...base, minister: "" }), { superuser: true, isNew: false }).minister, null);
+  assert.equal("minister" in personFromForm(form({ ...base, minister: "7" }), { superuser: false, isNew: true }), false);
+  assert.deepEqual(personFailure(400, { minister: ["This minister already has an account."] }).fields, {
+    minister: "This minister already has an account.",
+  });
+});
+
+test("ministers are offered by branch, saying which already have an account", () => {
+  const groups = ministerGroups(
+    [
+      { id: 1, name: "Banda", branch: "alpha", account_username: "" },
+      { id: 2, name: "Mwale", branch: "alpha", account_username: "mwale" },
+      { id: 3, name: "Phiri", branch: "beta", account_username: "rev" },
+    ],
+    [{ slug: "alpha", name: "Alpha" }, { slug: "beta", name: "Beta" }],
+    "rev",
+  );
+  assert.deepEqual(groups, [
+    { label: "Alpha", options: [{ value: "1", label: "Banda" }, { value: "2", label: "Mwale (has an account)" }] },
+    { label: "Beta", options: [{ value: "3", label: "Phiri" }] },
+  ]);
+});
+
+test("a linked account says whose it is", () => {
+  assert.equal(
+    personSummary({ role_label: "Branch Admin", branch_name: "Alpha", is_active: true, minister_name: "Banda" }),
+    "Branch Admin · Alpha · Minister: Banda",
+  );
 });

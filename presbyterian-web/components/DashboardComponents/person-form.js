@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { addPerson, savePerson } from "@/app/dashboard/staff-actions";
-import { STAFF_ROLES } from "@/Utilities/staffAdmin.mjs";
+import { STAFF_ROLES, ministerGroups } from "@/Utilities/staffAdmin.mjs";
 
 function Field({ label, help, error, optional, children }) {
   return (
@@ -37,8 +37,8 @@ function Added({ added }) {
   );
 }
 
-// `id` is null when adding someone. `branches` is only given to superusers.
-export default function PersonForm({ id, values, superuser, branches = [], branchName }) {
+// `id` is null when adding someone. `branches` and `ministers` are only given to superusers.
+export default function PersonForm({ id, values, superuser, branches = [], ministers = [], branchName }) {
   const isNew = id === null;
   const [state, action, pending] = useActionState(isNew ? addPerson : savePerson.bind(null, id), {
     added: null,
@@ -86,6 +86,17 @@ export default function PersonForm({ id, values, superuser, branches = [], branc
               <select key={shown.branch ?? ""} name="branch" defaultValue={shown.branch || ""} required aria-invalid={invalid("branch")}>
                 <option value="">Choose a branch</option>
                 {branches.map(({ slug, name }) => <option key={slug} value={slug}>{name}</option>)}
+              </select>
+            </Field>
+            <Field label="Minister" optional error={state.fields.minister}
+              help="For a minister's own account: choose them here. It must be a Branch Admin of the minister's branch.">
+              <select key={shown.minister ?? ""} name="minister" defaultValue={shown.minister ?? ""} aria-invalid={invalid("minister")}>
+                <option value="">Not a minister</option>
+                {ministerGroups(ministers, branches, values.username).map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.options.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+                  </optgroup>
+                ))}
               </select>
             </Field>
           </>
