@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from church_erp.core.models import Branch, Minister
 
@@ -65,6 +66,31 @@ class Activity(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class PageContent(models.Model):
+    """Changed wording for one page; see page_content.py. No branch means the national site."""
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True, related_name='page_content')
+    page = models.CharField(max_length=50)
+    fields = models.JSONField(default=dict)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "page content"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['branch', 'page'], condition=models.Q(branch__isnull=False), name='unique_page_per_branch',
+            ),
+            models.UniqueConstraint(
+                fields=['page'], condition=models.Q(branch__isnull=True), name='unique_national_page',
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.branch or 'National'}: {self.page}"
 
 
 class Page(models.Model):

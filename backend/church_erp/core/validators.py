@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 
 # Addresses the website already uses, so a branch can't take them over.
 RESERVED_BRANCH_SLUGS = {
-    "admin", "api", "branches", "contact", "dashboard", "find-a-branch", "find-a-church",
+    "admin", "api", "branches", "contact", "dashboard", "find-a-branch", "find-a-church", "national",
 }
 
 
