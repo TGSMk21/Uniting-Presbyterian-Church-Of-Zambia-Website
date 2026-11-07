@@ -96,20 +96,3 @@ class PageContent(models.Model):
 
     def __str__(self):
         return f"{self.branch or 'National'}: {self.page}"
-
-
-class Page(models.Model):
-    """Flexible page content — about pages, custom pages per branch."""
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='pages')
-    slug = models.SlugField()
-    title = models.CharField(max_length=200)
-    content = models.TextField(blank=True, help_text="HTML or plain text content")
-    is_published = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = [('branch', 'slug')]
-
-    def __str__(self):
-        return f"{self.title} ({self.branch.name})"

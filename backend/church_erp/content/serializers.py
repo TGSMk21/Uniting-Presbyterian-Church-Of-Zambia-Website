@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Sermon, Project, Activity, Page
+from .models import Sermon, Project, Activity
 
 
 class SermonSerializer(serializers.ModelSerializer):
@@ -23,8 +23,3 @@ class ActivitySerializer(serializers.ModelSerializer):
         model = Activity
         fields = '__all__'
 
-
-class PageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Page
-        fields = '__all__'

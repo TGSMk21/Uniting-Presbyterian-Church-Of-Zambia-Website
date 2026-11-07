@@ -18,7 +18,6 @@ EXPORTABLE = [
     ("content", "sermon"),
     ("content", "project"),
     ("content", "activity"),
-    ("content", "page"),
     ("media_library", "mediaasset"),
     ("ai_messages", "dailymessage"),
     ("finance", "givingrecord"),

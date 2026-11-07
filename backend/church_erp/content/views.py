@@ -1,13 +1,11 @@
-from django.db.models import Q
 from rest_framework import permissions, viewsets
 from rest_framework.exceptions import NotFound
-from church_erp.core.api_mixins import BranchScopedViewSetMixin, IsBranchStaffOrReadOnly
-from church_erp.content.models import Sermon, Project, Activity, Page
+from church_erp.core.api_mixins import BranchScopedViewSetMixin
+from church_erp.content.models import Sermon, Project, Activity
 from church_erp.content.serializers import (
     SermonSerializer,
     ProjectSerializer,
     ActivitySerializer,
-    PageSerializer,
 )
 
 
@@ -44,18 +42,3 @@ class ActivityViewSet(BranchScopedViewSetMixin, viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.AllowAny]
     filterset_fields = {'date': ['gte', 'lte']}  # e.g. ?date__gte=2026-11-02 for upcoming
 
-
-class PageViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
-    queryset = Page.objects.all()
-    serializer_class = PageSerializer
-    permission_classes = [IsBranchStaffOrReadOnly]
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        user = self.request.user
-        if user.is_superuser:
-            return qs
-        visible = Q(is_published=True)
-        if user.is_staff and user.branch_id:
-            visible |= Q(branch_id=user.branch_id)
-        return qs.filter(visible)

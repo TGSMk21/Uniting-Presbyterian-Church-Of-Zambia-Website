@@ -15,7 +15,6 @@ APP_LABELS = {
     "sermon": "content",
     "project": "content",
     "activity": "content",
-    "page": "content",
     "mediaasset": "media_library",
     "dailymessage": "ai_messages",
     "sermondocument": "ai_messages",

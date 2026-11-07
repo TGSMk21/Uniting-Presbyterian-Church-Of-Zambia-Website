@@ -434,7 +434,7 @@ Most page wording is hard-coded today: on the national site, the landing page (h
 - [x] Permissions: branch staff edit their own branch's pages; national pages are limited to superusers and the existing National Admin role.
 - [x] **[rev] Page editing live (verified 2026-11-07):** the owner edited a page on the production site and saw the change straight away.
 - [x] Make saved edits appear straight away: the website caches API answers for an hour. **[rev]** Saves go through the website's server, so it clears the cache tag itself (`updateTag`) and no extra endpoint is needed.
-- [ ] Decide what to do with the unused `Page` model: reuse it for the new content or remove it.
+- [x] Decide what to do with the unused `Page` model: reuse it for the new content or remove it. **[rev] Decision (2026-11-07): removed** (migration `content/0006`), with its admin section, `/api/pages/` and the role permissions `setup_roles` gave for it. `setup_roles` runs on every Render start, so that had to go in the same change.
 - [x] Commit: `"Add editable page content for national and branch sites"`
 
 ### Task 5.3 — Content sections
@@ -496,7 +496,7 @@ Remove once Phase 0 is done: `PROJECT_ID` (Sanity), `YOUTUBE_CHANNEL_ID` (now pe
 
 ## Appendix B — Current API Endpoints (`backend/church_erp/api/urls.py`)
 
-`/api/branches/` (lookup by slug: `/api/branches/<slug>/`), `/api/ministers/`, `/api/sermons/` (filter `?branch=<slug>`), `/api/sermons/<video_id>/` (**[rev]** not unique across branches — changes in Task 0.5), `/api/projects/`, `/api/activities/`, `/api/pages/`, `/api/media/`, `/api/daily-messages/` (filter `?branch=<slug>`; public callers only ever see `status=published`), `/api/giving-records/` (**[rev]** unused; finance is out of the plan). **[rev]** `/api/auth/` was removed in Phase 6; Task 5.1 restores it.
+`/api/branches/` (lookup by slug: `/api/branches/<slug>/`), `/api/ministers/`, `/api/sermons/` (filter `?branch=<slug>`), `/api/sermons/<video_id>/` (**[rev]** not unique across branches — changes in Task 0.5), `/api/projects/`, `/api/activities/`, `/api/media/`, `/api/daily-messages/` (filter `?branch=<slug>`; public callers only ever see `status=published`), `/api/giving-records/` (**[rev]** unused; finance is out of the plan). **[rev]** `/api/auth/` was removed in Phase 6; Task 5.1 restores it.
 
 ---
 
@@ -504,7 +504,7 @@ Remove once Phase 0 is done: `PROJECT_ID` (Sanity), `YOUTUBE_CHANNEL_ID` (now pe
 
 - `core`: `Branch`, `Minister` (**[rev]** with `ai_drafts` and `style_notes`), `ServiceTime`, `StaffChange`
 - `accounts`: `User` (role: `super_admin` / `branch_admin` / `finance_admin` / `content_editor`)
-- `content`: `Sermon`, `Project`, `Activity`, `Page` (unused), `PageContent`
+- `content`: `Sermon`, `Project`, `Activity`, `PageContent` (**[rev]** the old `Page` model was removed)
 - `media_library`: `MediaAsset`, `MediaTag`
 - `ai_messages`: `SermonDocument` (**[rev]** pastors' written sermons, private), `SermonEmbedding` (pgvector, 1536 dims, one row per passage of a `SermonDocument`), `DailyMessage` (with `ai_generated` and `source_documents`)
 - `finance`: `GivingRecord`

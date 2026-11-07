@@ -7,7 +7,7 @@ from church_erp.accounts.roles import ROLE_GROUP_NAMES, sync_role_group
 ALL = ('add', 'change', 'delete', 'view')
 
 CONTENT_EDITOR = {
-    'content': {'sermon': ALL, 'project': ALL, 'activity': ALL, 'page': ALL},
+    'content': {'sermon': ALL, 'project': ALL, 'activity': ALL},
     'media_library': {'mediaasset': ALL, 'mediatag': ALL},
     'ai_messages': {'dailymessage': ('add', 'change', 'view'), 'sermonembedding': ('view',)},
 }

@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from church_erp.core.admin_mixins import BranchScopedAdmin
 
-from .models import Sermon, Project, Activity, Page
+from .models import Sermon, Project, Activity
 
 
 @admin.register(Sermon)
@@ -26,10 +26,3 @@ class ActivityAdmin(BranchScopedAdmin):
     list_filter = ('branch', 'date')
     search_fields = ('title', 'details', 'location')
 
-
-@admin.register(Page)
-class PageAdmin(BranchScopedAdmin):
-    list_display = ('title', 'branch', 'slug', 'is_published', 'updated_at')
-    list_filter = ('is_published', 'branch')
-    search_fields = ('title', 'slug', 'content')
-    prepopulated_fields = {'slug': ('title',)}

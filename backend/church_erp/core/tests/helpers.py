@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from church_erp.accounts.models import User
 from church_erp.ai_messages.models import DailyMessage, SermonDocument
-from church_erp.content.models import Activity, Page, Project, Sermon
+from church_erp.content.models import Activity, Project, Sermon
 from church_erp.core.models import Branch, Minister
 from church_erp.finance.models import GivingRecord
 from church_erp.media_library.models import MediaAsset
@@ -64,7 +64,6 @@ def make_branch_content(branch, recorded_by):
             details="d",
             location="Hall",
         ),
-        "page": Page.objects.create(branch=branch, slug="about", title="About"),
         "mediaasset": MediaAsset.objects.create(
             branch=branch, file="media_library/x.jpg", file_type="image", title="x"
         ),

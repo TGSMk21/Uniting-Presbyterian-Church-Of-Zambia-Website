@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter, SimpleRouter
 from church_erp.core.views import BranchViewSet, MinisterViewSet
-from church_erp.content.views import SermonViewSet, ProjectViewSet, ActivityViewSet, PageViewSet
+from church_erp.content.views import SermonViewSet, ProjectViewSet, ActivityViewSet
 from church_erp.media_library.views import MediaAssetViewSet
 from church_erp.ai_messages.views import DailyMessageViewSet
 from church_erp.ai_messages.staff_messages import StaffMessageViewSet
@@ -28,7 +28,6 @@ router.register(r'ministers', MinisterViewSet)
 router.register(r'sermons', SermonViewSet)
 router.register(r'projects', ProjectViewSet)
 router.register(r'activities', ActivityViewSet)
-router.register(r'pages', PageViewSet)
 router.register(r'media', MediaAssetViewSet)
 router.register(r'daily-messages', DailyMessageViewSet)
 router.register(r'giving-records', GivingRecordViewSet)

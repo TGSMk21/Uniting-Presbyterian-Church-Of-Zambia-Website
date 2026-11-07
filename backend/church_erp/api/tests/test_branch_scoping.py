@@ -5,7 +5,7 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from church_erp.accounts.models import User
-from church_erp.content.models import Page, Project, Sermon
+from church_erp.content.models import Project, Sermon
 from church_erp.core.models import Minister
 from church_erp.core.tests.helpers import make_branch, make_branch_content
 from church_erp.finance.models import GivingRecord
@@ -56,16 +56,6 @@ class PublicReadTests(ApiScopingTestCase):
 # Daily messages are written through the staff API, and the public address only
 # shows published ones; see ai_messages/tests/test_staff_messages.py.
 
-
-class PageApiTests(ApiScopingTestCase):
-    def test_staff_see_unpublished_pages_of_own_branch_only(self):
-        self.as_user(self.staff_a)
-        response = self.client.get(reverse("page-list"))
-        self.assertEqual(self.ids(response), {self.a["page"].pk})
-
-    def test_public_sees_no_unpublished_pages(self):
-        response = self.client.get(reverse("page-list"))
-        self.assertEqual(self.ids(response), set())
 
 
 class MediaApiTests(ApiScopingTestCase):
