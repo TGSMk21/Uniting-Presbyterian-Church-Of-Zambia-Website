@@ -22,10 +22,21 @@ export default async function DashboardHome() {
             <dt>Branch</dt>
             <dd>{staff.branch?.name || "All branches"}</dd>
           </div>
+          <div>
+            <dt>Two-step login</dt>
+            <dd>{staff.two_factor_enabled ? "On" : "Off"}</dd>
+          </div>
         </dl>
-        <Link href="/dashboard/change-password" className="dash-link">
-          Change your password
-        </Link>
+        <div className="dash-links">
+          <Link href="/dashboard/change-password" className="dash-link">
+            Change your password
+          </Link>
+          {!staff.two_factor_enabled && (
+            <Link href="/dashboard/two-factor" className="dash-link">
+              Turn on two-step login
+            </Link>
+          )}
+        </div>
       </div>
       <p className="dash-text">Sections for managing pages and content will appear here as they&apos;re added.</p>
     </main>

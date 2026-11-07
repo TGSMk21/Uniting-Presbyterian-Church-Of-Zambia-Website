@@ -176,6 +176,7 @@
   display: grid;
   gap: 0.75rem;
 }
+.dash-submit { text-align: center; }
 .dash-details dt {
   color: var(--text-soft);
   font-size: 0.8rem;
@@ -189,10 +190,60 @@
   color: var(--navy);
   font-size: 0.9rem;
 }
+.dash-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+/* Two-step login */
+.dash-steps {
+  margin: 1rem 0 0;
+  padding-left: 1.25rem;
+  list-style: decimal;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.dash-steps li + li { margin-top: 0.4rem; }
+.dash-qr {
+  display: block;
+  margin: 1rem auto;
+  width: 200px;
+  height: 200px;
+  background: white;
+}
+.dash-key {
+  font-size: 0.9rem;
+  color: var(--navy);
+}
+.dash-key summary { cursor: pointer; }
+.dash-key code,
+.dash-codes li {
+  font-family: ui-monospace, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+.dash-key code {
+  display: block;
+  margin-top: 0.5rem;
+  padding: 0.6rem;
+  background: var(--cream-warm);
+  border-radius: 8px;
+}
+.dash-codes {
+  margin: 1.25rem 0;
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.4rem;
+  background: var(--cream-warm);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
 
 @media (min-width: 640px) {
   .dash-header { padding: 0.75rem 2rem; }
   .dash-main { padding: 2.5rem 2rem 4rem; }
-  .dash-details { grid-template-columns: repeat(3, 1fr); }
+  .dash-details { grid-template-columns: repeat(4, 1fr); }
   .dash-card { padding: 2.5rem 2rem; }
 }

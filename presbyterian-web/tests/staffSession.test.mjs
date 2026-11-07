@@ -5,7 +5,10 @@ import assert from "node:assert/strict";
 import {
   ACCESS_COOKIE,
   REFRESH_COOKIE,
+  CHALLENGE_COOKIE,
+  codeFailureMessage,
   cookieOptions,
+  isSignInPage,
   loginFailureMessage,
   needsRefresh,
   serverHeaders,
@@ -70,7 +73,7 @@ test("cookies can't be read by page scripts and only go to the dashboard", () =>
 });
 
 test("cookie names are distinct", () => {
-  assert.notEqual(ACCESS_COOKIE, REFRESH_COOKIE);
+  assert.equal(new Set([ACCESS_COOKIE, REFRESH_COOKIE, CHALLENGE_COOKIE]).size, 3);
 });
 
 test("the API is told who's asking, and given the visitor's first forwarded address", () => {
@@ -90,4 +93,18 @@ test("sign-in failures say what to do without revealing whether an account exist
   for (const status of [404, 500, 503, 0]) {
     assert.match(loginFailureMessage(status), /isn.t available/i, String(status));
   }
+});
+
+test("both sign-in steps open without a session; everything else in the dashboard doesn't", () => {
+  assert.equal(isSignInPage("/dashboard/login"), true);
+  assert.equal(isSignInPage("/dashboard/login/verify"), true);
+  for (const path of ["/dashboard", "/dashboard/two-factor", "/dashboard/change-password", "/dashboard/login-history"]) {
+    assert.equal(isSignInPage(path), false, path);
+  }
+});
+
+test("code failures say what to do", () => {
+  assert.match(codeFailureMessage(401), /code isn.t right/i);
+  assert.match(codeFailureMessage(429), /15 minutes/);
+  assert.match(codeFailureMessage(0), /isn.t available/i);
 });

@@ -6,8 +6,11 @@ import { staffFetch } from "@/Services/staffApi";
 import {
   ACCESS_COOKIE,
   ACCESS_MAX_AGE,
+  CHALLENGE_COOKIE,
+  CHALLENGE_MAX_AGE,
   REFRESH_COOKIE,
   REFRESH_MAX_AGE,
+  codeFailureMessage,
   cookieOptions,
   loginFailureMessage,
 } from "@/Utilities/staffSession.mjs";
@@ -27,6 +30,7 @@ async function clearTokens() {
   const store = await cookies();
   store.delete({ name: ACCESS_COOKIE, path: "/dashboard" });
   store.delete({ name: REFRESH_COOKIE, path: "/dashboard" });
+  store.delete({ name: CHALLENGE_COOKIE, path: "/dashboard" });
 }
 
 export async function signIn(previousState, formData) {
@@ -39,11 +43,63 @@ export async function signIn(previousState, formData) {
     body: { username, password },
     forwardedFor: await forwardedFor(),
   });
+  if (status === 200 && data?.two_factor_required && data?.challenge) {
+    const production = process.env.NODE_ENV === "production";
+    (await cookies()).set(CHALLENGE_COOKIE, data.challenge, cookieOptions({ maxAge: CHALLENGE_MAX_AGE, production }));
+    redirect("/dashboard/login/verify");
+  }
   if (status !== 200 || !data?.access || !data?.refresh) {
     return { error: loginFailureMessage(status) };
   }
   await saveTokens(data);
   redirect("/dashboard");
+}
+
+export async function verifyCode(previousState, formData) {
+  const code = String(formData.get("code") || "").trim();
+  if (!code) return { error: "Please enter your code." };
+
+  const store = await cookies();
+  const challenge = store.get(CHALLENGE_COOKIE)?.value;
+  if (!challenge) redirect("/dashboard/login");
+
+  const { status, data } = await staffFetch("/auth/login/verify/", {
+    method: "POST",
+    body: { challenge, code },
+    forwardedFor: await forwardedFor(),
+  });
+  if (status === 200 && data?.access && data?.refresh) {
+    store.delete({ name: CHALLENGE_COOKIE, path: "/dashboard" });
+    await saveTokens(data);
+    redirect("/dashboard");
+  }
+  if (status === 401 && data?.detail === "Please sign in again.") {
+    store.delete({ name: CHALLENGE_COOKIE, path: "/dashboard" });
+    redirect("/dashboard/login");
+  }
+  return { error: codeFailureMessage(status) };
+}
+
+export async function confirmTwoFactor(previousState, formData) {
+  const code = String(formData.get("code") || "").trim();
+  if (!code) return { error: "Please enter the code from your app.", recoveryCodes: null };
+
+  const access = (await cookies()).get(ACCESS_COOKIE)?.value;
+  const { status, data } = await staffFetch("/auth/two-factor/confirm/", {
+    method: "POST",
+    body: { code },
+    access,
+    forwardedFor: await forwardedFor(),
+  });
+  if (status === 200 && data?.access && data?.refresh) {
+    await saveTokens(data);
+    // Stay on this page: the recovery codes are only available now.
+    return { error: null, recoveryCodes: data.recovery_codes };
+  }
+  if (status === 409) redirect("/dashboard");
+  if (status === 401 || status === 403) redirect("/dashboard/login");
+  if (status === 400) return { error: "That code isn't right. Please try the newest one.", recoveryCodes: null };
+  return { error: "Two-step login couldn't be turned on right now. Please try again in a moment.", recoveryCodes: null };
 }
 
 export async function signOut() {

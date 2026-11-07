@@ -6,6 +6,7 @@ import {
   REFRESH_COOKIE,
   REFRESH_MAX_AGE,
   cookieOptions,
+  isSignInPage,
   sessionAction,
 } from "@/Utilities/staffSession.mjs";
 
@@ -22,7 +23,7 @@ function toLogin(request) {
 // here, before the page runs. Only pages are guarded here: every API call still
 // checks the token, role and branch.
 export async function proxy(request) {
-  const isLoginPage = request.nextUrl.pathname === LOGIN_PATH;
+  const isLoginPage = isSignInPage(request.nextUrl.pathname);
   const refresh = request.cookies.get(REFRESH_COOKIE)?.value;
   const action = sessionAction({
     access: request.cookies.get(ACCESS_COOKIE)?.value,

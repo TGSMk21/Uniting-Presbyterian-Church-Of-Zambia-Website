@@ -12,13 +12,14 @@ export const currentStaff = cache(async () => {
   return staffFetch("/auth/me/", { access, forwardedFor });
 });
 
-// For signed-in pages. Sends people to sign-in, or to choose a new password if
-// they still have a temporary one. An API outage shows the error page instead of
-// signing them out.
-export async function requireStaff({ allowTemporaryPassword = false } = {}) {
+// For signed-in pages. Sends people to sign-in, or to finish their first-time steps
+// (a new password, then two-step login). An API outage shows the error page
+// instead of signing them out.
+export async function requireStaff({ allowTemporaryPassword = false, allowTwoFactorSetUp = false } = {}) {
   const { status, data } = await currentStaff();
   if (status === 401 || status === 403) redirect("/dashboard/login");
   if (status !== 200) throw new Error(`The staff API answered ${status}`);
   if (data.must_change_password && !allowTemporaryPassword) redirect("/dashboard/change-password");
+  if (data.must_set_up_two_factor && !allowTemporaryPassword && !allowTwoFactorSetUp) redirect("/dashboard/two-factor");
   return data;
 }

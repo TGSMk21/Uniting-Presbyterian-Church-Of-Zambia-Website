@@ -3,6 +3,8 @@
 
 export const ACCESS_COOKIE = "upcz_access";
 export const REFRESH_COOKIE = "upcz_refresh";
+export const CHALLENGE_COOKIE = "upcz_challenge";
+export const CHALLENGE_MAX_AGE = 5 * 60; // matches the backend
 export const ACCESS_MAX_AGE = 15 * 60; // matches SIMPLE_JWT in the backend
 export const REFRESH_MAX_AGE = 3 * 24 * 60 * 60;
 
@@ -21,6 +23,11 @@ export function tokenExpiry(token) {
 
 export function needsRefresh(access, now) {
   return tokenExpiry(access) - REFRESH_EARLY_BY <= now;
+}
+
+// Pages that must open without a session: the password step and the code step.
+export function isSignInPage(pathname) {
+  return pathname === "/dashboard/login" || pathname === "/dashboard/login/verify";
 }
 
 // What to do with a dashboard request: "continue", "refresh" or "to-login".
@@ -45,6 +52,12 @@ export function serverHeaders({ secret, forwardedFor, access }) {
   };
   if (access) headers.Authorization = `Bearer ${access}`;
   return headers;
+}
+
+export function codeFailureMessage(status) {
+  if (status === 401) return "That code isn't right. Please try the newest one.";
+  if (status === 429) return "Too many attempts. Please wait 15 minutes and try again.";
+  return "Sign-in isn't available right now. Please try again in a few minutes.";
 }
 
 export function loginFailureMessage(status) {
