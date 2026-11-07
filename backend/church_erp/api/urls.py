@@ -6,7 +6,7 @@ from church_erp.media_library.views import MediaAssetViewSet
 from church_erp.ai_messages.views import DailyMessageViewSet
 from church_erp.finance.views import GivingRecordViewSet
 from church_erp.api.views import sync_youtube
-from church_erp.content.page_content_views import PageContentPageView, PageContentView
+from church_erp.content.page_content_views import PageContentPageView, PageContentView, PageImageView
 
 router = DefaultRouter()
 router.register(r'branches', BranchViewSet)
@@ -24,5 +24,6 @@ urlpatterns = [
     path('auth/', include('church_erp.accounts.urls')),
     path('page-content/<slug:scope>/', PageContentView.as_view(), name='page-content'),
     path('page-content/<slug:scope>/<slug:page>/', PageContentPageView.as_view(), name='page-content-page'),
+    path('page-content/<slug:scope>/<slug:page>/images/<slug:key>/', PageImageView.as_view(), name='page-image'),
     path('tasks/sync-youtube/', sync_youtube, name='sync-youtube'),
 ]

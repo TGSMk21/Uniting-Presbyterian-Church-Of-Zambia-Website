@@ -31,12 +31,14 @@ class SchemaTests(SimpleTestCase):
         for scope, pages in SCHEMA.items():
             for page in pages:
                 for spec in field_specs(scope, page).values():
+                    if spec["type"] == "image":
+                        continue
                     with self.subTest(scope=scope, page=page, key=spec["key"]):
                         self.assertLessEqual(len(spec["default"]), spec["max"])
 
     def test_fields_stored_on_the_branch_fit_its_columns(self):
         for spec in field_specs("branch", "home").values():
-            if spec.get("store") == "branch":
+            if spec.get("store") == "branch" and spec["type"] != "image":
                 column = Branch._meta.get_field(spec["key"])
                 if column.max_length:
                     with self.subTest(key=spec["key"]):

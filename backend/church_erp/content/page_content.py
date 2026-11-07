@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 
 from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
 from django.core.validators import validate_email
 from django.db import transaction
 
@@ -29,6 +30,23 @@ def field_specs(kind, page):
     """{key: field} for a page, or {} if there's no such page."""
     sections = SCHEMA[kind].get(page, {}).get("sections", [])
     return {field["key"]: field for section in sections for field in section["fields"]}
+
+
+def is_image(spec):
+    return spec["type"] == "image"
+
+
+def image_link(name, absolute):
+    return absolute(default_storage.url(name))
+
+
+def with_image_links(fields, kind, page, absolute):
+    """Images are stored by file name; anything reading them needs a link."""
+    specs = field_specs(kind, page)
+    return {
+        key: image_link(value, absolute) if key in specs and is_image(specs[key]) and value else value
+        for key, value in fields.items()
+    }
 
 
 def can_edit(user, branch):
@@ -61,7 +79,8 @@ def clean_fields(kind, page, submitted):
     specs = field_specs(kind, page)
     cleaned, errors = {}, {}
     for key, value in submitted.items():
-        if key not in specs:
+        # Images only change through an upload, so a file name can't be typed in here.
+        if key not in specs or is_image(specs[key]):
             errors[key] = ["This can't be edited."]
             continue
         try:
@@ -77,24 +96,30 @@ def current_fields(branch, page, kind):
     fields = dict(row.fields) if row else {}
     for key, spec in field_specs(kind, page).items():
         if spec.get("store") == "branch" and getattr(branch, key):
-            fields[key] = getattr(branch, key)
+            value = getattr(branch, key)
+            fields[key] = value.name if is_image(spec) else value
     return fields, row
 
 
 def save_page(branch, page, kind, cleaned, user):
-    """Replaces the page: fields left empty or equal to the original go back to it."""
+    """Replaces the page's wording: fields left empty or equal to the original go back to it."""
     specs = field_specs(kind, page)
-    overrides = {}
-    branch_fields = []
-    for key, spec in specs.items():
-        value = cleaned.get(key, "")
-        keep = value if value != spec["default"] else ""
-        if spec.get("store") == "branch":
-            setattr(branch, key, keep)
-            branch_fields.append(key)
-        elif keep:
-            overrides[key] = keep
     with transaction.atomic():
+        row = PageContent.objects.select_for_update().filter(branch=branch, page=page).first()
+        overrides = {}
+        branch_fields = []
+        for key, spec in specs.items():
+            if is_image(spec):
+                if row and key in row.fields:
+                    overrides[key] = row.fields[key]
+                continue
+            value = cleaned.get(key, "")
+            keep = value if value != spec["default"] else ""
+            if spec.get("store") == "branch":
+                setattr(branch, key, keep)
+                branch_fields.append(key)
+            elif keep:
+                overrides[key] = keep
         if branch_fields:
             branch.save(update_fields=branch_fields)
         if overrides:

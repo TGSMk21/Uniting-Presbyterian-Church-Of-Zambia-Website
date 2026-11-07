@@ -3,14 +3,19 @@
 Runs against moto's in-process S3 (pip install -r requirements-dev.txt), using
 the same storage options production builds for Cloudflare R2.
 """
+import io
 import unittest
 from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.files.base import ContentFile
-from django.core.files.storage import storages
+from django.core.files.storage import default_storage, storages
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
+from PIL import Image
 
+from church_erp.content.page_content import field_specs
+from church_erp.content.page_images import remove_image, replace_image
 from church_erp.core.tests.helpers import make_branch
 from church_erp.media_library.models import MediaAsset
 from church_erp.settings.storage import object_storages
@@ -59,6 +64,24 @@ class ObjectStorageTests(TestCase):
         url = urlparse(self.branch.hero_image.url)
         self.assertEqual((url.scheme, url.netloc, url.path), ("https", DOMAIN, "/branch_hero/hero.png"))
         self.assertEqual(url.query, "")  # cached pages need links that don't expire
+
+    def test_dashboard_images_go_to_the_public_bucket_as_webp_with_plain_links(self):
+        data = io.BytesIO()
+        Image.new("RGB", (40, 30), "red").save(data, "PNG")
+        upload = SimpleUploadedFile("photo.png", data.getvalue(), content_type="image/png")
+        spec = field_specs("branch", "home")["hero_image"]
+
+        name = replace_image(self.branch, "home", spec, upload, None)
+
+        self.assertEqual(self.keys(PUBLIC), {name})
+        self.assertEqual(self.keys(PRIVATE), set())
+        # Browsers refuse a page's image if the bucket labels it as the wrong type.
+        self.assertEqual(self.s3.head_object(Bucket=PUBLIC, Key=name)["ContentType"], "image/webp")
+        url = urlparse(default_storage.url(name))
+        self.assertEqual((url.scheme, url.netloc, url.query), ("https", DOMAIN, ""))
+
+        remove_image(self.branch, "home", spec, None)
+        self.assertEqual(self.keys(PUBLIC), set())
 
     def test_media_library_files_go_to_the_private_bucket_with_expiring_links(self):
         asset = MediaAsset(branch=self.branch, file_type="document", title="Minutes")
