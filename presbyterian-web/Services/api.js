@@ -1,4 +1,5 @@
 import { branchTag, contentTag } from '@/Utilities/pageContent.mjs'
+import { UPCOMING_ACTIVITIES_TAG, sectionTag } from '@/Utilities/branchContent.mjs'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
@@ -39,27 +40,35 @@ export async function getPageContent(scope) {
 }
 
 // --- Branch-scoped content ---
+// The dashboard clears these tags when staff save, so changes show straight away.
+function cachedFor(...tags) {
+  return { next: { revalidate: 3600, tags } }
+}
+
 export async function getSermons(branch, page = 1) {
-  return fetchAPI(`/sermons/?branch=${branch}&page=${page}`)
+  return fetchAPI(`/sermons/?branch=${branch}&page=${page}`, cachedFor(sectionTag('sermons', branch)))
 }
 
 // video_id is only unique within a branch, so the branch is required.
 export async function getSermonByVideoId(branch, videoId) {
-  return fetchAPI(`/sermons/${encodeURIComponent(videoId)}/?branch=${encodeURIComponent(branch)}`)
+  return fetchAPI(
+    `/sermons/${encodeURIComponent(videoId)}/?branch=${encodeURIComponent(branch)}`,
+    cachedFor(sectionTag('sermons', branch)),
+  )
 }
 
 export async function getProjects(branch) {
-  return fetchAPI(`/projects/?branch=${branch}`)
+  return fetchAPI(`/projects/?branch=${branch}`, cachedFor(sectionTag('projects', branch)))
 }
 
 export async function getActivities(branch) {
-  return fetchAPI(`/activities/?branch=${branch}`)
+  return fetchAPI(`/activities/?branch=${branch}`, cachedFor(sectionTag('activities', branch)))
 }
 
 // Every active branch's activities from today on, soonest first.
 export async function getUpcomingActivities() {
   const today = new Date().toISOString().slice(0, 10)
-  return fetchAPI(`/activities/?date__gte=${today}`)
+  return fetchAPI(`/activities/?date__gte=${today}`, { next: { revalidate: 3600, tags: [UPCOMING_ACTIVITIES_TAG] } })
 }
 
 export async function getMinisters(branch) {

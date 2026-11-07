@@ -15,6 +15,7 @@ export default async function StaffLayout({ children }) {
         <nav className="dash-nav" aria-label="Dashboard">
           <Link href="/dashboard" prefetch={false}>Overview</Link>
           <Link href="/dashboard/pages" prefetch={false}>Pages</Link>
+          <Link href="/dashboard/content" prefetch={false}>Branch content</Link>
         </nav>
         <div className="dash-account">
           <span className="dash-account-name">{staff.name}</span>

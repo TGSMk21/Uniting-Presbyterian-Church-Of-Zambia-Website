@@ -1,0 +1,110 @@
+"use client";
+
+import { useActionState, useState, useTransition } from "react";
+import Link from "next/link";
+import { deleteBranchContent, saveBranchContent } from "@/app/dashboard/content-actions";
+import { SECTIONS } from "@/Utilities/branchContent.mjs";
+
+const INPUT_TYPES = { datetime: "datetime-local", date: "date", time: "time", number: "number" };
+
+function Box({ field, value, error }) {
+  const invalid = error ? true : undefined;
+  if (field.type === "checkbox") {
+    return (
+      <label className="dash-check">
+        <input key={String(value)} type="checkbox" name={field.key} defaultChecked={value} />
+        <span>{field.label}</span>
+      </label>
+    );
+  }
+
+  const shared = { name: field.key, defaultValue: value, required: field.required, "aria-invalid": invalid };
+  let input;
+  if (field.type === "textarea") {
+    input = <textarea key={value} rows={6} maxLength={field.max} {...shared} />;
+  } else if (field.type === "select") {
+    input = (
+      <select key={value} {...shared}>
+        {field.options.map((option) => (
+          <option key={option.value} value={option.value}>{option.label}</option>
+        ))}
+      </select>
+    );
+  } else if (field.type === "number") {
+    input = <input key={value} type="number" min={field.min} max={field.max} step="1" inputMode="numeric" {...shared} />;
+  } else {
+    const type = INPUT_TYPES[field.type] || "text";
+    input = <input key={value} type={type} maxLength={type === "text" ? field.max : undefined} {...shared} />;
+  }
+
+  return (
+    <label className="dash-field">
+      <span>{field.label}{!field.required && <span className="dash-optional"> (optional)</span>}</span>
+      {/* The key puts typed values back after React clears the form. */}
+      {input}
+      {field.help && <small>{field.help}</small>}
+      {error && <span className="dash-field-error" role="alert">{error}</span>}
+    </label>
+  );
+}
+
+function DeleteButton({ branch, name, id }) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState(null);
+  const { singular } = SECTIONS[name];
+
+  function confirmDelete() {
+    if (!window.confirm(`Delete this ${singular}? It will be removed from the website. This can't be undone.`)) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteBranchContent(branch, name, id);
+      if (result?.error) setError(result.error);
+    });
+  }
+
+  return (
+    <div className="dash-delete">
+      <button type="button" className="dash-danger-button" onClick={confirmDelete} disabled={pending}>
+        {pending ? "Deleting…" : `Delete this ${singular}`}
+      </button>
+      {error && <p className="dash-error" role="alert">{error}</p>}
+    </div>
+  );
+}
+
+export default function ContentForm({ branch, name, id, values }) {
+  const spec = SECTIONS[name];
+  const isNew = id === null;
+  const [state, action, pending] = useActionState(saveBranchContent.bind(null, branch, name, id), {
+    error: null,
+    fields: {},
+    values: null,
+  });
+  const shown = state.values || values;
+  const hasErrors = state.error || Object.keys(state.fields).length > 0;
+  const fields = spec.fields.filter((field) => isNew || !field.newOnly);
+
+  return (
+    <>
+      <form action={action} className="dash-editor">
+        <div className="dash-section">
+          {fields.map((field) => (
+            <Box key={field.key} field={field} value={shown[field.key] ?? ""} error={state.fields[field.key]} />
+          ))}
+        </div>
+        <div className="dash-savebar">
+          <button type="submit" className="btn-primary" disabled={pending}>
+            {pending ? "Saving…" : isNew ? `Add ${spec.singular}` : "Save changes"}
+          </button>
+          <Link href={`/dashboard/content/${branch}/${name}`} className="dash-link" prefetch={false}>Cancel</Link>
+          <p className="dash-savebar-status" role="status">
+            {!pending && hasErrors && (
+              <span className="dash-error">{state.error || "Nothing was saved. Please fix the boxes marked in red."}</span>
+            )}
+          </p>
+        </div>
+      </form>
+      {!isNew && spec.canDelete && <DeleteButton branch={branch} name={name} id={id} />}
+    </>
+  );
+}

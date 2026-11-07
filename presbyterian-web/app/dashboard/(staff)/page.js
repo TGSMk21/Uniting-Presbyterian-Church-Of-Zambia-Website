@@ -40,10 +40,15 @@ export default async function DashboardHome() {
       </div>
       <div className="dash-panel">
         <h2 className="dash-subheading">Manage the website</h2>
-        <p className="dash-text">Change the wording on your pages.</p>
+        <p className="dash-text">
+          Change the wording and photos on your pages, and add sermons, projects and activities.
+        </p>
         <div className="dash-links dash-links-spaced">
           <Link href="/dashboard/pages" className="dash-link" prefetch={false}>
             Go to Pages
+          </Link>
+          <Link href="/dashboard/content" className="dash-link" prefetch={false}>
+            Go to Branch content
           </Link>
         </div>
       </div>
