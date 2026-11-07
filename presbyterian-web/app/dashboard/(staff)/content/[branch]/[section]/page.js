@@ -14,11 +14,14 @@ export default async function SectionList({ params, searchParams }) {
   if (!spec || !isBranchSlug(branch)) notFound();
   const query = await searchParams;
   const page = isRowId(query.page) ? Number(query.page) : 1;
+  // Only a listed status goes into the address.
+  const filter = spec.filters?.some(({ value }) => value && value === query.status) ? query.status : "";
+  const filtered = filter ? `&status=${filter}` : "";
   const saved = Object.hasOwn(SAVED, query.saved ?? "") ? SAVED[query.saved] : null;
 
   // The API decides who can manage which branch; this page only asks it.
   const [{ status, data }, branchData] = await Promise.all([
-    staffRequest(`${apiPath(branch, name)}?page=${page}`),
+    staffRequest(`${apiPath(branch, name)}?page=${page}${filtered}`),
     getBranch(branch),
   ]);
   if (status === 401) redirect("/dashboard/login");
@@ -51,7 +54,20 @@ export default async function SectionList({ params, searchParams }) {
         )}
       </div>
 
-      {rows.length === 0 ? (
+      {spec.filters && (
+        <nav className="dash-tabs" aria-label={`${spec.label} by status`}>
+          {spec.filters.map(({ value, label }) => (
+            <Link key={value || "all"} href={value ? `${base}?status=${value}` : base} prefetch={false}
+              aria-current={value === filter ? "page" : undefined}>
+              {label}
+            </Link>
+          ))}
+        </nav>
+      )}
+
+      {rows.length === 0 && filter ? (
+        <p className="dash-text">None here.</p>
+      ) : rows.length === 0 ? (
         <div className="dash-empty">
           <p className="dash-subheading">No {spec.label.toLowerCase()} yet</p>
           <p className="dash-text">When you add one, it appears here.</p>
@@ -77,9 +93,9 @@ export default async function SectionList({ params, searchParams }) {
 
       {(data.previous || data.next) && (
         <nav className="dash-pager" aria-label="More">
-          {data.previous ? <Link href={`${base}?page=${page - 1}`} prefetch={false}>← Newer</Link> : <span />}
+          {data.previous ? <Link href={`${base}?page=${page - 1}${filtered}`} prefetch={false}>← Newer</Link> : <span />}
           <span>Page {page}</span>
-          {data.next ? <Link href={`${base}?page=${page + 1}`} prefetch={false}>Older →</Link> : <span />}
+          {data.next ? <Link href={`${base}?page=${page + 1}${filtered}`} prefetch={false}>Older →</Link> : <span />}
         </nav>
       )}
     </main>

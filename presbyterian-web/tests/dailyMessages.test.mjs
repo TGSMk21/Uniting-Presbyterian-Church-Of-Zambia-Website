@@ -130,3 +130,10 @@ test("an open message says who published it and when, in Zambian time", () => {
   );
   assert.equal(publishedNote({ published_at: "2026-11-07T07:30:00Z", reviewed_by_name: "" }), "Published on 7 Nov 2026 at 09:30.");
 });
+
+test("the list has tabs for each status, all messages first", () => {
+  assert.deepEqual(SECTIONS.messages.filters.map((f) => [f.value, f.label]), [
+    ["", "All"], ["pending_review", "To check"], ["published", "Published"], ["rejected", "Turned down"],
+  ]);
+  assert.equal(SECTIONS.sermons.filters, undefined);
+});

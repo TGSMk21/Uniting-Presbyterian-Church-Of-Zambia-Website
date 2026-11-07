@@ -57,6 +57,8 @@ class StaffMessageSerializer(serializers.ModelSerializer):
 class StaffMessageViewSet(BranchContentViewSet):
     queryset = DailyMessage.objects.select_related("minister", "reviewed_by").prefetch_related("source_documents").order_by("-date", "-created_at", "-pk")
     serializer_class = StaffMessageSerializer
+    # ?status=pending_review and so on, for the dashboard's tabs (Task 7.3).
+    filterset_fields = ["status"]
 
     def get_queryset(self):
         return self.queryset.filter(minister__branch=self.branch)

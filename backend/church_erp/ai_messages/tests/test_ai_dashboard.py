@@ -65,3 +65,14 @@ class AIDashboardTests(APITestCase):
         SermonDocument.objects.create(minister=self.minister, title="S", text="w")
         rows = self.client.get(reverse("staff-writings-list", args=["alpha"])).data["results"]
         self.assertFalse(rows[0]["minister_ai_drafts"])
+
+
+    def test_the_list_can_be_limited_to_one_status(self):
+        draft = DailyMessage.objects.create(minister=self.minister, title="D", message="m", date=date(2026, 11, 9))
+        published = DailyMessage.objects.create(minister=self.minister, title="P", message="m", date=date(2026, 11, 8), status="published")
+        url = reverse("staff-messages-list", args=["alpha"])
+        ids = lambda query: [row["id"] for row in self.client.get(url + query).data["results"]]
+        self.assertEqual(ids("?status=pending_review"), [draft.pk])
+        self.assertEqual(ids("?status=published"), [published.pk])
+        self.assertEqual(set(ids("")), {draft.pk, published.pk})
+        self.assertEqual(self.client.get(url + "?status=nonsense").status_code, 400)

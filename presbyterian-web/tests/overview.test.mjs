@@ -20,7 +20,7 @@ test("each kind of task links to where it's done, most urgent first", () => {
   ));
   assert.deepEqual(items.map(({ text, href, tone }) => [text, href, tone]), [
     ["1 access request waiting", "/dashboard/requests", "warning"],
-    ["2 AI drafts to check", "/dashboard/content/chilanga/messages", "warning"],
+    ["2 AI drafts to check", "/dashboard/content/chilanga/messages?status=pending_review", "warning"],
     ["No daily message published for tomorrow, Mon 9 Nov", "/dashboard/content/chilanga/messages", "neutral"],
     ["3 sermons being read for daily messages", "/dashboard/content/chilanga/writings", "neutral"],
   ]);

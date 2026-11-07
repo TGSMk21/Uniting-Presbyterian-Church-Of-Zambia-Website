@@ -20,7 +20,7 @@ export function attentionItems({ tomorrow, branches = [], requests_waiting: requ
   const later = [];
   for (const b of branches) {
     if (b.ai_drafts) {
-      items.push({ text: label(b, `${plural(b.ai_drafts, "AI draft", "AI drafts")} to check`), href: `${base(b)}/messages`, tone: "warning" });
+      items.push({ text: label(b, `${plural(b.ai_drafts, "AI draft", "AI drafts")} to check`), href: `${base(b)}/messages?status=pending_review`, tone: "warning" });
     }
     if (!b.tomorrow_published) {
       later.push({ text: label(b, `No daily message published for tomorrow, ${dayName(tomorrow)}`), href: `${base(b)}/messages`, tone: "neutral" });

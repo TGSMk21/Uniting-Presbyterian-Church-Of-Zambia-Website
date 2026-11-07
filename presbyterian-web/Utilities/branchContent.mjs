@@ -122,6 +122,13 @@ export const SECTIONS = {
   },
   messages: {
     summary: "The message on your home page each day",
+    // Tabs above the list, as ?status= (Task 7.3).
+    filters: [
+      { value: "", label: "All" },
+      { value: "pending_review", label: "To check" },
+      { value: "published", label: "Published" },
+      { value: "rejected", label: "Turned down" },
+    ],
     label: "Daily messages",
     singular: "daily message",
     adding: "Write a daily message",
