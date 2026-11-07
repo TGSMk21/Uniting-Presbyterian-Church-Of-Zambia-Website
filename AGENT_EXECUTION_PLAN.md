@@ -436,6 +436,7 @@ Most page wording is hard-coded today: on the national site, the landing page (h
 
 ### Task 5.3 — Content sections
 - [x] Sermons (titles and verses; YouTube sync must not overwrite staff edits), projects, activities. **[rev]** At `/dashboard/content`, through `/api/staff/<branch>/<section>/`; the public addresses are now read-only. Sermons are added from a YouTube link and hidden rather than deleted, because the sync would import a deleted one again (`Sermon.is_hidden`). The sync already left staff wording alone, and a test now covers hiding too. Saves clear the website's cached copies, including upcoming activities on the national home page.
+- [x] **[rev] Branch content live (verified 2026-11-07):** the owner changed a project on the production site and saw it on the public page straight away.
 - [ ] Ministers and service times; branch details, including the exact map position that confirms a branch's pin.
 - [ ] Media library, using the existing private signed links; files must not become public through the dashboard.
 - [ ] Daily messages: list, edit and manual entry now; Phase 4 adds AI drafts and approval.
