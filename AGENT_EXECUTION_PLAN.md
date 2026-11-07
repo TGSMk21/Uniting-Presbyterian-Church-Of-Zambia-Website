@@ -243,7 +243,7 @@ The admin fix in 0.2 does nothing for `/api/*`. Write once, apply everywhere.
 
 ### Task 1.1 — Contact form, branch-aware
 - [x] Confirm whether the contact form currently uses a Next.js server action + Resend directly, or calls a Django endpoint — check `components/UniversalComponents/contact-form.js` and `components/HomeComponents/ContactComponets/send-email.js`.
-- [ ] Decide and document which path stays (recommendation: keep the existing Next.js server action + Resend — it already works and does not need a backend round-trip): **STOP — if any API keys for Resend currently live only in `.env.local` and not also in the production frontend's environment variables, flag this before deploying.**
+- [x] Decide and document which path stays (recommendation: keep the existing Next.js server action + Resend — it already works and does not need a backend round-trip): **STOP — if any API keys for Resend currently live only in `.env.local` and not also in the production frontend's environment variables, flag this before deploying.** **[rev] Kept the Next.js server action + Resend** (see the done notes below); the Resend key is set in Vercel.
 - **[rev] Answer to the first item:** it is a Next.js server action (`send-email.js`, `'use server'`) + Resend + Upstash rate limiting, called from the client component `contact-form.js`. No Django endpoint is involved.
 - [ ] **[rev] STOP — human decision required:** Resend currently sends from `onboarding@resend.dev`, which only delivers to the Resend account owner's address. Verify a sending domain in Resend (e.g. `upcz.org` or the church's domain — needs DNS access) and switch `from` to an address on it. Branch-aware delivery cannot work until this is done. **Decision (2026-11-02): build now, verify later** — code reads `RESEND_FROM_EMAIL` (falls back to the sandbox sender); **you** still need to verify a domain in Resend and set `RESEND_FROM_EMAIL` + `NATIONAL_CONTACT_EMAIL` in Vercel before launch.
 - [x] Make the destination email branch-aware: change the server action's signature to take the branch **slug** (not an email address), look up `contact_email` server-side via `getBranch(slug)`, and use it as `to`. Never accept a `to` address from the client — that would make the form an open mail relay. Set `replyTo` to the visitor's email. The national `/contact` page should send to a national address from a server-side env var (e.g. `NATIONAL_CONTACT_EMAIL`), replacing the hardcoded personal Gmail address.
@@ -295,7 +295,7 @@ Every branch currently renders Chilanga's home page.
 - [ ] **[rev]** Do NOT run the demo seed in production (it creates placeholder sermons with random YouTube videos and a weak superuser). Instead: `python manage.py createsuperuser` with a strong password, then create the Chilanga branch with `create_branch` (pull Task 2.1 forward) or via Django Admin, and enter its real sermons/projects/activities.
 - [x] Run `python manage.py collectstatic --noinput` as part of the build/release step.
 - [x] **[rev]** Run `python manage.py setup_roles` once after `migrate`.
-- [ ] **[rev]** Schedule the YouTube sync: either a Celery worker + beat (Task 4.4) or a cron job running `python manage.py sync_youtube` every 5–15 minutes. Run it once by hand after creating the Chilanga branch to import its sermons.
+- [x] **[rev]** Schedule the YouTube sync: either a Celery worker + beat (Task 4.4) or a cron job running `python manage.py sync_youtube` every 5–15 minutes. Run it once by hand after creating the Chilanga branch to import its sermons. **[rev] Done:** cron-job.org calls `POST /api/tasks/sync-youtube/` every 10 minutes (seen in Render's logs on 2026-11-07). Chilanga's channel has no videos yet, which YouTube answers with "playlist not found"; since `09bbf8c` that counts as no videos rather than an error. Since `6f1e88c` the API key is kept out of logs and sync reports; the owner replaced the key twice and deleted the leaked ones.
 - [x] Confirm `/api/branches/` responds correctly from the deployed URL.
 - [x] Commit any deploy-config files added (e.g. `Procfile`, `railway.json`, `nixpacks.toml`) : `"Add backend deployment configuration"`
 - **[rev] Live (verified 2026-11-03):** `https://upcz-backend.onrender.com` serves `/api/branches/` (200, ~1–3s), `/admin/login/` (200); the sync endpoint is enabled (403 without the token). Still open on your side: schedule the cron-job.org sync (Chilanga had only the 6 demo sermons, none from YouTube, at the time of checking), remove the demo sermons/projects/activities, deal with any old `admin`/`admin123` user, and add real content.
@@ -387,7 +387,7 @@ Every branch currently renders Chilanga's home page.
 - [x] Add `backend/church_erp/ai_messages/tasks.py` with a Celery task `generate_daily_messages()`. **[rev]** It and the endpoint below run `run_daily()`: read waiting sermons of ministers with drafts on, then write tomorrow's drafts. Safe to repeat.
 - [x] Configure `CELERY_BEAT_SCHEDULE`: 03:17 `Africa/Lusaka` (`TIME_ZONE` matches).
 - [x] **[rev] Decision (2026-11-07): Render's free plan has no Celery worker**, so production uses `POST /api/tasks/daily-messages/` with the `X-Sync-Token` header, like the YouTube sync, called **hourly** by cron-job.org. Each call works for at most 25 seconds (Render stops requests at 60) and the next call carries on.
-- [ ] **Owner's to do:** add `GEMINI_API_KEY` in Render's Environment tab, and the hourly cron-job.org job (backend/README.md, "Deploying to Render", step 5).
+- [x] **Owner's to do:** add `GEMINI_API_KEY` in Render's Environment tab, and the hourly cron-job.org job (backend/README.md, "Deploying to Render", step 5). **[rev] Done by the owner on 2026-11-07.**
 - [x] Commit: `"Schedule daily AI message generation via Celery beat"` **[rev]** See Task 4.2.
 
 ### Task 4.5 — Review workflow
@@ -422,7 +422,7 @@ Every branch currently renders Chilanga's home page.
 - [x] Temporary passwords must be changed at first sign-in, enforced by the API. Staff can change their own password, which ends their other sessions.
 - [ ] Add a forgotten-password flow once Resend's domain is verified. Until then, an admin sets a new temporary password.
 - [x] Two-step login for superusers and branch admins before the dashboard is handed to staff. **[rev]** Authenticator app plus 10 one-time recovery codes (`accounts/two_factor.py`). Wrong codes share the sign-in lockout. The Django admin enforces the same rules (`core/admin_site.py`), so it can't be used to skip it. `reset_two_factor` covers a lost phone. Recovery codes can't be regenerated yet: a used-up set means a reset.
-- [ ] Commit: `"Add secure staff sign-in for the dashboard"`
+- [x] Commit: `"Add secure staff sign-in for the dashboard"` **[rev]** As `ca7a2cb` (API) and `6fe1b96` (pages), then two-step login in `efd82a9` and `b05d980`.
 
 ### Task 5.2 — Editable page content
 Most page wording is hard-coded today: on the national site, the landing page (hero, welcome, fellowships, closing) and the contact page. On branch sites, some fixed wording sits around fields that are already editable (tagline, welcome text, year theme, images). The `Page` model exists, but no website page reads it.
@@ -486,7 +486,7 @@ Most page wording is hard-coded today: on the national site, the landing page (h
 ## Appendix A — Environment Variables Reference
 
 **Backend (`backend/.env`):**
-`DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_SETTINGS_MODULE` (production host only), `DATABASE_URL` (or discrete `DB_NAME`/`DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT`/`DB_SSLMODE` as currently used in `settings/local.py`), `REDIS_URL`, `AI_API_KEY`, `AI_API_MODEL`, `OPENAI_API_KEY`, `YOUTUBE_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_ENDPOINT_URL`, `FLUTTERWAVE_SECRET_KEY`, `MTN_MOMO_API_KEY`, `MTN_MOMO_ENVIRONMENT`, `FRONTEND_URL`.
+`DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_SETTINGS_MODULE` (production host only), `DJANGO_ADMIN_PATH`, `DATABASE_URL` (or discrete `DB_NAME`/`DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT`/`DB_SSLMODE` as currently used in `settings/local.py`), `REDIS_URL`, `INTERNAL_API_SECRET`, `SYNC_TOKEN`, `YOUTUBE_API_KEY`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_EMBEDDING_MODEL`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_STORAGE_BUCKET_NAME`, `AWS_PRIVATE_BUCKET_NAME`, `MEDIA_PUBLIC_DOMAIN`, `AWS_S3_ENDPOINT_URL`, `FRONTEND_URL`, `CSRF_TRUSTED_ORIGINS`. **[rev]** `AI_API_KEY`, `AI_API_MODEL` and `OPENAI_API_KEY` were replaced by the Gemini settings in Phase 4; the Flutterwave/MTN keys are unused while finance is out of the plan.
 
 **Frontend (`presbyterian-web/.env.local`):**
 `NEXT_PUBLIC_API_URL` (Django backend URL, including the `/api` suffix — `Services/api.js` appends paths like `/branches/` directly), `RESEND_API_KEY`, `RESEND_FROM_EMAIL` **[rev]** (address on the verified domain, Task 1.1), `NATIONAL_CONTACT_EMAIL` **[rev]**, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`.
@@ -502,9 +502,9 @@ Remove once Phase 0 is done: `PROJECT_ID` (Sanity), `YOUTUBE_CHANNEL_ID` (now pe
 
 ## Appendix C — App/Model Map
 
-- `core`: `Branch`, `Minister`
+- `core`: `Branch`, `Minister` (**[rev]** with `ai_drafts` and `style_notes`), `ServiceTime`, `StaffChange`
 - `accounts`: `User` (role: `super_admin` / `branch_admin` / `finance_admin` / `content_editor`)
-- `content`: `Sermon`, `Project`, `Activity`, `Page`
+- `content`: `Sermon`, `Project`, `Activity`, `Page` (unused), `PageContent`
 - `media_library`: `MediaAsset`, `MediaTag`
-- `ai_messages`: `SermonEmbedding` (pgvector, 1536 dims; **[rev]** currently one-to-one with `Sermon`, becomes many-per-sermon in Task 4.2), `DailyMessage`
+- `ai_messages`: `SermonDocument` (**[rev]** pastors' written sermons, private), `SermonEmbedding` (pgvector, 1536 dims, one row per passage of a `SermonDocument`), `DailyMessage` (with `ai_generated` and `source_documents`)
 - `finance`: `GivingRecord`
