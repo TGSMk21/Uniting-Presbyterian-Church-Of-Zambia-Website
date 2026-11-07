@@ -88,7 +88,7 @@ Pushing to `master` deploys both the website (Vercel) and the backend (Render). 
 ## Security
 
 - **API:** rate limited, and anyone can read public content, but only signed-in staff can change it, and only for their own branch.
-- **Staff sign-in:** locks after 10 failed attempts for 15 minutes. Only the website's server can reach the sign-in API.
+- **Staff sign-in:** locks after 10 failed attempts for 15 minutes. Only the website's server can reach the sign-in API. Superusers and branch admins must use two-step login, on the Django admin too.
 - **Website:** sends a Content-Security-Policy and other security headers (`presbyterian-web/Utilities/securityHeaders.mjs`).
 
 More detail is in [backend/README.md](backend/README.md#security).

@@ -145,6 +145,16 @@ The tests check all of this against an in-process fake S3 (`moto`, in `requireme
 
 **Activity log.** Superusers can see who changed what under **Administration → Log entries**. Nobody can edit or delete entries there.
 
+**Two-step login.** Superusers and branch admins must use an authenticator app, set up at their first sign-in on `/dashboard`. Others can turn it on from their account. Each person gets 10 one-time recovery codes for a lost phone. The Django admin follows the same rules, so it isn't a way around it: someone with a required role has to set it up on the dashboard before they can use the admin.
+
+If someone loses their phone and their recovery codes, check it's really them, then a superuser can delete their devices in the admin under **TOTP devices** and **Static devices**. If that superuser is the one locked out, run this from your own machine against the production database, the same way as `createsuperuser` in step 4 of "Deploying to Render":
+
+```bash
+python manage.py reset_two_factor <username>
+```
+
+They'll set it up again at their next sign-in.
+
 **Exporting data.** Every branch list in the admin has an **Export** button that downloads a CSV of the rows that person can see. Giving records can only be exported by finance staff and superusers.
 
 **Dashboard sign-in** is off until `INTERNAL_API_SECRET` is set; see "Turning on the staff dashboard" below. `/api/auth/login/`, `refresh/` and `logout/` only answer the website's server, which proves itself with that secret. Everyone else gets a 404, so passwords can't be guessed against the API directly. Sign-in shares the Admin login lockout. Sessions end after 3 days without a visit. Changing a password ends every other session.
