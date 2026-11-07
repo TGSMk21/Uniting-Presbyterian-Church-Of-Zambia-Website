@@ -160,8 +160,17 @@ class BranchAssignmentTests(BranchScopedAdminTestCase):
         self.assertTrue(Sermon.objects.filter(title="Mine", branch=self.branch_a).exists())
 
     def test_uploaded_by_is_set_to_current_user(self):
-        self.client.force_login(self.admin_a)
+        from django.core.files.storage import InMemoryStorage
         from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from church_erp.media_library.models import MediaAsset
+
+        # FileField picks its storage once, at import; keep this upload out of the project folder.
+        field = MediaAsset._meta.get_field("file")
+        original = field.storage
+        field.storage = InMemoryStorage()
+        self.addCleanup(setattr, field, "storage", original)
+        self.client.force_login(self.admin_a)
 
         self.client.post(
             admin_url("mediaasset", "add"),
@@ -173,8 +182,6 @@ class BranchAssignmentTests(BranchScopedAdminTestCase):
                 "description": "",
             },
         )
-        from church_erp.media_library.models import MediaAsset
-
         asset = MediaAsset.objects.get(title="Notes")
         self.assertEqual(asset.uploaded_by, self.admin_a)
 
