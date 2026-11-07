@@ -81,6 +81,16 @@ From `presbyterian-web/`:
 npm test
 ```
 
+## Agent skills
+
+`.claude/skills/` holds six of Vercel's agent skills (from `vercel-labs/agent-skills`) for coding assistants such as Claude Code: React and Next.js best practices, composition patterns, view transitions, web design guidelines, writing guidelines, and Vercel cost and speed checks. `skills-lock.json` records exactly what was installed. Update them with:
+
+```bash
+npx skills update -p
+```
+
+The two deploy skills and the React Native one were left out on purpose: this site goes live by pushing to `master`, and it has no mobile app. The web design and writing guidelines fetch their rules from Vercel's GitHub each time they run.
+
 ## Deploying
 
 Pushing to `master` deploys both the website (Vercel) and the backend (Render). Hosting set-up, storage and the sermon schedule are in [backend/README.md](backend/README.md#deploying-to-render).
