@@ -427,6 +427,7 @@ Most page wording is hard-coded today: on the national site, the landing page (h
 - [x] Seed it with today's wording, and keep the current text as a fallback, so no page goes blank and nothing changes until someone edits it. **[rev]** Unedited national pages were compared word for word with the live site.
 - [x] Dashboard section per page, with labelled fields (`/dashboard/pages`).
 - [x] Image upload to the public bucket: branch hero images and logos, and the national fellowship images. **[rev]** Images are fields of type `image` in the same schema. The browser shrinks photos first; the API checks each one and saves its own clean WebP copy, then deletes the file it replaced. Branch logos now show in that branch's header and footer. Minister photos come with the ministers section in Task 5.3.
+- [x] **[rev] Image upload live (verified 2026-11-07):** the owner uploaded a branch photo on the production site, saw it on the public page straight away, then removed it.
 - [x] Permissions: branch staff edit their own branch's pages; national pages are limited to superusers and the existing National Admin role.
 - [x] **[rev] Page editing live (verified 2026-11-07):** the owner edited a page on the production site and saw the change straight away.
 - [x] Make saved edits appear straight away: the website caches API answers for an hour. **[rev]** Saves go through the website's server, so it clears the cache tag itself (`updateTag`) and no extra endpoint is needed.
