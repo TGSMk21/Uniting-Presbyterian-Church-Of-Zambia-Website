@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-import { SECTIONS, aiDraftNote, newRowDefaults, rowSummary, tagsToClear, valuesFromForm } from "../Utilities/branchContent.mjs";
+import { SECTIONS, aiDraftNote, newRowDefaults, rowBadges, rowSummary, tagsToClear, valuesFromForm } from "../Utilities/branchContent.mjs";
 import {
   SERMON_ACCEPT,
   SERMON_MAX_BYTES,
@@ -108,6 +108,11 @@ test("AI drafts are marked, and say what to check", () => {
     "Written by AI from these sermons: The Good Shepherd, Grace. Please read it carefully, and check the verse's words in your Bible, before publishing.",
   );
   assert.match(aiDraftNote({ ai_generated: true, source_titles: [] }), /^Written by AI\. Please read/);
-  assert.equal(rowSummary("messages", { date: "2026-11-09", minister_name: "Banda", status: "pending_review", ai_generated: true }),
-    "Mon, 9 Nov 2026 · Banda · AI draft");
+  assert.deepEqual(rowBadges("messages", { status: "pending_review", ai_generated: true }), [{ text: "AI draft", tone: "warning" }]);
+});
+
+test("sermons say when they're live or hidden", () => {
+  assert.deepEqual(rowBadges("sermons", { is_live: true, is_hidden: false }), [{ text: "Live now", tone: "live" }]);
+  assert.deepEqual(rowBadges("sermons", { is_live: false, is_hidden: true }), [{ text: "Hidden", tone: "neutral" }]);
+  assert.deepEqual(rowBadges("projects", {}), []);
 });

@@ -26,10 +26,10 @@ export const MESSAGE_STATUSES = [
   { value: "published", label: "Published" },
   { value: "rejected", label: "Turned down (not on the website)" },
 ];
-const MESSAGE_STATUS_SHORT = { pending_review: "Draft", published: "Published", rejected: "Turned down" };
 
 export const SECTIONS = {
   sermons: {
+    summary: "Sermon videos from your YouTube channel",
     label: "Sermons",
     singular: "sermon",
     adding: "Add a sermon",
@@ -48,6 +48,7 @@ export const SECTIONS = {
     ],
   },
   projects: {
+    summary: "Building and outreach projects, with progress",
     label: "Projects",
     singular: "project",
     adding: "Add a project",
@@ -64,6 +65,7 @@ export const SECTIONS = {
     ],
   },
   activities: {
+    summary: "Events, also shown on the national home page",
     label: "Activities",
     singular: "activity",
     adding: "Add an activity",
@@ -80,6 +82,7 @@ export const SECTIONS = {
     ],
   },
   ministers: {
+    summary: "Ministers, their photos and AI draft settings",
     label: "Ministers",
     singular: "minister",
     adding: "Add a minister",
@@ -100,6 +103,7 @@ export const SECTIONS = {
     ],
   },
   services: {
+    summary: "Regular service days and times",
     label: "Service times",
     singular: "service time",
     adding: "Add a service time",
@@ -117,6 +121,7 @@ export const SECTIONS = {
     ],
   },
   messages: {
+    summary: "The message on your home page each day",
     label: "Daily messages",
     singular: "daily message",
     adding: "Write a daily message",
@@ -140,6 +145,7 @@ export const SECTIONS = {
   },
   // Pastors' sermons, for the AI's daily message drafts (Task 4.1). Never on the website.
   writings: {
+    summary: "Sermons the AI drafts are written from",
     label: "Written sermons",
     singular: "written sermon",
     adding: "Paste a written sermon",
@@ -304,8 +310,8 @@ export function rowSummary(name, row) {
   if (name === "ministers") return `Order ${row.order} · ${row.photo ? "Has a photo" : "No photo yet"}`;
   if (name === "messages") {
     const day = row.date ? formatted(new Date(`${row.date}T12:00:00Z`), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
-    const status = row.ai_generated && row.status === "pending_review" ? "AI draft" : MESSAGE_STATUS_SHORT[row.status] || row.status;
-    return [day, row.minister_name, status].filter(Boolean).join(" · ");
+    // The status is shown as a label beside it (rowBadges).
+    return [day, row.minister_name].filter(Boolean).join(" · ");
   }
   if (name === "writings") {
     const day = row.preached_on ? formatted(new Date(`${row.preached_on}T12:00:00Z`), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
@@ -324,6 +330,20 @@ export function rowSummary(name, row) {
   const day = row.date ? formatted(new Date(`${row.date}T12:00:00Z`), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
   const times = [row.start_time, row.end_time].filter(Boolean).map((t) => t.slice(0, 5)).join("–");
   return [day, times, row.location].filter(Boolean).join(" · ");
+}
+
+// Short coloured labels beside a row in a list (Task 7.3).
+export function rowBadges(name, row) {
+  if (name === "messages") {
+    if (row.status === "published") return [{ text: "Published", tone: "success" }];
+    if (row.status === "rejected") return [{ text: "Turned down", tone: "neutral" }];
+    return [row.ai_generated ? { text: "AI draft", tone: "warning" } : { text: "Draft", tone: "neutral" }];
+  }
+  if (name === "sermons") {
+    if (row.is_live) return [{ text: "Live now", tone: "live" }];
+    if (row.is_hidden) return [{ text: "Hidden", tone: "neutral" }];
+  }
+  return [];
 }
 
 // Shown above an AI draft's form: where it came from, and what to check.

@@ -10,6 +10,7 @@ import {
   ministerChoices,
   newRowDefaults,
   publishedNote,
+  rowBadges,
   rowSummary,
   saveFailure,
   tagsToClear,
@@ -103,19 +104,11 @@ test("a clash with another published message is shown by the date", () => {
   assert.equal(failure.error, null);
 });
 
-test("list rows say the day, who and whether it's on the website", () => {
-  assert.equal(
-    rowSummary("messages", { date: "2026-11-08", minister_name: "Banda", status: "published" }),
-    "Sun, 8 Nov 2026 · Banda · Published",
-  );
-  assert.equal(
-    rowSummary("messages", { date: "2026-11-09", minister_name: "Banda", status: "pending_review" }),
-    "Mon, 9 Nov 2026 · Banda · Draft",
-  );
-  assert.equal(
-    rowSummary("messages", { date: "2026-11-09", minister_name: "Banda", status: "rejected" }),
-    "Mon, 9 Nov 2026 · Banda · Turned down",
-  );
+test("list rows say the day and who; a label says whether it's on the website", () => {
+  assert.equal(rowSummary("messages", { date: "2026-11-08", minister_name: "Banda", status: "published" }), "Sun, 8 Nov 2026 · Banda");
+  assert.deepEqual(rowBadges("messages", { status: "published" }), [{ text: "Published", tone: "success" }]);
+  assert.deepEqual(rowBadges("messages", { status: "pending_review" }), [{ text: "Draft", tone: "neutral" }]);
+  assert.deepEqual(rowBadges("messages", { status: "rejected" }), [{ text: "Turned down", tone: "neutral" }]);
 });
 
 test("saving clears the home page's copy", () => {

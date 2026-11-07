@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getBranch } from "@/Services/api";
-import { apiPath, isBranchSlug, isRowId, rowSummary, rowTitle, section } from "@/Utilities/branchContent.mjs";
+import { apiPath, isBranchSlug, isRowId, rowBadges, rowSummary, rowTitle, section } from "@/Utilities/branchContent.mjs";
 import { exportHref } from "@/Utilities/csvExport.mjs";
 import { requireStaff, staffRequest } from "../../../../session";
 
@@ -52,7 +52,11 @@ export default async function SectionList({ params, searchParams }) {
       </div>
 
       {rows.length === 0 ? (
-        <p className="dash-text">There are no {spec.label.toLowerCase()} yet.</p>
+        <div className="dash-empty">
+          <p className="dash-subheading">No {spec.label.toLowerCase()} yet</p>
+          <p className="dash-text">When you add one, it appears here.</p>
+          <Link href={`${base}/new`} className="btn-primary" prefetch={false}>{spec.adding}</Link>
+        </div>
       ) : (
         <ul className="dash-rows">
           {rows.map((row) => (
@@ -60,10 +64,10 @@ export default async function SectionList({ params, searchParams }) {
               <Link href={`${base}/${row.id}`} prefetch={false}>
                 <span className="dash-row-title">{rowTitle(row)}</span>
                 <span className="dash-row-meta">
+                  {rowBadges(name, row).map(({ text, tone }) => (
+                    <span key={text} className={`dash-badge dash-badge-${tone}`}>{text}</span>
+                  ))}
                   {rowSummary(name, row)}
-                  {row.is_live && <span className="dash-badge dash-badge-live">Live now</span>}
-                  {row.is_hidden && <span className="dash-badge">Hidden</span>}
-                  {row.ai_generated && row.status === "pending_review" && <span className="dash-badge">Check before publishing</span>}
                 </span>
               </Link>
             </li>
