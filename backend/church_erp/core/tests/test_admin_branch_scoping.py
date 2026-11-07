@@ -1,4 +1,8 @@
 """Branch scoping in the Django admin (AGENT_EXECUTION_PLAN.md, Task 0.2)."""
+import shutil
+import tempfile
+
+from django.core.files.storage import FileSystemStorage
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -6,6 +10,7 @@ from django.utils import timezone
 from church_erp.accounts.models import User
 from church_erp.content.models import Sermon
 from church_erp.finance.models import GivingRecord
+from church_erp.media_library.models import MediaAsset
 
 from .helpers import CONTENT_APPS, make_branch, make_branch_content, make_staff
 
@@ -79,6 +84,24 @@ class ChangelistScopingTests(BranchScopedAdminTestCase):
 
 
 class BranchAssignmentTests(BranchScopedAdminTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.media_dir = tempfile.mkdtemp()
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.media_dir, ignore_errors=True)
+        super().tearDownClass()
+
+    def setUp(self):
+        # FileField resolves a storage callable once, at import, so overriding
+        # STORAGES wouldn't reach it; point it at a throwaway folder instead.
+        field = MediaAsset._meta.get_field("file")
+        original = field.storage
+        field.storage = FileSystemStorage(location=self.media_dir)
+        self.addCleanup(setattr, field, "storage", original)
+
     def sermon_post_data(self, branch, title):
         now = timezone.localtime()
         return {
@@ -169,8 +192,6 @@ class BranchAssignmentTests(BranchScopedAdminTestCase):
                 "description": "",
             },
         )
-        from church_erp.media_library.models import MediaAsset
-
         asset = MediaAsset.objects.get(title="Notes")
         self.assertEqual(asset.uploaded_by, self.admin_a)
 
