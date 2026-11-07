@@ -4,6 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import Link from "next/link";
 import { deleteMedia, saveMedia } from "@/app/dashboard/content-actions";
 import { MEDIA_LIMITS } from "@/Utilities/mediaLibrary.mjs";
+import { useConfirm } from "./confirm-dialog";
 
 function Field({ label, help, error, optional, children }) {
   return (
@@ -19,9 +20,14 @@ function Field({ label, help, error, optional, children }) {
 function DeleteButton({ branch, id }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState(null);
+  const [confirm, dialog] = useConfirm();
 
-  function confirmDelete() {
-    if (!window.confirm("Delete this file? It will be removed for good. This can't be undone.")) return;
+  async function confirmDelete() {
+    const sure = await confirm({
+      title: "Delete this file?", message: "It will be removed for good. This can't be undone.",
+      confirmLabel: "Delete", danger: true,
+    });
+    if (!sure) return;
     setError(null);
     startTransition(async () => {
       const result = await deleteMedia(branch, id);
@@ -35,6 +41,7 @@ function DeleteButton({ branch, id }) {
         {pending ? "Deleting…" : "Delete this file"}
       </button>
       {error && <p className="dash-error" role="alert">{error}</p>}
+      {dialog}
     </div>
   );
 }

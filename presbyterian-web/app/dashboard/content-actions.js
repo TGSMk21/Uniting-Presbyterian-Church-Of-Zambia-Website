@@ -184,3 +184,21 @@ export async function uploadWriting(branch, formData) {
   if (failure.signedOut) redirect("/dashboard/login");
   return failure;
 }
+
+// Publish, turn down or unpublish a daily message from its review screen (Task 7.3).
+const MESSAGE_STATUSES = new Set(["published", "pending_review", "rejected"]);
+
+export async function setMessageStatus(branch, id, status) {
+  if (!allowed(branch, "messages", id) || id === null || !MESSAGE_STATUSES.has(status)) {
+    return { error: "This can't be changed." };
+  }
+  const { status: answer, data } = await staffRequest(apiPath(branch, "messages", id), { method: "PATCH", body: { status } });
+  if (answer === 200) {
+    // Show the change on the public site straight away.
+    for (const tag of tagsToClear("messages", branch)) updateTag(tag);
+    return { ok: true };
+  }
+  const failure = saveFailure("messages", answer, data);
+  if (failure.signedOut) redirect("/dashboard/login");
+  return { error: failure.error || Object.values(failure.fields).join(" ") || "It couldn't be changed right now." };
+}

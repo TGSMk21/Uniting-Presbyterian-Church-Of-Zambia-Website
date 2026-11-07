@@ -4,6 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import Link from "next/link";
 import { deleteBranchContent, saveBranchContent } from "@/app/dashboard/content-actions";
 import { SECTIONS } from "@/Utilities/branchContent.mjs";
+import { useConfirm } from "./confirm-dialog";
 
 const INPUT_TYPES = { datetime: "datetime-local", date: "date", time: "time", number: "number" };
 
@@ -51,13 +52,18 @@ function Box({ field, value, error, choices }) {
 function DeleteButton({ branch, name, id }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState(null);
+  const [confirm, dialog] = useConfirm();
   const spec = SECTIONS[name];
   const { singular } = spec;
   // Private sections, such as written sermons, were never on the website.
   const where = spec.publicPath ? " It will be removed from the website." : "";
 
-  function confirmDelete() {
-    if (!window.confirm(`Delete this ${singular}?${where} This can't be undone.`)) return;
+  async function confirmDelete() {
+    const sure = await confirm({
+      title: `Delete this ${singular}?`, message: `${where.trim()} This can't be undone.`.trim(),
+      confirmLabel: "Delete", danger: true,
+    });
+    if (!sure) return;
     setError(null);
     startTransition(async () => {
       const result = await deleteBranchContent(branch, name, id);
@@ -71,6 +77,7 @@ function DeleteButton({ branch, name, id }) {
         {pending ? "Deleting…" : `Delete this ${singular}`}
       </button>
       {error && <p className="dash-error" role="alert">{error}</p>}
+      {dialog}
     </div>
   );
 }

@@ -3,13 +3,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { personAction } from "@/app/dashboard/staff-actions";
+import { useConfirm } from "./confirm-dialog";
 import { LinkMessage } from "./link-message";
 
 const QUESTIONS = {
-  suspend: "Suspend this account? They'll be signed out straight away and can't sign in until it's restored.",
-  restore: "Restore this account? They'll be able to sign in again.",
-  "reset-password": "Make a new set-password link? Their current password stops working and they're signed out until they use it.",
-  "reset-two-factor": "Turn off their two-step login? They'll set it up again on their phone when they next sign in.",
+  suspend: { title: "Suspend this account?", message: "They'll be signed out straight away and can't sign in until it's restored.", confirmLabel: "Suspend", danger: true },
+  restore: { title: "Restore this account?", message: "They'll be able to sign in again.", confirmLabel: "Restore" },
+  "reset-password": { title: "Make a new set-password link?", message: "Their current password stops working and they're signed out until they use the link.", confirmLabel: "Make a link" },
+  "reset-two-factor": { title: "Reset two-step login?", message: "They'll set it up again on their phone when they next sign in.", confirmLabel: "Reset", danger: true },
 };
 const DONE = {
   suspend: "Suspended.",
@@ -21,9 +22,10 @@ export default function PersonActions({ id, username, isActive, superuser, twoFa
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [outcome, setOutcome] = useState(null);
+  const [confirm, dialog] = useConfirm();
 
-  function run(kind) {
-    if (!window.confirm(QUESTIONS[kind])) return;
+  async function run(kind) {
+    if (!(await confirm(QUESTIONS[kind]))) return;
     setOutcome(null);
     startTransition(async () => {
       const result = await personAction(id, kind);
@@ -63,6 +65,7 @@ export default function PersonActions({ id, username, isActive, superuser, twoFa
         )}
         {outcome?.done && DONE[outcome.done] && <p className="dash-notice">{DONE[outcome.done]}</p>}
       </div>
+      {dialog}
     </section>
   );
 }

@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import ContentForm from "@/components/DashboardComponents/content-form";
+import MessageReview from "@/components/DashboardComponents/message-review";
 import MinisterPhoto from "@/components/DashboardComponents/minister-photo";
 import {
-  aiDraftNote,
   apiPath,
   formValues,
   isBranchSlug,
   isRowId,
   ministerChoices,
-  publishedNote,
   rowTitle,
   section,
 } from "@/Utilities/branchContent.mjs";
@@ -55,12 +54,8 @@ export default async function EditRow({ params }) {
       {name === "ministers" && (
         <MinisterPhoto branch={branch} id={id} value={data.photo || ""} viewHref={spec.publicPath(branch)} />
       )}
-      {name === "messages" && aiDraftNote(data) && (
-        <p className="dash-notice dash-notice-ai">{aiDraftNote(data)}</p>
-      )}
-      {name === "messages" && data.status === "published" && data.published_at && (
-        <p className="dash-text">{publishedNote(data)}</p>
-      )}
+      {name === "messages" && <MessageReview branch={branch} id={id} message={data} />}
+      {name === "messages" && <h2 className="dash-subheading dash-edit-heading">Edit the message</h2>}
       <ContentForm
         branch={branch}
         name={name}
