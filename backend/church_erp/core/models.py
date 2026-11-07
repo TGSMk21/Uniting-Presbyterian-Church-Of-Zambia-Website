@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from .validators import validate_not_reserved
@@ -68,3 +69,26 @@ class ServiceTime(models.Model):
 
     def __str__(self):
         return f"{self.day}: {self.title}"
+
+
+class StaffChange(models.Model):
+    """A change made through the dashboard (AGENT_EXECUTION_PLAN.md, Task 5.4).
+
+    Django's own history only covers the Django admin. This keeps who changed
+    what, where and when; never the values themselves, which may be private."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    # Kept as written, so the history outlives the account.
+    username = models.CharField(max_length=150)
+    branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    section = models.CharField(max_length=30)
+    action = models.CharField(max_length=40)
+    target = models.CharField(max_length=300, blank=True)
+    target_id = models.CharField(max_length=40, blank=True)
+    changes = models.JSONField(default=list, blank=True, help_text="Names of the fields that changed")
+    at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-at", "-pk"]
+
+    def __str__(self):
+        return f"{self.username} {self.action} {self.section}: {self.target}"

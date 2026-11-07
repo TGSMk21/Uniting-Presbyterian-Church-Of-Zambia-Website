@@ -5,6 +5,7 @@ Staff list, write and publish their own branch's messages at
 messages whose day has come."""
 from datetime import timedelta
 
+from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APITestCase
@@ -38,6 +39,9 @@ class MessagesTestCase(APITestCase):
         cls.today = timezone.localdate()
 
     def setUp(self):
+        # Staff saves are rate limited per account; start each test afresh.
+        cache.clear()
+        self.addCleanup(cache.clear)
         self.client.force_authenticate(self.editor)
 
     def message(self, minister=None, **extra):

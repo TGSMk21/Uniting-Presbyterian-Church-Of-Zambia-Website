@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { canManageStaff } from "@/Utilities/staffAdmin.mjs";
 import { requireStaff } from "../session";
 
 export default async function DashboardHome() {
@@ -52,7 +53,25 @@ export default async function DashboardHome() {
           </Link>
         </div>
       </div>
-      <p className="dash-text">More sections will appear here as they&apos;re added.</p>
+      {canManageStaff(staff) && (
+        <div className="dash-panel">
+          <h2 className="dash-subheading">People and branches</h2>
+          <p className="dash-text">
+            {staff.is_superuser
+              ? "Add and suspend staff in any branch, add branches, and see every change made in this dashboard."
+              : "Add, change and suspend your branch's content editors."}
+          </p>
+          <div className="dash-links dash-links-spaced">
+            <Link href="/dashboard/staff" className="dash-link" prefetch={false}>Go to Staff</Link>
+            {staff.is_superuser && (
+              <>
+                <Link href="/dashboard/branches" className="dash-link" prefetch={false}>Go to Branches</Link>
+                <Link href="/dashboard/history" className="dash-link" prefetch={false}>Go to Change history</Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -447,9 +447,9 @@ Most page wording is hard-coded today: on the national site, the landing page (h
 - [x] Commit per section.
 
 ### Task 5.4 — Staff and activity
-- [ ] Branch admins add and suspend content editors for their own branch, and can't grant higher roles or see other branches. Superusers manage everyone and create branches.
-- [ ] **Trap:** Django's activity log only records changes made in the Django admin. Add logging on API writes so dashboard changes are recorded with who, what and when, and show it to superusers.
-- [ ] Commit: `"Add staff management and activity log to the dashboard"`
+- [x] Branch admins add and suspend content editors for their own branch, and can't grant higher roles or see other branches. Superusers manage everyone and create branches. **[rev]** `/api/staff-people/` and `/api/staff-branches/`. New accounts get a one-time temporary password and must choose their own; suspending cancels their sessions at once. Superusers also reset passwords and two-step login. Superusers, finance and national roles, and your own account stay in the Django admin, so nobody locks themselves out or hands out more power. Branches: add, rename, YouTube channel, on or off the website; the web address never changes.
+- [x] **Trap:** Django's activity log only records changes made in the Django admin. Add logging on API writes so dashboard changes are recorded with who, what and when, and show it to superusers. **[rev]** `StaffChange`, recorded by every staff API write (content, pages, images, details, staff, branches), with the names of the fields that really changed but never their values. Superusers read it at `/dashboard/history`.
+- [x] Commit: `"Add staff management and activity log to the dashboard"`
 
 ### Task 5.5 — Testing and pilot
 - [ ] For every section, test that branch A staff can't read or change branch B's data, and that content editors can't reach admin-only sections, through the API as well as the screens.

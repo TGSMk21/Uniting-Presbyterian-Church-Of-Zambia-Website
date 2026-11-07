@@ -615,3 +615,34 @@
   margin: 0.5rem 0 1rem;
   border-radius: 10px;
 }
+
+/* Staff, branches and change history */
+.dash-row-username { font-weight: 400; color: var(--text-soft); }
+.dash-handover {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 2px solid var(--navy);
+  border-radius: 10px;
+  background: var(--warm-white);
+}
+.dash-secret {
+  display: inline-block;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  background: var(--sand);
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+.dash-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.dash-history li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem 1rem;
+  background: var(--warm-white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.dash-history-what { color: var(--navy); overflow-wrap: anywhere; }

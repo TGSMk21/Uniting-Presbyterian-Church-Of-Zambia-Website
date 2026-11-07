@@ -22,6 +22,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from church_erp.accounts.auth_views import IsStaff
+from church_erp.core.changes import changed, editable_names, record, row_title
 from church_erp.core.models import Branch, Minister, ServiceTime
 
 from .models import Activity, Project, Sermon
@@ -151,6 +152,33 @@ class BranchContentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(branch=self.branch)
 
+    # Every change is kept in the change history (core/changes.py).
+    def section_name(self):
+        return self.basename.removeprefix("staff-")
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        record(request.user, self.section_name(), "added", branch=self.branch,
+               target=row_title(response.data), target_id=response.data.get("id"))
+        return response
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_object())
+        before, names = dict(serializer.data), editable_names(serializer)
+        response = super().update(request, *args, **kwargs)
+        changes = changed(before, response.data, names)
+        if changes:
+            record(request.user, self.section_name(), "changed", branch=self.branch,
+                   target=row_title(response.data), target_id=response.data.get("id"), changes=changes)
+        return response
+
+    def destroy(self, request, *args, **kwargs):
+        row = self.get_object()
+        title = row_title(self.get_serializer(row).data)
+        response = super().destroy(request, *args, **kwargs)
+        record(request.user, self.section_name(), "deleted", branch=self.branch, target=title, target_id=row.pk)
+        return response
+
     # Left out of the CSV export, such as links that give access to private files.
     export_exclude = ()
 
@@ -236,6 +264,8 @@ class StaffMinisterViewSet(BranchContentViewSet):
         if request.method == "DELETE":
             Minister.objects.filter(pk=minister.pk).update(photo="")
             delete_quietly(previous)
+            record(request.user, "ministers", "changed", branch=self.branch, target=minister.name,
+                   target_id=minister.pk, changes=["photo"])
             return Response({"url": ""})
 
         uploaded = request.FILES.get("image")
@@ -252,6 +282,8 @@ class StaffMinisterViewSet(BranchContentViewSet):
             delete_quietly(name)
             raise
         delete_quietly(previous)
+        record(request.user, "ministers", "changed", branch=self.branch, target=minister.name,
+               target_id=minister.pk, changes=["photo"])
         return Response({"url": request.build_absolute_uri(default_storage.url(name))})
 
 
@@ -327,6 +359,11 @@ class BranchDetailsView(APIView):
 
     def patch(self, request, scope):
         serializer = BranchDetailsSerializer(self.branch, data=request.data, partial=True)
+        before, names = dict(BranchDetailsSerializer(self.branch).data), editable_names(serializer)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        changes = changed(before, serializer.data, names)
+        if changes:
+            record(request.user, "details", "changed", branch=self.branch, target=self.branch.name,
+                   target_id=self.branch.pk, changes=changes)
         return Response(serializer.data)

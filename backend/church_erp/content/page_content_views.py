@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from church_erp.accounts.auth_views import IsStaff
+from church_erp.core.changes import record
 from church_erp.core.models import Branch
 
 from . import page_content, page_images
@@ -66,7 +67,13 @@ class PageContentPageView(APIView):
         cleaned, errors = page_content.clean_fields(kind, page, submitted)
         if errors:
             raise ValidationError({"fields": errors})
+        before, _ = page_content.current_fields(branch, page, kind)
         saved = page_content.save_page(branch, page, kind, cleaned, request.user)
+        after, _ = page_content.current_fields(branch, page, kind)
+        specs = page_content.field_specs(kind, page)
+        changes = [key for key, spec in specs.items() if not page_content.is_image(spec) and before.get(key) != after.get(key)]
+        if changes:
+            record(request.user, "pages", "changed", branch=branch, target=page, changes=changes)
         return Response({"fields": page_content.with_image_links(saved, kind, page, request.build_absolute_uri)})
 
 
@@ -91,9 +98,11 @@ class PageImageView(APIView):
             name = page_images.replace_image(branch, page, spec, uploaded, request.user)
         except DjangoValidationError as exc:
             raise ValidationError({"image": exc.messages})
+        record(request.user, "pages", "changed", branch=branch, target=page, changes=[key])
         return Response({"url": page_content.image_link(name, request.build_absolute_uri)})
 
     def delete(self, request, scope, page, key):
         branch, spec = self.get_target(request, scope, page, key)
         page_images.remove_image(branch, page, spec, request.user)
+        record(request.user, "pages", "changed", branch=branch, target=page, changes=[key])
         return Response({"url": spec["default"]})

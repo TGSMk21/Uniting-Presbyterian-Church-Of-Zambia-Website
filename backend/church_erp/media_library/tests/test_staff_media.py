@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.storage import storages
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
+from django.core.cache import cache
 from django.urls import reverse
 from PIL import Image
 from rest_framework.test import APITestCase
@@ -67,6 +68,9 @@ class MediaTestCase(APITestCase):
         cls.editor = staff("editor", cls.alpha)
 
     def setUp(self):
+        # Staff saves are rate limited per account; start each test afresh.
+        cache.clear()
+        self.addCleanup(cache.clear)
         override = override_settings(STORAGES=IN_MEMORY)
         override.enable()
         self.addCleanup(override.disable)

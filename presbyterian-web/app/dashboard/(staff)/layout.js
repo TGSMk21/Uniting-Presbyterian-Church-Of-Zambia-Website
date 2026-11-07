@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { canManageStaff } from "@/Utilities/staffAdmin.mjs";
 import { signOut } from "../actions";
 import { requireStaff } from "../session";
 
@@ -16,6 +17,9 @@ export default async function StaffLayout({ children }) {
           <Link href="/dashboard" prefetch={false}>Overview</Link>
           <Link href="/dashboard/pages" prefetch={false}>Pages</Link>
           <Link href="/dashboard/content" prefetch={false}>Branch content</Link>
+          {canManageStaff(staff) && <Link href="/dashboard/staff" prefetch={false}>Staff</Link>}
+          {staff.is_superuser && <Link href="/dashboard/branches" prefetch={false}>Branches</Link>}
+          {staff.is_superuser && <Link href="/dashboard/history" prefetch={false}>Change history</Link>}
         </nav>
         <div className="dash-account">
           <span className="dash-account-name">{staff.name}</span>

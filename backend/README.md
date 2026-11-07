@@ -214,7 +214,15 @@ Every section exports at `/api/staff/<branch>/<section>/export/` (sermons, proje
 
 ### Branch details and map position
 
-`GET` and `PATCH /api/staff/<branch>/details/` change a branch's contact email (where its Contact form's messages go), phone, address and map position, at `/dashboard/content/<branch>/details`. Staff click the church on a map or paste the position from Google Maps. Positions outside Zambia, half a position, and "confirmed" without a position are refused; extra decimal places are rounded to six (about 10 cm). The name, web address and YouTube channel stay in the admin for superusers.
+`GET` and `PATCH /api/staff/<branch>/details/` change a branch's contact email (where its Contact form's messages go), phone, address and map position, at `/dashboard/content/<branch>/details`. Staff click the church on a map or paste the position from Google Maps. Positions outside Zambia, half a position, and "confirmed" without a position are refused; extra decimal places are rounded to six (about 10 cm). Superusers change the name and YouTube channel under Branches (below); the web address never changes.
+
+### Staff, branches and change history
+
+`/api/staff-people/` (dashboard: `/dashboard/staff`) lets branch admins see their branch's admins and content editors and add, change, suspend and restore its content editors. Superusers see everyone and manage every branch's admins and editors. Superusers, finance and national roles, and your own account stay in the Django admin, so nobody can lock themselves out or hand out more power from the dashboard. A new account gets a temporary password, shown once, and must choose its own at first sign-in. Suspending sets the account inactive and cancels its sessions at once; restoring lets them sign in again. A new temporary password can be given the same way, and superusers can reset someone's two-step login after a lost phone. Accounts are never deleted here.
+
+`/api/staff-branches/` (dashboard: `/dashboard/branches`, superusers only) adds branches, renames them, sets their YouTube channel ID, and takes them off the website or brings them back. The web address is chosen once and checked against the website's own addresses. Then add the branch's first branch admin from Staff. The `create_branch` command still works for doing both at once.
+
+Every change made through the staff API is recorded in `StaffChange`: who, which branch, which section, what happened and which fields changed, never the values. Saving without changing anything records nothing. Superusers read it at `/api/staff-changes/` (dashboard: `/dashboard/history`), filtered by branch, username or section. Changes made in the Django admin stay in Django's own history.
 
 ## Settings
 

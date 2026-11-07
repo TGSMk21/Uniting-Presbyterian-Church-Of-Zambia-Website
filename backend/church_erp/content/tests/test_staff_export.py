@@ -6,6 +6,7 @@ import csv
 import io
 from datetime import date, time
 
+from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APITestCase
@@ -45,6 +46,9 @@ class ExportTests(APITestCase):
             MediaAsset.objects.create(branch=branch, file="media_library/a.pdf", file_type="document", title=f"{word} file")
 
     def setUp(self):
+        # Staff saves are rate limited per account; start each test afresh.
+        cache.clear()
+        self.addCleanup(cache.clear)
         self.client.force_authenticate(self.editor)
 
     def rows(self, response):
