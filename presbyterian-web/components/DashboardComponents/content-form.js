@@ -5,6 +5,7 @@ import Link from "next/link";
 import { deleteBranchContent, saveBranchContent } from "@/app/dashboard/content-actions";
 import { SECTIONS } from "@/Utilities/branchContent.mjs";
 import { useConfirm } from "./confirm-dialog";
+import { useUnsavedChanges } from "./unsaved-changes";
 
 const INPUT_TYPES = { datetime: "datetime-local", date: "date", time: "time", number: "number" };
 
@@ -94,10 +95,11 @@ export default function ContentForm({ branch, name, id, values, choices = {} }) 
   const shown = state.values || values;
   const hasErrors = state.error || Object.keys(state.fields).length > 0;
   const fields = spec.fields.filter((field) => isNew || !field.newOnly);
+  const unsaved = useUnsavedChanges();
 
   return (
     <>
-      <form action={action} className="dash-editor">
+      <form action={action} className="dash-editor" {...unsaved}>
         <div className="dash-section">
           {fields.map((field) => (
             <Box key={field.key} field={field} value={shown[field.key] ?? ""} error={state.fields[field.key]} choices={choices} />

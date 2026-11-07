@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { removePageImage, savePageContent, uploadPageImage } from "@/app/dashboard/actions";
 import ImageField from "./image-field";
+import { useUnsavedChanges } from "./unsaved-changes";
 
 const HELP = {
   title: "Put *stars* around words to show them in italics. Press Enter for a new line.",
@@ -39,6 +40,7 @@ function Field({ field, value, error }) {
 }
 
 export default function PageEditor({ scope, page, sections, values, viewHref }) {
+  const unsaved = useUnsavedChanges();
   const [state, action, pending] = useActionState(savePageContent.bind(null, scope, page), {
     saved: false,
     error: null,
@@ -47,7 +49,7 @@ export default function PageEditor({ scope, page, sections, values, viewHref }) 
   const hasErrors = state.error || Object.keys(state.fields).length > 0;
 
   return (
-    <form action={action} className="dash-editor">
+    <form action={action} className="dash-editor" {...unsaved}>
       {sections.map((section) => (
         <fieldset key={section.title} className="dash-section">
           <legend>{section.title}</legend>
