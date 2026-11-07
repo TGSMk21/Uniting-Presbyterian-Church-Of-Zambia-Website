@@ -119,9 +119,11 @@
   outline-offset: 2px;
 }
 .dash-back {
-  display: block;
-  margin-top: 1.25rem;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem; /* big enough to tap */
+  margin-top: 0.75rem;
   color: var(--navy);
   font-size: 0.9rem;
 }

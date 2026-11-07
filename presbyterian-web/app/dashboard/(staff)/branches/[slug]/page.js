@@ -24,12 +24,11 @@ export default async function Branch({ params, searchParams }) {
       <Link href="/dashboard/branches" className="dash-link" prefetch={false}>← Branches</Link>
       <h1 className="dash-heading dash-heading-spaced">{branch.name}</h1>
       {saved && <p className="dash-notice" role="status">{saved}</p>}
-      <p className="dash-text">
-        At <a href={`/${branch.slug}`} target="_blank" rel="noopener">/{branch.slug}</a>.{" "}
-        <Link href={`/dashboard/staff?branch=${branch.slug}`} prefetch={false}>Its staff</Link>
-        {" · "}
-        <Link href={`/dashboard/content`} prefetch={false}>Its content</Link>
-      </p>
+      <div className="dash-links">
+        <a href={`/${branch.slug}`} target="_blank" rel="noopener" className="dash-link">See it at /{branch.slug}</a>
+        <Link href={`/dashboard/staff?branch=${branch.slug}`} className="dash-link" prefetch={false}>Its staff</Link>
+        <Link href="/dashboard/content" className="dash-link" prefetch={false}>Its content</Link>
+      </div>
       <BranchAdminForm
         slug={branch.slug}
         values={{

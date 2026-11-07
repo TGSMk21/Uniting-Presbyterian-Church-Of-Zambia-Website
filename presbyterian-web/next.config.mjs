@@ -3,6 +3,8 @@ import { dashboardHeaders, securityHeaders } from "./Utilities/securityHeaders.m
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactCompiler: true,
+  // No "X-Powered-By: Next.js": it only helps someone looking for known weaknesses.
+  poweredByHeader: false,
   experimental: {
     // Dashboard photo uploads. Vercel refuses requests over 4.5 MB whatever this says.
     serverActions: { bodySizeLimit: "4.2mb" },
