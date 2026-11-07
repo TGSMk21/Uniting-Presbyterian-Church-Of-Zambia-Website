@@ -174,6 +174,14 @@ Add it as `INTERNAL_API_SECRET` in both places, with the same value, then redepl
 
 Until both are set, the sign-in page says sign-in isn't available, and the public site is unaffected. To sign someone out everywhere, change their password or untick **Active** or **Staff status** on their user in the admin.
 
+## Page wording
+
+Staff change the wording of the website's pages at `/dashboard/pages`. Branch staff edit their own branch; superusers and National Admins edit the national site, and superusers can edit every branch.
+
+`presbyterian-web/Utilities/pageSchema.json` lists every editable field, with today's wording as its default. `backend/church_erp/content/page_schema.json` is an identical copy, because the two deploy separately, and a test fails if they differ. To add a field, add it to both files and use it on the page. Only changes are stored (`PageContent`), so a page nobody has edited shows its defaults. In headings, `*stars*` show as italics.
+
+Saving from the dashboard updates the public page straight away. A change to a branch's tagline, welcome text or year theme made in the Django admin can take up to an hour to show.
+
 ## Settings
 
 `manage.py` defaults to `church_erp.settings.local`. Production uses `DJANGO_SETTINGS_MODULE=church_erp.settings.production`.
@@ -203,7 +211,7 @@ Branch scoping is enforced in both the admin (`core/admin_mixins.py`) and the AP
 
 - `core`: `Branch`, `Minister`
 - `accounts`: custom `User` with `branch` and `role`, and staff sign-in for the dashboard
-- `content`: `Sermon`, `Project`, `Activity`, `Page`
+- `content`: `Sermon`, `Project`, `Activity`, `PageContent`, `Page` (unused)
 - `media_library`: `MediaAsset`, `MediaTag`
 - `ai_messages`: `SermonEmbedding` (pgvector), `DailyMessage`
 - `finance`: `GivingRecord`

@@ -412,6 +412,7 @@ Every branch currently renders Chilanga's home page.
 ### Task 5.1 — Secure staff sign-in
 - [x] Restore login on the API with short-lived tokens, rotation and a blacklist (`/api/auth/` was removed in Phase 6 until something needed it). **[rev]** 15-minute access, 3-day refresh. Sign-in, refresh and sign-out only answer the website's server (`INTERNAL_API_SECRET`); everyone else gets a 404.
 - [x] **[rev] Live (verified 2026-11-07):** the owner signed in on the production site with their superuser account, after adding `INTERNAL_API_SECRET` on Render and Vercel.
+- [x] **[rev] Two-step live (verified 2026-11-07):** the owner set it up with a real authenticator app and signed in on the production site.
 - [x] Keep tokens out of browser JavaScript: the Next.js server sets them as `httpOnly`, `Secure`, `SameSite=Lax` cookies, and sign-out blacklists the refresh token.
 - [x] Keep the login lockout working through the API. **Trap:** dashboard calls reach the API from Vercel's servers, so address-based limits and lockouts would treat all staff as one visitor. Pass the visitor's real address in a header protected by a shared secret, and only trust it when the secret matches. Test that one person's failures can't lock out other staff.
 - [x] Guard every `/dashboard` route on the server, keep the pages out of search engines, and never cache one person's page for another. Hiding a button is not protection: the API's role and branch checks stay the real gate.
@@ -422,13 +423,14 @@ Every branch currently renders Chilanga's home page.
 
 ### Task 5.2 — Editable page content
 Most page wording is hard-coded today: on the national site, the landing page (hero, welcome, fellowships, closing) and the contact page. On branch sites, some fixed wording sits around fields that are already editable (tagline, welcome text, year theme, images). The `Page` model exists, but no website page reads it.
-- [ ] Add a content model with named fields per page and section, for both the national site and each branch, not one free-form HTML box. Plain text and images only, so edits can't break a layout or inject scripts.
-- [ ] Seed it with today's wording, and keep the current text as a fallback, so no page goes blank and nothing changes until someone edits it.
-- [ ] Dashboard section per page, with labelled fields and image upload to the public bucket.
-- [ ] Permissions: branch staff edit their own branch's pages; national pages are limited to superusers (or a national role, to be confirmed).
-- [ ] Make saved edits appear straight away: the website caches API answers for an hour, so saving must trigger on-demand revalidation through a shared-secret endpoint. Test that a failed revalidation still saves the edit and tells the user.
+- [x] Add a content model with named fields per page and section, for both the national site and each branch, not one free-form HTML box. Plain text and images only, so edits can't break a layout or inject scripts. **[rev]** `PageContent` stores only changes; `pageSchema.json` (a copy on each side, compared by a test) lists every field. `*stars*` give emphasis. Tagline, welcome text and year theme stay on `Branch`. Text only so far.
+- [x] Seed it with today's wording, and keep the current text as a fallback, so no page goes blank and nothing changes until someone edits it. **[rev]** Unedited national pages were compared word for word with the live site.
+- [x] Dashboard section per page, with labelled fields (`/dashboard/pages`).
+- [ ] Image upload to the public bucket: branch hero images and logos, and the national fellowship images.
+- [x] Permissions: branch staff edit their own branch's pages; national pages are limited to superusers and the existing National Admin role.
+- [x] Make saved edits appear straight away: the website caches API answers for an hour. **[rev]** Saves go through the website's server, so it clears the cache tag itself (`updateTag`) and no extra endpoint is needed.
 - [ ] Decide what to do with the unused `Page` model: reuse it for the new content or remove it.
-- [ ] Commit: `"Add editable page content for national and branch sites"`
+- [x] Commit: `"Add editable page content for national and branch sites"`
 
 ### Task 5.3 — Content sections
 - [ ] Sermons (titles and verses; YouTube sync must not overwrite staff edits), projects, activities.
