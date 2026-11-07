@@ -216,6 +216,12 @@ class RefreshAndLogoutTests(AuthTestCase):
         User.objects.filter(pk=self.staff.pk).update(is_active=False)
         self.assertEqual(self.refresh(tokens["refresh"]).status_code, 401)
 
+    def test_deleted_staff_are_asked_to_sign_in_again(self):
+        tokens = self.tokens()
+        self.staff.delete()
+        response = self.refresh(tokens["refresh"])
+        self.assertEqual(response.status_code, 401)
+
     def test_staff_who_lost_staff_status_cannot_refresh(self):
         tokens = self.tokens()
         User.objects.filter(pk=self.staff.pk).update(is_staff=False)

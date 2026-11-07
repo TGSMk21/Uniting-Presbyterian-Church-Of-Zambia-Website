@@ -22,6 +22,7 @@ from church_erp.api.throttling import ClientAddressMixin
 from church_erp.core.client_address import has_internal_secret
 
 from . import two_factor
+from .models import User
 
 
 class FromWebsiteServer(permissions.BasePermission):
@@ -103,6 +104,13 @@ class LoginVerifyView(APIView):
 
 class RefreshView(TokenRefreshView):
     permission_classes = [FromWebsiteServer]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            return super().post(request, *args, **kwargs)
+        except User.DoesNotExist:
+            # The account was deleted after this session began.
+            raise InvalidToken("Please sign in again.")
 
 
 class LogoutView(TokenBlacklistView):
