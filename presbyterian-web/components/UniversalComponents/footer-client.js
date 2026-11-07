@@ -9,7 +9,7 @@ export default function FooterClient({ brand, links, contact }) {
         <div className="footer-top">
           <div>
             <Link href={brand.href} className="nav-brand" style={{ marginBottom: "0.5rem" }}>
-              <img src="/logo.png" alt="Church logo" style={{ height: 88, width: "auto", objectFit: "contain" }} />
+              <img src={brand.logo || "/logo.png"} alt="Church logo" style={{ height: 88, width: "auto", maxWidth: 176, objectFit: "contain" }} />
               <div className="nav-title" style={{ color: "white" }}>
                 {brand.name}
                 {brand.sub && <span style={{ color: "rgba(255,255,255,0.6)" }}>{brand.sub}</span>}

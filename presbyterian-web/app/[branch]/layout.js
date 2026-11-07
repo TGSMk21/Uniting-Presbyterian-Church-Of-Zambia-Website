@@ -20,7 +20,12 @@ export default async function BranchLayout({ children, params }) {
   const { branch } = await params;
   const [data, content] = await Promise.all([getBranch(branch), getPageContent(branch)]);
   if (!data) notFound();
-  const { footer_text } = pageFields("branch", "home", content?.pages?.home, { branchName: data.name });
+  const { footer_text, logo } = pageFields(
+    "branch",
+    "home",
+    { ...content?.pages?.home, logo: data.logo },
+    { branchName: data.name },
+  );
 
   const base = `/${branch}`;
   const brand = {
@@ -28,6 +33,7 @@ export default async function BranchLayout({ children, params }) {
     sub: "Church",
     href: base,
     description: footer_text,
+    logo,
   };
   const links = [
     { label: "Home", href: base },

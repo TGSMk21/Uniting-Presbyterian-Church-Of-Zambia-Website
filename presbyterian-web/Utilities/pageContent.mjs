@@ -60,10 +60,13 @@ export function phoneHref(phone) {
   return `tel:${(phone || "").replace(/[^0-9+]/g, "")}`;
 }
 
-// Only the page's own fields are sent; a missing field goes back to its original.
+// Only the page's own wording is sent; a missing field goes back to its original.
+// Images change through their own upload.
 export function fieldsFromForm(kind, page, formData) {
   return Object.fromEntries(
-    pageFieldSpecs(kind, page).map(({ key }) => [key, String(formData.get(key) ?? "")]),
+    pageFieldSpecs(kind, page)
+      .filter(({ type }) => type !== "image")
+      .map(({ key }) => [key, String(formData.get(key) ?? "")]),
   );
 }
 

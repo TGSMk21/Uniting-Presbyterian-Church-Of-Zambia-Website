@@ -16,7 +16,7 @@ export default async function BranchHome({ params }) {
     getDailyMessages(slug),
     getPageContent(slug),
   ]);
-  // The tagline, welcome text and year theme are stored on the branch itself.
+  // The tagline, welcome text, year theme and photos are stored on the branch itself.
   const f = pageFields(
     "branch",
     "home",
@@ -26,6 +26,8 @@ export default async function BranchHome({ params }) {
       welcome_text: branch?.welcome_text,
       year_theme_title: branch?.year_theme_title,
       year_theme_text: branch?.year_theme_text,
+      hero_image: branch?.hero_image,
+      hero_image_secondary: branch?.hero_image_secondary,
     },
     { branchName: branch?.name },
   );
@@ -35,7 +37,7 @@ export default async function BranchHome({ params }) {
     : { text: f.verse_text, ref: f.verse_ref };
   const formattedDate = msg?.date ? dateFormat(msg.date) : null;
   const services = branch?.service_times || [];
-  const heroImages = [branch?.hero_image, branch?.hero_image_secondary].filter(Boolean);
+  const heroImages = [f.hero_image, f.hero_image_secondary].filter(Boolean);
   const year = new Date().getFullYear();
 
   return (

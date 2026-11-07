@@ -289,6 +289,85 @@
 }
 .dash-savebar-status a { color: var(--navy); }
 
+/* Page images */
+.dash-image-row {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.dash-image-frame {
+  flex: none;
+  width: 10rem;
+  height: 7.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream-warm);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  overflow: hidden;
+}
+.dash-image-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.dash-image-controls {
+  flex: 1 1 14rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.dash-image-controls small {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+.dash-image-input {
+  max-width: 100%;
+  min-height: 2.75rem;
+  font-size: 0.9rem;
+}
+.dash-image-input:focus-visible,
+.dash-quiet-button:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
+}
+.dash-image-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.dash-image-actions:empty,
+.dash-image-status:empty { display: none; }
+.dash-image-actions .btn-primary:disabled,
+.dash-quiet-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.dash-quiet-button {
+  min-height: 2.75rem;
+  padding: 0.3rem 1rem;
+  border: 1px solid var(--muted);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--navy);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.dash-quiet-button:hover { background: var(--cream-warm); }
+.dash-image-status {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.dash-image-status a { color: var(--navy); }
+
 /* Two-step login */
 .dash-steps {
   margin: 1rem 0 0;

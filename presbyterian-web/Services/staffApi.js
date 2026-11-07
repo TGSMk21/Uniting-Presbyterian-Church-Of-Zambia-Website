@@ -5,14 +5,14 @@ const TIMEOUT_MS = 15000;
 
 // Server-side only: INTERNAL_API_SECRET must never reach the browser. Staff data
 // is never cached. Returns { status, data }, with status 0 if the API can't be reached.
-export async function staffFetch(path, { method = "GET", body, access, forwardedFor } = {}) {
+export async function staffFetch(path, { method = "GET", body, formData, access, forwardedFor, timeoutMs = TIMEOUT_MS } = {}) {
   try {
     const response = await fetch(`${API_BASE}${path}`, {
       method,
-      headers: serverHeaders({ secret: process.env.INTERNAL_API_SECRET, forwardedFor, access }),
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: serverHeaders({ secret: process.env.INTERNAL_API_SECRET, forwardedFor, access, json: !formData }),
+      body: formData ?? (body === undefined ? undefined : JSON.stringify(body)),
       cache: "no-store",
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     let data = null;
     try {

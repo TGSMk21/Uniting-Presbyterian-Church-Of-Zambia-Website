@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { savePageContent } from "@/app/dashboard/actions";
+import ImageField from "./image-field";
 
 const HELP = {
   title: "Put *stars* around words to show them in italics. Press Enter for a new line.",
@@ -50,14 +51,25 @@ export default function PageEditor({ scope, page, sections, values, viewHref }) 
       {sections.map((section) => (
         <fieldset key={section.title} className="dash-section">
           <legend>{section.title}</legend>
-          {section.fields.map((field) => (
-            <Field
-              key={field.key}
-              field={field}
-              value={values[field.key] ?? field.default}
-              error={state.fields[field.key]?.join(" ")}
-            />
-          ))}
+          {section.fields.map((field) =>
+            field.type === "image" ? (
+              <ImageField
+                key={field.key}
+                scope={scope}
+                page={page}
+                field={field}
+                value={values[field.key]}
+                viewHref={viewHref}
+              />
+            ) : (
+              <Field
+                key={field.key}
+                field={field}
+                value={values[field.key] ?? field.default}
+                error={state.fields[field.key]?.join(" ")}
+              />
+            ),
+          )}
         </fieldset>
       ))}
 

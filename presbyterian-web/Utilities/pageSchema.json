@@ -28,15 +28,19 @@
           "fields": [
             { "key": "fellowships_label", "label": "Small heading", "type": "line", "max": 80, "default": "Our Fellowships" },
             { "key": "fellowships_title", "label": "Heading", "type": "title", "max": 120, "default": "Every generation, *every season*" },
+            { "key": "youth_image", "label": "Youth photo", "type": "image", "max_side": 1200, "default": "/youthMin.png" },
             { "key": "youth_title", "label": "Youth: name", "type": "line", "max": 80, "default": "Youth Fellowship" },
             { "key": "youth_verse", "label": "Youth: verse", "type": "line", "max": 80, "default": "1 Timothy 4:12" },
             { "key": "youth_text", "label": "Youth: description", "type": "text", "max": 400, "default": "Empowering young hearts to live boldly for Christ through worship, discipleship, and fellowship that transforms lives." },
+            { "key": "children_image", "label": "Children photo", "type": "image", "max_side": 1200, "default": "/cm.png" },
             { "key": "children_title", "label": "Children: name", "type": "line", "max": 80, "default": "Children's Fellowship" },
             { "key": "children_verse", "label": "Children: verse", "type": "line", "max": 80, "default": "Matthew 19:14" },
             { "key": "children_text", "label": "Children: description", "type": "text", "max": 400, "default": "Planting seeds of faith in young hearts through engaging Bible lessons, worship, and activities that make God's love real." },
+            { "key": "men_image", "label": "Men photo", "type": "image", "max_side": 1200, "default": "/mm.png" },
             { "key": "men_title", "label": "Men: name", "type": "line", "max": 80, "default": "Men's Fellowship" },
             { "key": "men_verse", "label": "Men: verse", "type": "line", "max": 80, "default": "1 Corinthians 16:13" },
             { "key": "men_text", "label": "Men: description", "type": "text", "max": 400, "default": "Building godly men of integrity through brotherhood, accountability, and purpose-driven discipleship in Christ." },
+            { "key": "women_image", "label": "Women photo", "type": "image", "max_side": 1200, "default": "/wm.png" },
             { "key": "women_title", "label": "Women: name", "type": "line", "max": 80, "default": "Women's Fellowship" },
             { "key": "women_verse", "label": "Women: verse", "type": "line", "max": 80, "default": "Proverbs 31:25" },
             { "key": "women_text", "label": "Women: description", "type": "text", "max": 400, "default": "Nurturing women of faith to discover their God-given purpose through prayer, study, and authentic community." }
@@ -110,6 +114,14 @@
       "label": "Home page",
       "path": "",
       "sections": [
+        {
+          "title": "Photos and logo",
+          "fields": [
+            { "key": "hero_image", "label": "Main photo", "type": "image", "max_side": 2000, "store": "branch", "default": "" },
+            { "key": "hero_image_secondary", "label": "Smaller photo", "type": "image", "max_side": 1200, "store": "branch", "default": "" },
+            { "key": "logo", "label": "Logo", "type": "image", "max_side": 600, "store": "branch", "transparent": true, "default": "/logo.png" }
+          ]
+        },
         {
           "title": "Top of the page",
           "fields": [

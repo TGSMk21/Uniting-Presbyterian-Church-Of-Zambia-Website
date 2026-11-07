@@ -15,8 +15,12 @@ import {
   cookieOptions,
   loginFailureMessage,
 } from "@/Utilities/staffSession.mjs";
+import { imageFailure, imageSpec } from "@/Utilities/imageUpload.mjs";
 import { NATIONAL, branchTag, contentTag, fieldsFromForm, pageSchema, scopeKind } from "@/Utilities/pageContent.mjs";
 import { staffRequest } from "./session";
+
+// The API re-saves the photo and sends it to storage, and may be waking from sleep.
+const UPLOAD_TIMEOUT_MS = 45000;
 
 async function forwardedFor() {
   return (await headers()).get("x-forwarded-for");
@@ -128,6 +132,35 @@ export async function savePageContent(scope, page, previousState, formData) {
     error: "Your changes couldn't be saved right now. Please try again in a moment.",
     fields: {},
   };
+}
+
+function imagePath(scope, page, key) {
+  return `/page-content/${encodeURIComponent(scope)}/${encodeURIComponent(page)}/images/${encodeURIComponent(key)}/`;
+}
+
+function imageOutcome(scope, { status, data }) {
+  if (status !== 200) return imageFailure(status, data);
+  // Show the change on the public site straight away.
+  updateTag(contentTag(scope));
+  if (scope !== NATIONAL) updateTag(branchTag(scope));
+  return { url: data.url };
+}
+
+export async function uploadPageImage(scope, page, key, formData) {
+  const file = formData.get("image");
+  if (!imageSpec(scopeKind(scope), page, key) || !(file instanceof File)) return imageFailure(0);
+
+  const upload = new FormData();
+  upload.append("image", file);
+  return imageOutcome(
+    scope,
+    await staffRequest(imagePath(scope, page, key), { method: "POST", formData: upload, timeoutMs: UPLOAD_TIMEOUT_MS }),
+  );
+}
+
+export async function removePageImage(scope, page, key) {
+  if (!imageSpec(scopeKind(scope), page, key)) return imageFailure(0);
+  return imageOutcome(scope, await staffRequest(imagePath(scope, page, key), { method: "DELETE" }));
 }
 
 export async function signOut() {

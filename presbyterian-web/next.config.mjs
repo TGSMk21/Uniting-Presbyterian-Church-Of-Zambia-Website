@@ -3,6 +3,10 @@ import { dashboardHeaders, securityHeaders } from "./Utilities/securityHeaders.m
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactCompiler: true,
+  experimental: {
+    // Dashboard photo uploads. Vercel refuses requests over 4.5 MB whatever this says.
+    serverActions: { bodySizeLimit: "4.2mb" },
+  },
   // Old addresses still reach the branch finder.
   async redirects() {
     return [

@@ -44,9 +44,10 @@ export function cookieOptions({ maxAge, production }) {
 }
 
 // Headers for calls from the website's server to the API.
-export function serverHeaders({ secret, forwardedFor, access }) {
+export function serverHeaders({ secret, forwardedFor, access, json = true }) {
   const headers = {
-    "Content-Type": "application/json",
+    // Without one, fetch describes a file upload's body itself.
+    ...(json && { "Content-Type": "application/json" }),
     "X-Internal-Secret": secret || "",
     "X-Client-Address": (forwardedFor || "").split(",")[0].trim(),
   };

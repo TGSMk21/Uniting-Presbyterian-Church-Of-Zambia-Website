@@ -164,7 +164,8 @@ test("every field in the schema has what the editor needs", () => {
       assert.ok(spec.label, page);
       for (const section of spec.sections) {
         for (const field of section.fields) {
-          assert.ok(field.label && field.type && field.max > 0, `${page}.${field.key}`);
+          const limit = field.type === "image" ? field.max_side : field.max;
+          assert.ok(field.label && field.type && limit > 0, `${page}.${field.key}`);
           assert.equal(typeof field.default, "string", `${page}.${field.key}`);
         }
       }
@@ -189,9 +190,9 @@ for (const [path, kind, page] of PAGES) {
     const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
     for (const section of pageSchema[kind][page].sections) {
       for (const { key } of section.fields) {
-        if (key === "footer_text") continue;
+        if (key === "footer_text" || key === "logo") continue; // shown by the layout
         if (LAYOUT_FIELDS.has(key) && !source.includes(`f.${key}`)) assert.fail(`${key} missing`);
-        assert.ok(source.includes(`f.${key}`) || source.includes(`f[\`\${item.id}_`), `${path} ignores ${key}`);
+        assert.ok(source.includes(`f.${key}`) || source.includes(`f[\`\${id}_`), `${path} ignores ${key}`);
       }
     }
   });

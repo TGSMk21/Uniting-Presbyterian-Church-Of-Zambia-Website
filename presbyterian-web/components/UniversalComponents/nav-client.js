@@ -21,7 +21,7 @@ export default function NavClient({ brand, links }) {
       <nav className="nav">
         <div className="nav-inner">
           <Link href={brand.href} className="nav-brand">
-            <img src="/logo.png" alt="Church logo" style={{ height: 80, width: "auto", objectFit: "contain" }} />
+            <img src={brand.logo || "/logo.png"} alt="Church logo" style={{ height: 80, width: "auto", maxWidth: 160, objectFit: "contain" }} />
             <div className="nav-title">
               {brand.name}
               {brand.sub && <span>{brand.sub}</span>}

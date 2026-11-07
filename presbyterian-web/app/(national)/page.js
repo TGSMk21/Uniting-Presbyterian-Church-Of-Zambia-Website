@@ -7,12 +7,7 @@ import { pageFields } from "@/Utilities/pageContent.mjs";
 
 const EVENTS_SHOWN = 6;
 
-const fellowships = [
-  { id: "youth", img: "/youthMin.png" },
-  { id: "children", img: "/cm.png" },
-  { id: "men", img: "/mm.png" },
-  { id: "women", img: "/wm.png" },
-];
+const fellowships = ["youth", "children", "men", "women"];
 
 // "2026-12-06" → { day: "06", month: "Dec", year: "2026" }, without timezone shifts.
 function eventDate(isoDate) {
@@ -105,16 +100,16 @@ export default async function NationalLanding() {
             </div>
           </div>
           <div className="ministries-grid">
-            {fellowships.map((item, i) => (
-              <ScrollReveal key={item.id} delay={i + 1}>
+            {fellowships.map((id, i) => (
+              <ScrollReveal key={id} delay={i + 1}>
                 <div className="ministry-card">
                   <div className="ministry-img">
-                    <img loading="lazy" src={item.img} alt={f[`${item.id}_title`]} />
+                    <img loading="lazy" src={f[`${id}_image`]} alt={f[`${id}_title`]} />
                   </div>
                   <div className="ministry-body">
-                    <h3 className="ministry-title">{f[`${item.id}_title`]}</h3>
-                    <p className="ministry-verse">{f[`${item.id}_verse`]}</p>
-                    <p className="ministry-desc">{f[`${item.id}_text`]}</p>
+                    <h3 className="ministry-title">{f[`${id}_title`]}</h3>
+                    <p className="ministry-verse">{f[`${id}_verse`]}</p>
+                    <p className="ministry-desc">{f[`${id}_text`]}</p>
                   </div>
                 </div>
               </ScrollReveal>

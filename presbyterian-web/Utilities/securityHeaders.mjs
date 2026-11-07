@@ -14,7 +14,7 @@ export function contentSecurityPolicy({ dev }) {
     "style-src": ["'self'", "'unsafe-inline'"],
     // Any https image: map tiles, YouTube thumbnails, and uploads, which may
     // move to a custom domain. Images can't run code.
-    "img-src": ["'self'", "data:", "blob:", "https:"],
+    "img-src": ["'self'", "data:", "blob:", "https:", ...(dev ? ["http://localhost:*"] : [])],
     "font-src": ["'self'"],
     "connect-src": ["'self'", ...(dev ? ["ws://localhost:*"] : [])],
     "frame-src": ["https://www.youtube.com"],

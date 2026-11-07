@@ -22,6 +22,7 @@ export default async function EditPage({ params }) {
       <h1 className="dash-heading dash-heading-spaced">{schema.label}</h1>
       <p className="dash-text">
         Change any box and save. To go back to the original wording, clear the box and save.
+        Photos save on their own as soon as you confirm them.
         {data.updated_by && ` Last edited by ${data.updated_by}.`}
       </p>
       <PageEditor
