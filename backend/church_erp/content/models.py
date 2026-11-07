@@ -15,6 +15,11 @@ class Sermon(models.Model):
     reference_verse = models.CharField(max_length=100, blank=True)
     preached_at = models.DateTimeField()
     is_live = models.BooleanField(default=False)
+    is_hidden = models.BooleanField(
+        default=False,
+        help_text="Left off the public website. Sermons from YouTube are hidden rather than deleted, "
+                  "because the sync would bring them back.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

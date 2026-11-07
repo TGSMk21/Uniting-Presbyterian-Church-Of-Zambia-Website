@@ -43,69 +43,12 @@ class PublicReadTests(ApiScopingTestCase):
 
     def test_anonymous_cannot_write(self):
         response = self.client.post(reverse("project-list"), {}, format="json")
-        self.assertEqual(response.status_code, 401)
+        self.assertIn(response.status_code, (401, 403, 405))
+        self.assertEqual(Project.objects.count(), 2)
 
 
-class ContentWriteScopingTests(ApiScopingTestCase):
-    def sermon_payload(self, branch, title):
-        return {"branch": branch.pk, "title": title, "preached_at": timezone.now().isoformat()}
-
-    def test_staff_can_create_for_own_branch(self):
-        self.as_user(self.staff_a)
-        response = self.client.post(
-            reverse("sermon-list"), self.sermon_payload(self.branch_a, "Mine"), format="json"
-        )
-        self.assertEqual(response.status_code, 201)
-
-    def test_staff_cannot_create_for_other_branch(self):
-        self.as_user(self.staff_a)
-        response = self.client.post(
-            reverse("sermon-list"), self.sermon_payload(self.branch_b, "Sneaky"), format="json"
-        )
-        self.assertEqual(response.status_code, 403)
-        self.assertFalse(Sermon.objects.filter(title="Sneaky").exists())
-
-    def test_staff_cannot_edit_or_delete_other_branch_objects(self):
-        self.as_user(self.staff_a)
-        project_b = self.b["project"]
-        patch = self.client.patch(
-            reverse("project-detail", args=[project_b.pk]), {"title": "Hijacked"}, format="json"
-        )
-        delete = self.client.delete(reverse("activity-detail", args=[self.b["activity"].pk]))
-        self.assertEqual(patch.status_code, 404)
-        self.assertEqual(delete.status_code, 404)
-        project_b.refresh_from_db()
-        self.assertNotEqual(project_b.title, "Hijacked")
-
-    def test_staff_can_delete_own_branch_object(self):
-        self.as_user(self.staff_a)
-        response = self.client.delete(reverse("project-detail", args=[self.a["project"].pk]))
-        self.assertEqual(response.status_code, 204)
-        self.assertFalse(Project.objects.filter(pk=self.a["project"].pk).exists())
-
-    def test_staff_cannot_move_own_object_to_other_branch(self):
-        self.as_user(self.staff_a)
-        project = self.a["project"]
-        response = self.client.patch(
-            reverse("project-detail", args=[project.pk]), {"branch": self.branch_b.pk}, format="json"
-        )
-        self.assertEqual(response.status_code, 403)
-        project.refresh_from_db()
-        self.assertEqual(project.branch, self.branch_a)
-
-    def test_staff_without_branch_cannot_write(self):
-        self.as_user(make_api_staff("orphan", None))
-        response = self.client.post(
-            reverse("sermon-list"), self.sermon_payload(self.branch_a, "Orphaned"), format="json"
-        )
-        self.assertEqual(response.status_code, 403)
-
-    def test_superuser_can_write_any_branch(self):
-        self.as_user(User.objects.create_superuser("root", password="pw"))
-        response = self.client.post(
-            reverse("sermon-list"), self.sermon_payload(self.branch_b, "National"), format="json"
-        )
-        self.assertEqual(response.status_code, 201)
+# Writes to sermons, projects and activities go through the staff API, which has
+# its own tests in content/tests/test_staff_content.py.
 
 
 class MinisterApiTests(ApiScopingTestCase):

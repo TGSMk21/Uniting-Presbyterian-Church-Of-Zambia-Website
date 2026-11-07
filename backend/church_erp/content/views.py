@@ -11,10 +11,12 @@ from church_erp.content.serializers import (
 )
 
 
-class SermonViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
-    queryset = Sermon.objects.all()
+# Sermons, projects and activities are read-only here. Staff change them through
+# the dashboard's own addresses in staff_content.py.
+class SermonViewSet(BranchScopedViewSetMixin, viewsets.ReadOnlyModelViewSet):
+    queryset = Sermon.objects.filter(is_hidden=False)
     serializer_class = SermonSerializer
-    permission_classes = [IsBranchStaffOrReadOnly]
+    permission_classes = [permissions.AllowAny]
     lookup_field = 'video_id'
 
     def get_object(self):
@@ -30,23 +32,17 @@ class SermonViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
         return matches[0]
 
 
-class ProjectViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
+class ProjectViewSet(BranchScopedViewSetMixin, viewsets.ReadOnlyModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [IsBranchStaffOrReadOnly]
+    permission_classes = [permissions.AllowAny]
 
 
-class ActivityViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):
-    queryset = Activity.objects.select_related('branch')
+class ActivityViewSet(BranchScopedViewSetMixin, viewsets.ReadOnlyModelViewSet):
+    queryset = Activity.objects.select_related('branch').filter(branch__is_active=True)
     serializer_class = ActivitySerializer
-    permission_classes = [IsBranchStaffOrReadOnly]
+    permission_classes = [permissions.AllowAny]
     filterset_fields = {'date': ['gte', 'lte']}  # e.g. ?date__gte=2026-11-02 for upcoming
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        if self.request.method in permissions.SAFE_METHODS:
-            qs = qs.filter(branch__is_active=True)
-        return qs
 
 
 class PageViewSet(BranchScopedViewSetMixin, viewsets.ModelViewSet):

@@ -6,7 +6,7 @@ from .models import Sermon, Project, Activity, Page
 class SermonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sermon
-        fields = '__all__'
+        exclude = ['is_hidden']
 
 
 class ProjectSerializer(serializers.ModelSerializer):

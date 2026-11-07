@@ -86,6 +86,14 @@ class SyncBranchTests(TestCase):
         self.assertEqual(sermon.title, "Grace (edited)")
         self.assertEqual(sermon.series, "Ephesians")
 
+    def test_hidden_sermon_stays_hidden_and_is_not_imported_again(self):
+        youtube = FakeYouTube([video("v1", title="Grace")])
+        self.sync(youtube)
+        Sermon.objects.filter(video_id="v1").update(is_hidden=True)
+        self.sync(youtube)
+        self.assertEqual(Sermon.objects.filter(video_id="v1").count(), 1)
+        self.assertTrue(Sermon.objects.get(video_id="v1").is_hidden)
+
     def test_duration_is_refreshed_from_youtube(self):
         # A finished live stream reports P0D while live and its real length afterwards.
         self.sync(FakeYouTube([video("v1", state="live", duration="P0D")]))

@@ -7,8 +7,8 @@ from .models import Sermon, Project, Activity, Page
 
 @admin.register(Sermon)
 class SermonAdmin(BranchScopedAdmin):
-    list_display = ('title', 'branch', 'minister', 'preached_at', 'is_live')
-    list_filter = ('is_live', 'branch')
+    list_display = ('title', 'branch', 'minister', 'preached_at', 'is_live', 'is_hidden')
+    list_filter = ('is_live', 'is_hidden', 'branch')
     search_fields = ('title', 'description', 'reference_verse')
     date_hierarchy = 'preached_at'
 
