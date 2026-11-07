@@ -8,6 +8,7 @@ from church_erp.ai_messages.staff_messages import StaffMessageViewSet
 from church_erp.ai_messages.staff_writings import StaffWritingViewSet
 from church_erp.media_library.staff_media import StaffMediaViewSet
 from church_erp.accounts.staff_people import StaffPeopleViewSet
+from church_erp.accounts.access_requests import RequestAccessView, StaffRequestViewSet
 from church_erp.core.staff_branches import StaffBranchViewSet
 from church_erp.core.changes import StaffChangeViewSet
 from church_erp.finance.views import GivingRecordViewSet
@@ -43,6 +44,7 @@ staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/messages', StaffMessageV
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/writings', StaffWritingViewSet, basename='staff-writings')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/media', StaffMediaViewSet, basename='staff-media')
 staff_router.register(r'staff-people', StaffPeopleViewSet, basename='staff-people')
+staff_router.register(r'staff-requests', StaffRequestViewSet, basename='staff-requests')
 staff_router.register(r'staff-branches', StaffBranchViewSet, basename='staff-branches')
 staff_router.register(r'staff-changes', StaffChangeViewSet, basename='staff-changes')
 
@@ -50,6 +52,7 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', include(staff_router.urls)),
     path('auth/', include('church_erp.accounts.urls')),
+    path('access-requests/', RequestAccessView.as_view(), name='access-request'),
     path('page-content/<slug:scope>/', PageContentView.as_view(), name='page-content'),
     path('page-content/<slug:scope>/<slug:page>/', PageContentPageView.as_view(), name='page-content-page'),
     path('page-content/<slug:scope>/<slug:page>/images/<slug:key>/', PageImageView.as_view(), name='page-image'),

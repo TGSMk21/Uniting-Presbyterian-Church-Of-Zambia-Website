@@ -179,6 +179,9 @@ REST_FRAMEWORK = {
         "user": "600/min",
         "write": "60/min",
         "login": "30/min",
+        # Asking for access, and opening set-password links, per visitor (Task 7.2).
+        "access_request": "5/hour",
+        "password_link": "30/hour",
     },
 }
 

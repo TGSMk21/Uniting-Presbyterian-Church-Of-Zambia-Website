@@ -10,7 +10,7 @@ from django.urls import get_resolver, reverse
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
-from church_erp.accounts.models import User
+from church_erp.accounts.models import AccessRequest, User
 from church_erp.ai_messages.models import DailyMessage, SermonDocument
 from church_erp.content.models import Activity, Project, Sermon
 from church_erp.core.models import Minister, ServiceTime
@@ -26,6 +26,8 @@ SECTIONS = {
 }
 POST_EXTRAS = {"upload"}
 PEOPLE_ACTIONS = ["suspend", "restore", "reset-password", "reset-two-factor"]
+# Access requests (Task 7.2): superusers, and Branch Admins for their own branch's staff.
+REQUEST_ACTIONS = ["approve", "turn-down"]
 # Branch admins manage staff; only superusers manage branches and read the history.
 SUPERUSER_ONLY = ["staff-branches", "staff-changes"]
 
@@ -61,6 +63,10 @@ class AccessMatrixTests(APITestCase):
         cls.finance_a = user("finance_a", cls.alpha, "finance_admin")
         cls.editor_b = user("editor_b", cls.beta, "content_editor")
         cls.admin_b = user("admin_b", cls.beta, "branch_admin")
+
+        cls.beta_request = AccessRequest.objects.create(
+            full_name="Beta Staff", email="bs@example.org", phone="0971234567", branch=cls.beta, kind="staff",
+        )
 
         # One row of every kind in beta, to be reached from alpha.
         minister = Minister.objects.create(branch=cls.beta, name="Beta minister")
@@ -133,6 +139,7 @@ class AccessMatrixTests(APITestCase):
         listed = {f"staff-{section}-{kind}" for section, extras in SECTIONS.items() for kind in ["list", "detail", "export", *extras]}
         listed |= {"staff-branch-details", "staff-people-list", "staff-people-detail"}
         listed |= {f"staff-people-{name}" for name in PEOPLE_ACTIONS}
+        listed |= {"staff-requests-list", "staff-requests-detail"} | {f"staff-requests-{name}" for name in REQUEST_ACTIONS}
         listed |= {f"{name}-{kind}" for name in SUPERUSER_ONLY for kind in ("list", "detail")}
         self.assertEqual(staff_url_names() - listed, set(), "Add new staff addresses to this file.")
 
@@ -177,3 +184,24 @@ class AccessMatrixTests(APITestCase):
         addresses = [(m, u) for m, u in self.admin_addresses(self.editor_b.pk) if "/staff-people/" in u and str(self.editor_b.pk) in u]
         # Resetting two-step login is refused to branch admins before any lookup (403).
         self.assertEqual(self.refused(self.admin_a, addresses, {403, 404}), [])
+
+
+    # Who can review access requests (Task 7.2).
+    def request_addresses(self):
+        pk = self.beta_request.pk
+        yield "get", reverse("staff-requests-list")
+        yield "get", reverse("staff-requests-detail", args=[pk])
+        for name in REQUEST_ACTIONS:
+            yield "post", reverse(f"staff-requests-{name}", args=[pk])
+
+    def test_requests_refuse_signed_out_people_editors_and_finance(self):
+        self.assertEqual(self.refused(None, self.request_addresses(), {401}), [])
+        for user in (self.editor_a, self.finance_a):
+            with self.subTest(user=user.username):
+                self.assertEqual(self.refused(user, self.request_addresses(), {403}), [])
+
+    def test_another_branchs_requests_are_invisible_to_a_branchs_minister(self):
+        addresses = [(m, u) for m, u in self.request_addresses() if u != reverse("staff-requests-list")]
+        self.assertEqual(self.refused(self.admin_a, addresses, {404}), [])
+        self.client.force_authenticate(self.admin_a)
+        self.assertEqual(self.client.get(reverse("staff-requests-list")).data["results"], [])
