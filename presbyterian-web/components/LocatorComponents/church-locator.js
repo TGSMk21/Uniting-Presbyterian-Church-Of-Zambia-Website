@@ -11,6 +11,7 @@ import {
   towns,
 } from "@/Utilities/churchLocator";
 import { formatTime } from "@/Utilities/timeFormat";
+import { locate, locationMessage } from "@/Utilities/locate.mjs";
 
 export default function ChurchLocator({ branches }) {
   const [query, setQuery] = useState("");
@@ -25,24 +26,16 @@ export default function ChurchLocator({ branches }) {
   const anyApproximate = results.some((b) => hasLocation(b) && !b.location_confirmed);
 
   // The position stays in this browser: it is only used to sort the list.
-  function findNearest() {
-    if (!navigator.geolocation) {
-      setLocationError("Your browser can't share its location. Try searching by town instead.");
-      return;
-    }
+  async function findNearest() {
     setLocating(true);
     setLocationError("");
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setUserLocation({ lat: coords.latitude, lng: coords.longitude });
-        setLocating(false);
-      },
-      () => {
-        setLocationError("We couldn't get your location. Try searching by town instead.");
-        setLocating(false);
-      },
-      { timeout: 10000 },
-    );
+    try {
+      setUserLocation(await locate(navigator.geolocation));
+    } catch (error) {
+      setLocationError(locationMessage(error?.code));
+    } finally {
+      setLocating(false);
+    }
   }
 
   return (
