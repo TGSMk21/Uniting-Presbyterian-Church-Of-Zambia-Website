@@ -20,6 +20,9 @@ SCHEMA = json.loads((Path(__file__).parent / "page_schema.json").read_text(encod
 NATIONAL = "national"
 EDITOR_ROLES = {"branch_admin", "content_editor"}
 PHONE_RE = re.compile(r"^\+?[0-9][0-9 ()\-]{5,28}$")
+# A banner button goes to a page on this site ("/find-a-branch") or a secure address.
+LINK_RE = re.compile(r"^(/(?!/)\S*|https://[^\s/]+\S*)$")
+LINK_ERROR = "Please enter a page here starting with / (such as /find-a-branch), or an address starting with https://."
 
 
 def scope_kind(scope):
@@ -71,6 +74,8 @@ def clean_value(spec, value):
             raise ValidationError("Please enter a valid email address.")
     if value and spec["type"] == "phone" and not PHONE_RE.match(value):
         raise ValidationError("Please enter a valid phone number.")
+    if value and spec["type"] == "link" and not LINK_RE.match(value):
+        raise ValidationError(LINK_ERROR)
     return value
 
 

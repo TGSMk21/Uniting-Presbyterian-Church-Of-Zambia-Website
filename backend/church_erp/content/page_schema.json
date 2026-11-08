@@ -5,15 +5,47 @@
       "path": "/",
       "sections": [
         {
-          "title": "Top of the page",
+          "title": "Banner slide 1",
           "fields": [
+            { "key": "hero_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
             { "key": "hero_label", "label": "Small heading", "type": "line", "max": 80, "default": "Uniting Presbyterian Church In Zambia" },
             { "key": "hero_title", "label": "Main heading", "type": "title", "max": 120, "default": "One family.\n*Many houses.*" },
             { "key": "hero_text", "label": "Introduction", "type": "text", "max": 400, "default": "Wherever you are in Zambia, there is a branch of our family near you — a place to worship, to grow, and to belong." },
             { "key": "hero_button", "label": "Button", "type": "line", "max": 40, "default": "Find a branch near you" },
-            { "key": "story_link", "label": "Link beside the button", "type": "line", "max": 40, "default": "Our story" },
-            { "key": "badge_label", "label": "Badge heading", "type": "line", "max": 40, "default": "Gathered" },
-            { "key": "badge_text", "label": "Badge text", "type": "line", "max": 80, "default": "Across Zambia, every week" }
+            { "key": "story_link", "label": "Link beside the button", "type": "line", "max": 40, "default": "Our story" }
+          ]
+        },
+        {
+          "title": "Banner slide 2",
+          "fields": [
+            { "key": "slide2_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
+            { "key": "slide2_label", "label": "Small heading", "type": "line", "max": 80, "default": "" },
+            { "key": "slide2_title", "label": "Heading", "type": "title", "max": 120, "default": "" },
+            { "key": "slide2_text", "label": "Text", "type": "text", "max": 300, "default": "" },
+            { "key": "slide2_button", "label": "Button", "type": "line", "max": 40, "default": "" },
+            { "key": "slide2_link", "label": "Button goes to (a page here such as /find-a-branch, or https://…)", "type": "link", "max": 300, "default": "" }
+          ]
+        },
+        {
+          "title": "Banner slide 3",
+          "fields": [
+            { "key": "slide3_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
+            { "key": "slide3_label", "label": "Small heading", "type": "line", "max": 80, "default": "" },
+            { "key": "slide3_title", "label": "Heading", "type": "title", "max": 120, "default": "" },
+            { "key": "slide3_text", "label": "Text", "type": "text", "max": 300, "default": "" },
+            { "key": "slide3_button", "label": "Button", "type": "line", "max": 40, "default": "" },
+            { "key": "slide3_link", "label": "Button goes to (a page here such as /find-a-branch, or https://…)", "type": "link", "max": 300, "default": "" }
+          ]
+        },
+        {
+          "title": "Banner slide 4",
+          "fields": [
+            { "key": "slide4_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
+            { "key": "slide4_label", "label": "Small heading", "type": "line", "max": 80, "default": "" },
+            { "key": "slide4_title", "label": "Heading", "type": "title", "max": 120, "default": "" },
+            { "key": "slide4_text", "label": "Text", "type": "text", "max": 300, "default": "" },
+            { "key": "slide4_button", "label": "Button", "type": "line", "max": 40, "default": "" },
+            { "key": "slide4_link", "label": "Button goes to (a page here such as /find-a-branch, or https://…)", "type": "link", "max": 300, "default": "" }
           ]
         },
         {
@@ -116,21 +148,53 @@
       "path": "",
       "sections": [
         {
-          "title": "Photos and logo",
+          "title": "Logo",
           "fields": [
-            { "key": "hero_image", "label": "Main photo", "type": "image", "max_side": 2000, "store": "branch", "default": "" },
-            { "key": "hero_image_secondary", "label": "Smaller photo", "type": "image", "max_side": 1200, "store": "branch", "default": "" },
             { "key": "logo", "label": "Logo", "type": "image", "max_side": 600, "store": "branch", "transparent": true, "default": "/logo.png" }
           ]
         },
         {
-          "title": "Top of the page",
+          "title": "Banner slide 1",
           "fields": [
+            { "key": "hero_image", "label": "Banner photo", "type": "image", "max_side": 2000, "store": "branch", "default": "" },
             { "key": "hero_label", "label": "Small heading", "type": "line", "max": 80, "default": "Welcome to our family" },
             { "key": "tagline", "label": "Main heading", "type": "title", "max": 200, "store": "branch", "default": "A place of *grace,* belonging & purpose." },
             { "key": "welcome_text", "label": "Welcome message", "type": "text", "max": 1000, "store": "branch", "default": "Whether you are exploring faith or looking for a church home, you are welcome here at {branch}." },
             { "key": "schedule_button", "label": "Button to the service times", "type": "line", "max": 40, "default": "Join Us This Sunday" },
             { "key": "story_button", "label": "Button to the About page", "type": "line", "max": 40, "default": "Our Story" }
+          ]
+        },
+        {
+          "title": "Banner slide 2",
+          "fields": [
+            { "key": "slide2_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
+            { "key": "slide2_label", "label": "Small heading", "type": "line", "max": 80, "default": "" },
+            { "key": "slide2_title", "label": "Heading", "type": "title", "max": 120, "default": "" },
+            { "key": "slide2_text", "label": "Text", "type": "text", "max": 300, "default": "" },
+            { "key": "slide2_button", "label": "Button", "type": "line", "max": 40, "default": "" },
+            { "key": "slide2_link", "label": "Button goes to (a page here such as /find-a-branch, or https://…)", "type": "link", "max": 300, "default": "" }
+          ]
+        },
+        {
+          "title": "Banner slide 3",
+          "fields": [
+            { "key": "slide3_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
+            { "key": "slide3_label", "label": "Small heading", "type": "line", "max": 80, "default": "" },
+            { "key": "slide3_title", "label": "Heading", "type": "title", "max": 120, "default": "" },
+            { "key": "slide3_text", "label": "Text", "type": "text", "max": 300, "default": "" },
+            { "key": "slide3_button", "label": "Button", "type": "line", "max": 40, "default": "" },
+            { "key": "slide3_link", "label": "Button goes to (a page here such as /find-a-branch, or https://…)", "type": "link", "max": 300, "default": "" }
+          ]
+        },
+        {
+          "title": "Banner slide 4",
+          "fields": [
+            { "key": "slide4_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
+            { "key": "slide4_label", "label": "Small heading", "type": "line", "max": 80, "default": "" },
+            { "key": "slide4_title", "label": "Heading", "type": "title", "max": 120, "default": "" },
+            { "key": "slide4_text", "label": "Text", "type": "text", "max": 300, "default": "" },
+            { "key": "slide4_button", "label": "Button", "type": "line", "max": 40, "default": "" },
+            { "key": "slide4_link", "label": "Button goes to (a page here such as /find-a-branch, or https://…)", "type": "link", "max": 300, "default": "" }
           ]
         },
         {

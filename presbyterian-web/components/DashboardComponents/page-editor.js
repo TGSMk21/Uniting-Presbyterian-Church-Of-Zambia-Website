@@ -31,7 +31,8 @@ function Field({ field, value, error }) {
       {multiline ? (
         <textarea key={value} rows={rows} {...shared} />
       ) : (
-        <input key={value} type={inputType} {...shared} />
+        <input key={value} type={inputType} {...shared}
+          {...(field.type === "link" ? { inputMode: "url", spellCheck: false, autoCapitalize: "none", placeholder: "/find-a-branch" } : {})} />
       )}
       {help && <small>{help}</small>}
       {error && <span className="dash-field-error" role="alert">{error}</span>}
@@ -67,7 +68,7 @@ export default function PageEditor({ scope, page, sections, values, viewHref }) 
               <Field
                 key={field.key}
                 field={field}
-                value={values[field.key] ?? field.default}
+                value={state.values?.[field.key] ?? values[field.key] ?? field.default}
                 error={state.fields[field.key]?.join(" ")}
               />
             ),

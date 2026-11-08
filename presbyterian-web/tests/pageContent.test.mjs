@@ -187,7 +187,14 @@ const LAYOUT_FIELDS = new Set(["footer_text", "email", "phone"]);
 
 for (const [path, kind, page] of PAGES) {
   test(`${path} uses every editable field`, () => {
-    const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    let source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    // The banner slides read their fields in Utilities/heroSlides.mjs.
+    if (/Slides\(f\b/.test(source)) {
+      const slides = readFileSync(new URL("../Utilities/heroSlides.mjs", import.meta.url), "utf8");
+      const extra = [2, 3, 4].flatMap((n) => ["image", "label", "title", "text", "button", "link"]
+        .filter((part) => slides.includes(`f[\`slide\${n}_${part}\`]`)).map((part) => `f.slide${n}_${part}`));
+      source += slides + extra.join(" ");
+    }
     for (const section of pageSchema[kind][page].sections) {
       for (const { key } of section.fields) {
         if (key === "footer_text" || key === "logo") continue; // shown by the layout
@@ -203,4 +210,17 @@ test("the footers use their editable text", () => {
     const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
     assert.match(source, /footer_text/, path);
   }
+});
+
+// Found while testing the banner slides (2026-11-08): a refused save emptied what
+// had been typed. Like the other dashboard forms, it now keeps it.
+test("a refused page save keeps what was typed", () => {
+  const actions = readFileSync(new URL("../app/dashboard/actions.js", import.meta.url), "utf8");
+  const save = actions.slice(actions.indexOf("export async function savePageContent"), actions.indexOf("function imagePath"));
+  assert.match(save, /const typed = fieldsFromForm\(kind, page, formData\)/);
+  for (const line of save.split("\n").filter((l) => /return \{ saved: false/.test(l) && !/can't be edited/.test(l))) {
+    assert.match(line, /values: typed/, line);
+  }
+  const editor = readFileSync(new URL("../components/DashboardComponents/page-editor.js", import.meta.url), "utf8");
+  assert.match(editor, /state\.values\?\.\[field\.key\] \?\? values\[field\.key\] \?\? field\.default/);
 });

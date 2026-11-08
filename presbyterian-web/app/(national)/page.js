@@ -4,6 +4,8 @@ import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
 import RichText from "@/components/UniversalComponents/rich-text";
 import { getPageContent, getUpcomingActivities } from "@/Services/api";
 import { pageFields } from "@/Utilities/pageContent.mjs";
+import { nationalSlides } from "@/Utilities/heroSlides.mjs";
+import HeroCarousel from "@/components/UniversalComponents/hero-carousel";
 
 const EVENTS_SHOWN = 6;
 
@@ -32,49 +34,8 @@ export default async function NationalLanding() {
 
   return (
     <main>
-      {/* ===== HERO ===== */}
-      <section className="nat-hero">
-        <div className="nat-hero-inner">
-          <div className="nat-hero-copy">
-            <span className="nat-eyebrow">{f.hero_label}</span>
-            <h1 className="nat-h1">
-              <RichText text={f.hero_title} />
-            </h1>
-            <p className="nat-lede">{f.hero_text}</p>
-            <div className="nat-hero-actions">
-              <Link href="/find-a-branch" className="btn-primary">
-                {f.hero_button}
-              </Link>
-              <a href="#welcome" className="nat-link-quiet">
-                {f.story_link} <span aria-hidden="true">→</span>
-              </a>
-            </div>
-          </div>
-
-          <div className="nat-hero-visual" aria-hidden="true">
-            <div className="nat-arch-wrap">
-              <div className="nat-arch-back" />
-              <div className="nat-arch">
-                <svg
-                  className="nat-arch-cross"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                >
-                  <line x1="12" y1="4" x2="12" y2="21" />
-                  <line x1="6" y1="9" x2="18" y2="9" />
-                </svg>
-              </div>
-              <div className="nat-arch-tag">
-                <div className="nat-arch-tag-label">{f.badge_label}</div>
-                <div className="nat-arch-tag-text">{f.badge_text}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ===== BANNER SLIDES (edited under Pages in the dashboard) ===== */}
+      <HeroCarousel slides={nationalSlides(f)} label="Uniting Presbyterian Church In Zambia" />
 
       {/* ===== MANIFESTO / WELCOME ===== */}
       <section className="nat-manifesto" id="welcome">

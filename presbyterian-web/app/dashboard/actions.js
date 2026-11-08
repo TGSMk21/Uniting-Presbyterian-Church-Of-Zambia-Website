@@ -113,9 +113,11 @@ export async function savePageContent(scope, page, previousState, formData) {
   const kind = scopeKind(scope);
   if (!pageSchema[kind][page]) return { saved: false, error: "This page can't be edited.", fields: {} };
 
+  // Sent back when the save is refused, so the boxes keep what was typed.
+  const typed = fieldsFromForm(kind, page, formData);
   const { status, data } = await staffRequest(
     `/page-content/${encodeURIComponent(scope)}/${encodeURIComponent(page)}/`,
-    { method: "PUT", body: { fields: fieldsFromForm(kind, page, formData) } },
+    { method: "PUT", body: { fields: typed } },
   );
 
   if (status === 200) {
@@ -125,12 +127,13 @@ export async function savePageContent(scope, page, previousState, formData) {
     return { saved: true, error: null, fields: {} };
   }
   if (status === 401) redirect("/dashboard/login");
-  if (status === 400 && data?.fields) return { saved: false, error: null, fields: data.fields };
-  if (status === 403) return { saved: false, error: "You can't edit this page.", fields: {} };
+  if (status === 400 && data?.fields) return { saved: false, error: null, fields: data.fields, values: typed };
+  if (status === 403) return { saved: false, error: "You can't edit this page.", fields: {}, values: typed };
   return {
     saved: false,
     error: "Your changes couldn't be saved right now. Please try again in a moment.",
     fields: {},
+    values: typed,
   };
 }
 

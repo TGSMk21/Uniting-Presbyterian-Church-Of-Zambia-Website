@@ -3,6 +3,8 @@ import RichText from "@/components/UniversalComponents/rich-text";
 import { CalendarDays, FolderKanban } from "lucide-react";
 import { getActivities, getAnnouncements, getBranch, getDailyMessages, getPageContent, getProjects } from "@/Services/api";
 import { glimpseItems } from "@/Utilities/projectItems.mjs";
+import { branchSlides } from "@/Utilities/heroSlides.mjs";
+import HeroCarousel from "@/components/UniversalComponents/hero-carousel";
 import { pageFields } from "@/Utilities/pageContent.mjs";
 import ContactForm from "@/components/UniversalComponents/contact-form";
 import { dateFormat } from "@/Utilities/DateFormatter";
@@ -28,7 +30,7 @@ export default async function BranchHome({ params }) {
   ]);
   const glimpse = glimpseItems(projectData?.results, activityData?.results);
   const announcements = announcementData?.results || [];
-  // The tagline, welcome text, year theme and photos are stored on the branch itself.
+  // The tagline, welcome text, year theme and first banner photo are stored on the branch itself.
   const f = pageFields(
     "branch",
     "home",
@@ -39,7 +41,6 @@ export default async function BranchHome({ params }) {
       year_theme_title: branch?.year_theme_title,
       year_theme_text: branch?.year_theme_text,
       hero_image: branch?.hero_image,
-      hero_image_secondary: branch?.hero_image_secondary,
     },
     { branchName: branch?.name },
   );
@@ -49,47 +50,12 @@ export default async function BranchHome({ params }) {
     : { text: f.verse_text, ref: f.verse_ref };
   const formattedDate = msg?.date ? dateFormat(msg.date) : null;
   const services = branch?.service_times || [];
-  const heroImages = [f.hero_image, f.hero_image_secondary].filter(Boolean);
   const year = new Date().getFullYear();
 
   return (
     <>
 
-      <section className="hero">
-        <div className="hero-blob-1" />
-        <div className="hero-blob-2" />
-        <div className="hero-grid">
-          <div>
-            <div className="hero-eyebrow">{f.hero_label}</div>
-            <h1 style={{ fontFamily: "var(--font-playfair)" }}>
-              <RichText text={f.tagline} />
-            </h1>
-            <p className="hero-desc">{f.welcome_text}</p>
-            <div className="hero-actions">
-              {services.length > 0 && <a href="#schedule" className="btn-primary">{f.schedule_button}</a>}
-              <a href={`/${slug}/about`} className="btn-ghost">{f.story_button}</a>
-            </div>
-          </div>
-          {heroImages.length > 0 && (
-            <div className="hero-visual">
-              <div className="hero-img-main">
-                <img src={heroImages[0]} alt={`${branch.name} worship`} />
-              </div>
-              {heroImages[1] && (
-                <div className="hero-img-accent">
-                  <img src={heroImages[1]} alt={`${branch.name} community`} />
-                </div>
-              )}
-              {f.year_theme_title && (
-                <div className="hero-floating">
-                  <div className="hero-floating-label">{year} Theme</div>
-                  <div className="hero-floating-text">{f.year_theme_title}</div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
+      <HeroCarousel slides={branchSlides(f, { slug, hasServices: services.length > 0 })} label={branch?.name} />
 
       {f.year_theme_title && (
         <section className="year-theme">

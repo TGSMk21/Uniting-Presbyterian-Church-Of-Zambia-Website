@@ -2929,3 +2929,147 @@ a.pa-card { text-decoration: none; }
 .pa-card-kind { color: var(--red); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
 .pa-media .pa-media-empty { display: grid; }
 @media (max-width: 640px) { .glimpse-section { padding: 4rem 1.25rem; } }
+
+/* ===== Banner slides at the top of the home pages (owner's request, 2026-11-08) =====
+   components/UniversalComponents/hero-carousel.js. Always dark, photo or not, so
+   the white words read the same in both themes. */
+.hero-carousel {
+  position: relative;
+  min-height: clamp(36rem, 88vh, 52rem);
+  overflow: hidden;
+  isolation: isolate;
+  background: #0b1630;
+  color: white;
+  touch-action: pan-y;
+}
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.9s ease, visibility 0s linear 0.9s;
+  /* Without a photo: the church's navy with a warm red glow. */
+  background:
+    radial-gradient(55rem 38rem at 88% 12%, rgba(200, 16, 46, 0.42), transparent 62%),
+    radial-gradient(40rem 30rem at 6% 96%, rgba(42, 74, 140, 0.55), transparent 70%),
+    linear-gradient(135deg, #0a1430 0%, #142850 55%, #2a1838 100%);
+}
+.hero-slide[data-current] { opacity: 1; visibility: visible; z-index: 1; transition: opacity 0.9s ease; }
+.hero-slide-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero-slide[data-current] .hero-slide-photo { animation: hero-drift 10s ease-out forwards; }
+@keyframes hero-drift { from { transform: scale(1.07); } to { transform: scale(1); } }
+/* Darkens the side the words sit on, so they read on any photo. */
+.hero-slide[data-photo]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(7, 13, 30, 0.88) 0%, rgba(7, 13, 30, 0.62) 42%, rgba(7, 13, 30, 0.12) 100%),
+    linear-gradient(0deg, rgba(7, 13, 30, 0.55) 0%, transparent 38%);
+}
+.hero-slide-inner { position: relative; z-index: 1; width: 100%; max-width: 1400px; margin: 0 auto; padding: 9rem 2.5rem 7rem; }
+.hero-slide-copy { max-width: 42rem; }
+.hero-slide-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 1rem;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.hero-slide-label::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #f07a87; }
+.hero-slide-title {
+  margin-top: 1.4rem;
+  font-family: var(--font-playfair);
+  font-size: clamp(2.6rem, 6vw, 4.9rem);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  color: white;
+  text-wrap: balance;
+}
+.hero-slide-title em { font-style: italic; font-weight: 500; color: #f58a96; }
+.hero-slide-text { margin-top: 1.4rem; max-width: 36rem; font-size: 1.12rem; line-height: 1.7; color: rgba(255, 255, 255, 0.84); }
+.hero-slide-actions { margin-top: 2.25rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.75rem; }
+.hero-carousel .btn-primary { background: var(--red); }
+/* The banner is always dark, so this is always a white button. */
+.hero-carousel .btn-primary:hover { background: #ffffff; color: #142850; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); }
+.hero-slide-quiet {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  padding-bottom: 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.45);
+  transition: border-color 0.2s ease;
+}
+.hero-slide-quiet:hover { border-bottom-color: white; }
+.hero-carousel :focus-visible { outline: 2px solid white; outline-offset: 3px; }
+.hero-carousel-controls {
+  position: absolute;
+  z-index: 2;
+  left: max(2.5rem, calc((100% - 1400px) / 2 + 2.5rem));
+  bottom: 2.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.hero-carousel-button {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.hero-carousel-button:hover { background: rgba(255, 255, 255, 0.2); }
+.hero-carousel-dots { list-style: none; margin: 0 0.25rem; padding: 0; display: flex; gap: 0.35rem; }
+.hero-carousel-dots button {
+  position: relative;
+  width: 2.25rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.hero-carousel-dots button::before,
+.hero-carousel-progress {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 3px;
+}
+.hero-carousel-dots button::before { background: rgba(255, 255, 255, 0.3); }
+.hero-carousel-dots button[aria-current="true"]::before { background: rgba(255, 255, 255, 0.55); }
+.hero-carousel-progress { background: #ffffff; transform-origin: left; animation: hero-progress linear forwards; }
+@keyframes hero-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (max-width: 640px) {
+  .hero-carousel { min-height: 38rem; }
+  .hero-slide-inner { padding: 8rem 1.25rem 7.5rem; }
+  .hero-slide-text { font-size: 1rem; }
+  .hero-slide[data-photo]::after {
+    background: linear-gradient(0deg, rgba(7, 13, 30, 0.92) 0%, rgba(7, 13, 30, 0.7) 55%, rgba(7, 13, 30, 0.35) 100%);
+  }
+  .hero-carousel-controls { left: 1.25rem; bottom: 1.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide, .hero-slide[data-current] { transition: none; }
+  .hero-slide[data-current] .hero-slide-photo, .hero-carousel-progress { animation: none; }
+}

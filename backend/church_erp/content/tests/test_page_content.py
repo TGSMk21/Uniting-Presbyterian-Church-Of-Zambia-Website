@@ -218,6 +218,16 @@ class ValidationTests(PageContentTestCase):
             with self.subTest(bad=bad):
                 self.assertIn("phone", self.errors({"phone": bad}, "national", "contact", self.root))
 
+    # Banner slide buttons (owner's request, 2026-11-08): a page on this site or a secure address.
+    def test_slide_links_must_be_a_page_here_or_a_secure_address(self):
+        for bad in ("javascript:alert(1)", "http://example.org", "//evil.example", "example.org", "/ spaces", "data:text/html,x"):
+            with self.subTest(bad=bad):
+                self.assertIn("slide2_link", self.errors({"slide2_link": bad}, "alpha", "home"))
+                self.assertIn("slide2_link", self.errors({"slide2_link": bad}, "national", "home", self.root))
+        for good in ("/alpha/projects-and-activities", "/find-a-branch#map", "https://www.youtube.com/@upcz", ""):
+            with self.subTest(good=good):
+                self.assertEqual(self.save(self.editor, "alpha", "home", {"slide2_link": good}).status_code, 200)
+
     def test_good_contact_details_are_accepted(self):
         response = self.save(self.root, "national", "contact", {"email": "office@upcz.org", "phone": "+260 (97) 123-4567"})
         self.assertEqual(response.status_code, 200, response.content)
