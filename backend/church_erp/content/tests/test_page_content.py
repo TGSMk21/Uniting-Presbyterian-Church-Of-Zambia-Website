@@ -82,10 +82,10 @@ class PublicReadTests(PageContentTestCase):
 
     def test_each_scope_only_sees_its_own(self):
         PageContent.objects.create(branch=None, page="home", fields={"hero_text": "National"})
-        PageContent.objects.create(branch=self.alpha, page="home", fields={"hero_label": "Alpha"})
-        PageContent.objects.create(branch=self.beta, page="home", fields={"hero_label": "Beta"})
+        PageContent.objects.create(branch=self.alpha, page="home", fields={"verse_label": "Alpha"})
+        PageContent.objects.create(branch=self.beta, page="home", fields={"verse_label": "Beta"})
         response = self.client.get(reverse("page-content", args=["alpha"]))
-        self.assertEqual(response.data["pages"], {"home": {"hero_label": "Alpha"}})
+        self.assertEqual(response.data["pages"], {"home": {"verse_label": "Alpha"}})
 
     def test_nothing_changed_is_an_empty_answer(self):
         self.assertEqual(self.client.get(reverse("page-content", args=["alpha"])).data["pages"], {})
@@ -248,14 +248,14 @@ class BranchFieldTests(PageContentTestCase):
 
     def test_they_are_saved_on_the_branch_not_in_page_content(self):
         response = self.save(self.editor, "alpha", "home", {
-            "tagline": "New tagline", "welcome_text": "Welcome", "year_theme_title": "Hope", "hero_label": "Hi",
+            "tagline": "New tagline", "welcome_text": "Welcome", "year_theme_title": "Hope", "verse_label": "Hi",
         })
         self.assertEqual(response.status_code, 200, response.content)
         self.alpha.refresh_from_db()
         self.assertEqual(self.alpha.tagline, "New tagline")
         self.assertEqual(self.alpha.welcome_text, "Welcome")
         self.assertEqual(self.alpha.year_theme_title, "Hope")
-        self.assertEqual(PageContent.objects.get().fields, {"hero_label": "Hi"})
+        self.assertEqual(PageContent.objects.get().fields, {"verse_label": "Hi"})
 
     def test_clearing_them_clears_the_branch(self):
         Branch.objects.filter(pk=self.alpha.pk).update(tagline="Old", year_theme_title="Old theme")
@@ -266,10 +266,10 @@ class BranchFieldTests(PageContentTestCase):
 
     def test_the_edit_form_shows_their_current_values(self):
         Branch.objects.filter(pk=self.alpha.pk).update(tagline="Current")
-        PageContent.objects.create(branch=self.alpha, page="home", fields={"hero_label": "Hi"})
+        PageContent.objects.create(branch=self.alpha, page="home", fields={"verse_label": "Hi"})
         self.client.force_authenticate(self.editor)
         fields = self.client.get(self.url("alpha", "home")).data["fields"]
-        self.assertEqual(fields, {"hero_label": "Hi", "tagline": "Current"})
+        self.assertEqual(fields, {"verse_label": "Hi", "tagline": "Current"})
 
     def test_nothing_else_on_the_branch_can_be_changed_this_way(self):
         response = self.save(self.editor, "alpha", "home", {"slug": "stolen", "contact_email": "x@example.org"})

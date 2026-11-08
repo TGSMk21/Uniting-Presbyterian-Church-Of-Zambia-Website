@@ -76,7 +76,6 @@ export default function HeroCarousel({ slides, label = "Welcome" }) {
             {slide.image && <img className="hero-slide-photo" src={slide.image} alt="" fetchPriority={i === 0 ? "high" : "low"} loading={i === 0 ? "eager" : "lazy"} />}
             <div className="hero-slide-inner">
               <div className="hero-slide-copy">
-                {slide.label && <p className="hero-slide-label">{slide.label}</p>}
                 {slide.title && (
                   <Heading className="hero-slide-title">
                     <RichText text={slide.title} />

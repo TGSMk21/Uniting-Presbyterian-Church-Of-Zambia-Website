@@ -20,7 +20,6 @@ function extraSlides(f) {
     return [{
       key: `slide${n}`,
       image,
-      label: f[`slide${n}_label`] || "",
       title,
       text: f[`slide${n}_text`] || "",
       actions: button && href ? [{ label: button, href, primary: true }] : [],
@@ -33,7 +32,6 @@ export function nationalSlides(f) {
     {
       key: "hero",
       image: f.hero_image || "",
-      label: f.hero_label,
       title: f.hero_title,
       text: f.hero_text,
       actions: [
@@ -50,7 +48,6 @@ export function branchSlides(f, { slug, hasServices = false }) {
     {
       key: "hero",
       image: f.hero_image || "",
-      label: f.hero_label,
       title: f.tagline,
       text: f.welcome_text,
       actions: [

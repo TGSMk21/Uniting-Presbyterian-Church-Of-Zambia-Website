@@ -8,7 +8,6 @@
           "title": "Banner slide 1",
           "fields": [
             { "key": "hero_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
-            { "key": "hero_label", "label": "Small heading", "type": "line", "max": 80, "default": "Uniting Presbyterian Church In Zambia" },
             { "key": "hero_title", "label": "Main heading", "type": "title", "max": 120, "default": "One family.\n*Many houses.*" },
             { "key": "hero_text", "label": "Introduction", "type": "text", "max": 400, "default": "Wherever you are in Zambia, there is a branch of our family near you — a place to worship, to grow, and to belong." },
             { "key": "hero_button", "label": "Button", "type": "line", "max": 40, "default": "Find a branch near you" },
@@ -19,7 +18,6 @@
           "title": "Banner slide 2",
           "fields": [
             { "key": "slide2_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
-            { "key": "slide2_label", "label": "Small heading", "type": "line", "max": 80, "default": "" },
             { "key": "slide2_title", "label": "Heading", "type": "title", "max": 120, "default": "" },
             { "key": "slide2_text", "label": "Text", "type": "text", "max": 300, "default": "" },
             { "key": "slide2_button", "label": "Button", "type": "line", "max": 40, "default": "" },
@@ -30,7 +28,6 @@
           "title": "Banner slide 3",
           "fields": [
             { "key": "slide3_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
-            { "key": "slide3_label", "label": "Small heading", "type": "line", "max": 80, "default": "" },
             { "key": "slide3_title", "label": "Heading", "type": "title", "max": 120, "default": "" },
             { "key": "slide3_text", "label": "Text", "type": "text", "max": 300, "default": "" },
             { "key": "slide3_button", "label": "Button", "type": "line", "max": 40, "default": "" },
@@ -41,7 +38,6 @@
           "title": "Banner slide 4",
           "fields": [
             { "key": "slide4_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
-            { "key": "slide4_label", "label": "Small heading", "type": "line", "max": 80, "default": "" },
             { "key": "slide4_title", "label": "Heading", "type": "title", "max": 120, "default": "" },
             { "key": "slide4_text", "label": "Text", "type": "text", "max": 300, "default": "" },
             { "key": "slide4_button", "label": "Button", "type": "line", "max": 40, "default": "" },
@@ -157,7 +153,6 @@
           "title": "Banner slide 1",
           "fields": [
             { "key": "hero_image", "label": "Banner photo", "type": "image", "max_side": 2000, "store": "branch", "default": "" },
-            { "key": "hero_label", "label": "Small heading", "type": "line", "max": 80, "default": "Welcome to our family" },
             { "key": "tagline", "label": "Main heading", "type": "title", "max": 200, "store": "branch", "default": "A place of *grace,* belonging & purpose." },
             { "key": "welcome_text", "label": "Welcome message", "type": "text", "max": 1000, "store": "branch", "default": "Whether you are exploring faith or looking for a church home, you are welcome here at {branch}." },
             { "key": "schedule_button", "label": "Button to the service times", "type": "line", "max": 40, "default": "Join Us This Sunday" },
@@ -168,7 +163,6 @@
           "title": "Banner slide 2",
           "fields": [
             { "key": "slide2_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
-            { "key": "slide2_label", "label": "Small heading", "type": "line", "max": 80, "default": "" },
             { "key": "slide2_title", "label": "Heading", "type": "title", "max": 120, "default": "" },
             { "key": "slide2_text", "label": "Text", "type": "text", "max": 300, "default": "" },
             { "key": "slide2_button", "label": "Button", "type": "line", "max": 40, "default": "" },
@@ -179,7 +173,6 @@
           "title": "Banner slide 3",
           "fields": [
             { "key": "slide3_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
-            { "key": "slide3_label", "label": "Small heading", "type": "line", "max": 80, "default": "" },
             { "key": "slide3_title", "label": "Heading", "type": "title", "max": 120, "default": "" },
             { "key": "slide3_text", "label": "Text", "type": "text", "max": 300, "default": "" },
             { "key": "slide3_button", "label": "Button", "type": "line", "max": 40, "default": "" },
@@ -190,7 +183,6 @@
           "title": "Banner slide 4",
           "fields": [
             { "key": "slide4_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
-            { "key": "slide4_label", "label": "Small heading", "type": "line", "max": 80, "default": "" },
             { "key": "slide4_title", "label": "Heading", "type": "title", "max": 120, "default": "" },
             { "key": "slide4_text", "label": "Text", "type": "text", "max": 300, "default": "" },
             { "key": "slide4_button", "label": "Button", "type": "line", "max": 40, "default": "" },

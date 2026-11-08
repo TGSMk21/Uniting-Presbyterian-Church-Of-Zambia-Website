@@ -55,7 +55,7 @@ test("both home pages edit four slides, each with a photo and a link field", () 
     assert.deepEqual(titles.filter((t) => t.startsWith("Banner slide")), ["Banner slide 1", "Banner slide 2", "Banner slide 3", "Banner slide 4"]);
     for (const n of [2, 3, 4]) {
       const keys = schema[kind].home.sections.find((s) => s.title === `Banner slide ${n}`).fields.map((f) => f.key);
-      assert.deepEqual(keys, ["image", "label", "title", "text", "button", "link"].map((k) => `slide${n}_${k}`));
+      assert.deepEqual(keys, ["image", "title", "text", "button", "link"].map((k) => `slide${n}_${k}`));
     }
   }
 });
@@ -70,6 +70,12 @@ test("both home pages open with the carousel", () => {
   assert.match(carousel, /shouldAdvance\(/);
   assert.match(carousel, /aria-roledescription="carousel"/);
   assert.match(carousel, /Pause slides|Play slides/);
+  // No small label above the heading (owner's request, 2026-11-08).
+  assert.doesNotMatch(carousel, /hero-slide-label/);
+  for (const kind of ["national", "branch"]) {
+    const keys = schema[kind].home.sections.flatMap((s) => s.fields.map((f) => f.key));
+    assert.ok(!keys.some((k) => k === "hero_label" || /^slide\d_label$/.test(k)), kind);
+  }
   // Only the first slide's heading is the page's main heading.
   assert.match(carousel, /i === 0 \? "h1" : "h2"/);
 });

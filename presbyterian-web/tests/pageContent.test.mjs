@@ -26,7 +26,7 @@ test("a page nobody has edited shows its original wording", () => {
 test("edited wording replaces the original, field by field", () => {
   const fields = pageFields("national", "home", { hero_text: "Hello" });
   assert.equal(fields.hero_text, "Hello");
-  assert.equal(fields.hero_label, "Uniting Presbyterian Church In Zambia");
+  assert.equal(fields.hero_button, "Find a branch near you");
 });
 
 test("a failed API call (no changes available) still gives a full page", () => {
@@ -191,7 +191,7 @@ for (const [path, kind, page] of PAGES) {
     // The banner slides read their fields in Utilities/heroSlides.mjs.
     if (/Slides\(f\b/.test(source)) {
       const slides = readFileSync(new URL("../Utilities/heroSlides.mjs", import.meta.url), "utf8");
-      const extra = [2, 3, 4].flatMap((n) => ["image", "label", "title", "text", "button", "link"]
+      const extra = [2, 3, 4].flatMap((n) => ["image", "title", "text", "button", "link"]
         .filter((part) => slides.includes(`f[\`slide\${n}_${part}\`]`)).map((part) => `f.slide${n}_${part}`));
       source += slides + extra.join(" ");
     }
