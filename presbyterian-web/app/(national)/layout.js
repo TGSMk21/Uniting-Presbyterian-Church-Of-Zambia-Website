@@ -18,7 +18,7 @@ export default async function NationalLayout({ children }) {
     { label: "Find a Branch", href: "/find-a-branch" },
     { label: "Contact", href: "/contact" },
   ];
-  const contact = { email: f.email, phone: f.phone };
+  const contact = { email: f.email };
 
   return (
     <>

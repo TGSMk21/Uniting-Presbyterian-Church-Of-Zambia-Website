@@ -41,7 +41,7 @@ export default async function BranchLayout({ children, params }) {
     { label: "Projects & Activities", href: `${base}/projects-and-activities` },
     { label: "About", href: `${base}/about` },
   ];
-  const contact = { email: data.contact_email, phone: data.contact_phone };
+  const contact = { email: data.contact_email };
 
   return (
     <>

@@ -93,11 +93,10 @@ test("the home page shows the fellowship photos from its fields", () => {
   assert.doesNotMatch(page, /youthMin\.png/);
 });
 
-test("branch pages show the branch's logo in the header and footer", () => {
+test("branch pages show the branch's logo in the header", () => {
+  // The navy footer shows the UPCZ crest without its white glow instead (tests/footer.test.mjs).
   assert.match(source("app/[branch]/layout.js"), /logo: data\.logo/);
-  for (const file of ["nav-client.js", "footer-client.js"]) {
-    assert.match(source(`components/UniversalComponents/${file}`), /src=\{brand\.logo \|\| "\/logo\.png"\}/);
-  }
+  assert.match(source("components/UniversalComponents/nav-client.js"), /src=\{brand\.logo \|\| "\/logo\.png"\}/);
 });
 
 test("a file upload lets fetch describe its own body", () => {

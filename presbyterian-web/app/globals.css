@@ -2509,3 +2509,6 @@ body::after {
   .loc-map { height: 380px; }
   .loc-list { max-height: none; overflow: visible; }
 }
+
+/* The crest in the navy footer (owner's request, 2026-11-08). */
+.footer-logo { height: 88px; width: auto; object-fit: contain; }

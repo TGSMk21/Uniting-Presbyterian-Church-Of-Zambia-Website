@@ -9,7 +9,9 @@ export default function FooterClient({ brand, links, contact }) {
         <div className="footer-top">
           <div>
             <Link href={brand.href} className="nav-brand" style={{ marginBottom: "0.5rem" }}>
-              <img src={brand.logo || "/logo.png"} alt="Church logo" style={{ height: 88, width: "auto", maxWidth: 176, objectFit: "contain" }} />
+              {/* The crest without its white glow, which looked rough on navy. A branch's own
+                  logo still shows in the light top bar. */}
+              <img src="/logo-on-dark.png" alt="" width="64" height="88" className="footer-logo" />
               <div className="nav-title" style={{ color: "white" }}>
                 {brand.name}
                 {brand.sub && <span style={{ color: "rgba(255,255,255,0.6)" }}>{brand.sub}</span>}
@@ -54,7 +56,6 @@ export default function FooterClient({ brand, links, contact }) {
               <li><a href="#">Facebook</a></li>
               <li><a href="#">YouTube</a></li>
               {contact?.email && <li><a href={`mailto:${contact.email}`}>Email Us</a></li>}
-              {contact?.phone && <li><a href={`tel:${contact.phone}`}>{contact.phone}</a></li>}
             </ul>
           </div>
         </div>
