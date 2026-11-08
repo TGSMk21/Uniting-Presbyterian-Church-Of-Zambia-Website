@@ -238,10 +238,22 @@ body::after {
 .crest-own { height: 80px; width: auto; max-width: 160px; object-fit: contain; }
 .footer-crest { --crest-h: 72px; color: rgba(255, 255, 255, 0.92); }
 .footer-crest .crest-motto span { display: block; }
+/* In the top bar the motto sits on two short lines, so the crest stays narrow
+   and the menu fits beside it on tablets too (owner's request, 2026-11-08). */
+.nav-crest { --crest-h: 50px; }
+.nav-crest .crest-motto { font-size: 8px; letter-spacing: 0.08em; line-height: 1.15; }
+.nav-crest .crest-motto span { display: block; }
+.nav-brand { min-width: 0; }
+.nav-title { max-width: 15rem; }
+.nav-links a { white-space: nowrap; }
+@media (max-width: 1280px) {
+  .nav-inner { padding: 0.875rem 1.5rem; gap: 1rem; }
+  .nav-links a { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+  .nav-title { font-size: 0.95rem; max-width: 12.5rem; }
+}
 @media (max-width: 640px) {
-  .nav-crest { --crest-h: 46px; }
-  /* Two short lines fit beside the church's name on a phone. */
-  .nav-crest .crest-motto span { display: block; }
+  .nav-crest { --crest-h: 44px; }
+  .nav-inner { padding: 0.75rem 1rem; }
 }
 
 /* The theme switch beside the menu (Utilities/theme.mjs). */
