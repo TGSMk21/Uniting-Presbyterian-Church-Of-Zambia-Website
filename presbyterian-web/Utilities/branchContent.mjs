@@ -54,7 +54,7 @@ export const SECTIONS = {
     label: "Projects",
     singular: "project",
     adding: "Add a project",
-    intro: "Projects show on your Projects page with how far along they are.",
+    intro: "Projects show on your Projects & Activities page with how far along they are.",
     canDelete: true,
     publicPath: (branch) => `/${branch}/projects-and-activities`,
     fields: [
@@ -72,7 +72,7 @@ export const SECTIONS = {
     label: "Activities",
     singular: "activity",
     adding: "Add an activity",
-    intro: "Activities show on your Projects page, and upcoming ones on the national home page too.",
+    intro: "Activities show on your Projects & Activities page, and upcoming ones on the national home page too.",
     canDelete: true,
     publicPath: (branch) => `/${branch}/projects-and-activities`,
     fields: [

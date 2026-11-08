@@ -247,7 +247,7 @@
       ]
     },
     "projects": {
-      "label": "Projects page",
+      "label": "Projects & Activities page",
       "path": "/projects-and-activities",
       "sections": [
         {
