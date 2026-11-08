@@ -224,12 +224,12 @@ export default async function BranchHome({ params }) {
                   <RichText text={f.glimpse_title} />
                 </h2>
               </div>
-              <a href={`/${slug}/projects-and-activities`} className="btn-ghost glimpse-all">{f.glimpse_button}</a>
+              <a href={`/${slug}/projects-and-events`} className="btn-ghost glimpse-all">{f.glimpse_button}</a>
             </div>
             <ul className="pa-grid">
               {glimpse.map((item) => (
                 <li key={item.key}>
-                  <a href={`/${slug}/projects-and-activities#${item.key}`} className="pa-card">
+                  <a href={`/${slug}/projects-and-events#${item.key}`} className="pa-card">
                     <span className="pa-media">
                       {item.cover ? (
                         <img src={item.cover} alt="" loading="lazy" />
@@ -238,7 +238,7 @@ export default async function BranchHome({ params }) {
                           {item.kind === "Project" ? <FolderKanban size={32} strokeWidth={1.25} /> : <CalendarDays size={32} strokeWidth={1.25} />}
                         </span>
                       )}
-                      {item.kind === "Activity" && (
+                      {item.kind === "Event" && (
                         <span className="pa-date" aria-hidden="true"><strong>{item.day.number}</strong><span>{item.day.month}</span></span>
                       )}
                     </span>

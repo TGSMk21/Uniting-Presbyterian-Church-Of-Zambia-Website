@@ -58,7 +58,7 @@ export default async function DashboardHome() {
           <div className="dash-shortcuts">
             <Link href={`${base}/messages/new`} className="btn-ghost" prefetch={false}>Write a daily message</Link>
             <Link href={`${base}/writings/upload`} className="btn-ghost" prefetch={false}>Add sermon files</Link>
-            <Link href={`${base}/activities/new`} className="btn-ghost" prefetch={false}>Add an activity</Link>
+            <Link href={`${base}/activities/new`} className="btn-ghost" prefetch={false}>Add an event</Link>
             <Link href="/dashboard/pages" className="btn-ghost" prefetch={false}>Edit your pages</Link>
           </div>
         </section>

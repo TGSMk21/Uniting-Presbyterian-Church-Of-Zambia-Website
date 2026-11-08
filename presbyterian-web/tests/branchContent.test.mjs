@@ -40,7 +40,7 @@ test("only these sections exist", () => {
 
 test("buttons read properly", () => {
   assert.deepEqual(Object.values(SECTIONS).map((s) => s.adding), [
-    "Add a sermon", "Add a project", "Add an activity", "Add an announcement", "Add a minister", "Add a service time", "Write a daily message",
+    "Add a sermon", "Add a project", "Add an event", "Add an announcement", "Add a minister", "Add a service time", "Write a daily message",
     "Paste a written sermon",
   ]);
 });

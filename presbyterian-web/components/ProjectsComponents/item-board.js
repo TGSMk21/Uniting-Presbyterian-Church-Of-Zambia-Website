@@ -7,7 +7,7 @@ import {
 import RichText from "@/components/UniversalComponents/rich-text";
 import { SLIDE_SECONDS, prefersReducedMotion, shouldAdvance, step } from "@/Utilities/slideshow.mjs";
 
-// Projects and activities as cards that open into an overlay with their photos and
+// Projects and events (once called activities) as cards that open into an overlay with their photos and
 // details (owner's request, 2026-11-08). Each card has its own address (#project-12),
 // so a link from the home page can open it straight away.
 
@@ -50,7 +50,7 @@ function Card({ item, onOpen, muted }) {
       <button type="button" className="pa-card" data-muted={muted || undefined} onClick={() => onOpen(item)}
         aria-haspopup="dialog" id={`card-${item.key}`}>
         <Media item={item}>
-          {item.kind === "Activity" && (
+          {item.kind === "Event" && (
             <span className="pa-date" aria-hidden="true">
               <strong>{item.day.number}</strong>
               <span>{item.day.month}</span>
@@ -248,12 +248,13 @@ export default function ItemBoard({ sections }) {
     if (key) window.setTimeout(() => document.getElementById(`card-${key}`)?.focus(), 0);
   }, [open]);
 
-  // A link such as /chilanga/projects-and-activities#project-12 opens that one, whether
+  // A link such as /chilanga/projects-and-events#project-12 opens that one, whether
   // it's followed from another page or on this one.
   useEffect(() => {
     let timer;
     const openFromAddress = () => {
-      const key = window.location.hash.slice(1);
+      // Links made before "activities" were renamed "events" still open the right card.
+      const key = window.location.hash.slice(1).replace(/^activity-/, "event-");
       const found = key && all.find((item) => item.key === key);
       if (!found) return;
       document.getElementById(`card-${key}`)?.scrollIntoView({ block: "center" });

@@ -13,7 +13,7 @@ export const HISTORY_SECTIONS = [
   { value: "details", label: "Contact details", noun: "the details of" },
   { value: "sermons", label: "Sermons", noun: "the sermon" },
   { value: "projects", label: "Projects", noun: "the project" },
-  { value: "activities", label: "Activities", noun: "the activity" },
+  { value: "activities", label: "Events", noun: "the event" },
   { value: "ministers", label: "Ministers", noun: "the minister" },
   { value: "services", label: "Service times", noun: "the service time" },
   { value: "messages", label: "Daily messages", noun: "the daily message" },

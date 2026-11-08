@@ -1,5 +1,6 @@
-// The public Projects & Activities page (owner's request, 2026-11-08): projects and
-// activities as cards that open into an overlay with their photos and details.
+// The public Projects & Events page (owner's request, 2026-11-08; "activities" were
+// renamed "events" the same day, but keep their name in the code and API): projects and
+// events as cards that open into an overlay with their photos and details.
 import { todayInZambia } from "./branchContent.mjs";
 
 const STATUS = {
@@ -48,8 +49,8 @@ export function projectItem(project) {
 export function activityItem(activity) {
   const pics = photos(activity.photos);
   return {
-    key: `activity-${activity.id}`,
-    kind: "Activity",
+    key: `event-${activity.id}`,
+    kind: "Event",
     title: activity.title,
     date: activity.date,
     day: {

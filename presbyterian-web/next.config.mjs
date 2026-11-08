@@ -14,6 +14,8 @@ const nextConfig = {
     return [
       { source: "/branches", destination: "/find-a-branch", permanent: true },
       { source: "/find-a-church", destination: "/find-a-branch", permanent: true },
+      // "Activities" became "events" (owner's request, 2026-11-08).
+      { source: "/:branch/projects-and-activities", destination: "/:branch/projects-and-events", permanent: true },
     ];
   },
   async headers() {

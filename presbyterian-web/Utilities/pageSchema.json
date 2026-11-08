@@ -227,11 +227,11 @@
           ]
         },
         {
-          "title": "Projects & Activities",
+          "title": "Projects & Events",
           "fields": [
-            { "key": "glimpse_label", "label": "Small heading", "type": "line", "max": 80, "default": "Projects & Activities" },
+            { "key": "glimpse_label", "label": "Small heading", "type": "line", "max": 80, "default": "Projects & Events" },
             { "key": "glimpse_title", "label": "Heading", "type": "title", "max": 120, "default": "Life in *our church*" },
-            { "key": "glimpse_button", "label": "Button to the page", "type": "line", "max": 60, "default": "See all projects & activities" }
+            { "key": "glimpse_button", "label": "Button to the page", "type": "line", "max": 60, "default": "See all projects & events" }
           ]
         },
         {
@@ -319,27 +319,27 @@
       ]
     },
     "projects": {
-      "label": "Projects & Activities page",
-      "path": "/projects-and-activities",
+      "label": "Projects & Events page",
+      "path": "/projects-and-events",
       "sections": [
         {
           "title": "Top of the page",
           "fields": [
-            { "key": "banner_label", "label": "Small heading", "type": "line", "max": 80, "default": "Projects & Activities" },
+            { "key": "banner_label", "label": "Small heading", "type": "line", "max": 80, "default": "Projects & Events" },
             { "key": "banner_title", "label": "Main heading", "type": "title", "max": 120, "default": "Faith in *action*" },
             { "key": "banner_text", "label": "Introduction", "type": "text", "max": 600, "default": "We believe faith is made visible through service. From community development to spiritual growth, every initiative is an opportunity to live out the Gospel and transform lives." }
           ]
         },
         {
-          "title": "Projects and activities",
+          "title": "Projects and events",
           "fields": [
             { "key": "projects_label", "label": "Projects: small heading", "type": "line", "max": 80, "default": "Current Projects" },
             { "key": "projects_title", "label": "Projects: heading", "type": "title", "max": 120, "default": "Making a *difference*" },
-            { "key": "activities_label", "label": "Activities: small heading", "type": "line", "max": 80, "default": "Upcoming Activities" },
-            { "key": "activities_title", "label": "Activities: heading", "type": "title", "max": 120, "default": "What's *happening*" },
-            { "key": "activities_empty", "label": "When no activities are coming up", "type": "text", "max": 300, "default": "Nothing is planned just now. Please check back soon." },
-            { "key": "past_label", "label": "Past activities: small heading", "type": "line", "max": 80, "default": "Past activities" },
-            { "key": "past_title", "label": "Past activities: heading", "type": "title", "max": 120, "default": "Moments *we have shared*" },
+            { "key": "activities_label", "label": "Events: small heading", "type": "line", "max": 80, "default": "Upcoming Events" },
+            { "key": "activities_title", "label": "Events: heading", "type": "title", "max": 120, "default": "What's *happening*" },
+            { "key": "activities_empty", "label": "When no events are coming up", "type": "text", "max": 300, "default": "Nothing is planned just now. Please check back soon." },
+            { "key": "past_label", "label": "Past events: small heading", "type": "line", "max": 80, "default": "Past events" },
+            { "key": "past_title", "label": "Past events: heading", "type": "title", "max": 120, "default": "Moments *we have shared*" },
             { "key": "projects_empty", "label": "When there are no projects", "type": "text", "max": 300, "default": "There are no projects to show yet." }
           ]
         }

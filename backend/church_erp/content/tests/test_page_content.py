@@ -224,7 +224,7 @@ class ValidationTests(PageContentTestCase):
             with self.subTest(bad=bad):
                 self.assertIn("slide2_link", self.errors({"slide2_link": bad}, "alpha", "home"))
                 self.assertIn("slide2_link", self.errors({"slide2_link": bad}, "national", "home", self.root))
-        for good in ("/alpha/projects-and-activities", "/find-a-branch#map", "https://www.youtube.com/@upcz", ""):
+        for good in ("/alpha/projects-and-events", "/find-a-branch#map", "https://www.youtube.com/@upcz", ""):
             with self.subTest(good=good):
                 self.assertEqual(self.save(self.editor, "alpha", "home", {"slide2_link": good}).status_code, 200)
 

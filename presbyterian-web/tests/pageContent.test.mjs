@@ -128,7 +128,7 @@ test("each page knows where it can be viewed", () => {
   assert.equal(viewPath("national", "home"), "/");
   assert.equal(viewPath("national", "contact"), "/contact");
   assert.equal(viewPath("chilanga", "home"), "/chilanga");
-  assert.equal(viewPath("chilanga", "projects"), "/chilanga/projects-and-activities");
+  assert.equal(viewPath("chilanga", "projects"), "/chilanga/projects-and-events");
 });
 
 test("saving clears a tag per scope, and branches have their own", () => {
@@ -181,7 +181,7 @@ const PAGES = [
   ["app/[branch]/page.js", "branch", "home"],
   ["app/[branch]/about/page.js", "branch", "about"],
   ["app/[branch]/sermons/page.js", "branch", "sermons"],
-  ["app/[branch]/projects-and-activities/page.js", "branch", "projects"],
+  ["app/[branch]/projects-and-events/page.js", "branch", "projects"],
 ];
 const LAYOUT_FIELDS = new Set(["footer_text", "email", "phone"]);
 
