@@ -44,3 +44,9 @@ test("the motto takes the theme's colour and stays readable", () => {
   assert.match(css, /\.crest \{[^}]*color: var\(--heading\)/);
   assert.match(css, /\.crest-motto \{[^}]*font-size: max\(9px/);
 });
+
+test("the phone menu shows the crest too", () => {
+  const nav = read("components/UniversalComponents/nav-client.js");
+  assert.match(nav, /<CrestLogo src=\{brand\.logo\} className="drawer-crest" \/>/);
+  assert.match(read("app/globals.css"), /\.drawer-crest \{[^}]*color: rgba\(255, 255, 255/);
+});

@@ -54,10 +54,14 @@ export default function NavClient({ brand, links }) {
       <div className={`drawer-overlay ${drawerOpen ? "open" : ""}`} onClick={closeDrawer} />
       <aside className={`drawer ${drawerOpen ? "open" : ""}`}>
         <div className="drawer-header">
-          <div className="nav-title" style={{ color: "white" }}>
-            {brand.name}
-            {brand.sub && <span style={{ color: "rgba(255,255,255,0.6)" }}>{brand.sub}</span>}
-          </div>
+          <Link href={brand.href} className="nav-brand" onClick={closeDrawer}>
+            {/* The menu is always navy, so the crest's motto is white here. */}
+            <CrestLogo src={brand.logo} className="drawer-crest" />
+            <div className="nav-title" style={{ color: "white" }}>
+              {brand.name}
+              {brand.sub && <span style={{ color: "rgba(255,255,255,0.6)" }}>{brand.sub}</span>}
+            </div>
+          </Link>
           <button className="drawer-close" onClick={closeDrawer} aria-label="Close menu">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18"/>

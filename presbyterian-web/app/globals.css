@@ -236,6 +236,9 @@ body::after {
   text-align: center;
 }
 .crest-own { height: 80px; width: auto; max-width: 160px; object-fit: contain; }
+.drawer-crest { --crest-h: 52px; color: rgba(255, 255, 255, 0.92); }
+.drawer-crest .crest-motto span { display: block; }
+.drawer-header .nav-title { min-width: 0; }
 .footer-crest { --crest-h: 72px; color: rgba(255, 255, 255, 0.92); }
 .footer-crest .crest-motto span { display: block; }
 /* In the top bar the motto sits on two short lines, so the crest stays narrow
