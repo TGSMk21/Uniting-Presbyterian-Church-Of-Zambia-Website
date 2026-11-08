@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import ContentForm from "@/components/DashboardComponents/content-form";
+import ItemPhotos from "@/components/DashboardComponents/item-photos";
 import MessageReview from "@/components/DashboardComponents/message-review";
 import MinisterPhoto from "@/components/DashboardComponents/minister-photo";
 import {
@@ -54,6 +55,7 @@ export default async function EditRow({ params }) {
       {name === "ministers" && (
         <MinisterPhoto branch={branch} id={id} value={data.photo || ""} viewHref={spec.publicPath(branch)} />
       )}
+      {spec.photos && <ItemPhotos branch={branch} name={name} id={id} photos={data.photos} singular={spec.singular} />}
       {name === "messages" && <MessageReview branch={branch} id={id} message={data} />}
       {name === "messages" && <h2 className="dash-subheading dash-edit-heading">Edit the message</h2>}
       <ContentForm

@@ -62,8 +62,9 @@ export async function getProjects(branch) {
   return fetchAPI(`/projects/?branch=${branch}`, cachedFor(sectionTag('projects', branch)))
 }
 
+// Newest day first, so a long history never pushes upcoming activities off the first page.
 export async function getActivities(branch) {
-  return fetchAPI(`/activities/?branch=${branch}`, cachedFor(sectionTag('activities', branch)))
+  return fetchAPI(`/activities/?branch=${branch}&ordering=-date`, cachedFor(sectionTag('activities', branch)))
 }
 
 // Every active branch's activities from today on, soonest first.

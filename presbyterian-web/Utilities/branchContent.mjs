@@ -10,6 +10,10 @@ const ORDER = {
   help: "Lower numbers come first.",
 };
 
+// Photos of a project or activity (owner's request, 2026-11-08): shrunk in the browser,
+// then checked and re-saved by the API, which allows up to 12 each.
+export const ITEM_PHOTOS = { max_side: 1600, transparent: false, most: 12 };
+
 // Uploaded on its own, like page photos.
 export const MINISTER_PHOTO = { key: "photo", label: "Photo", default: "", max_side: 800 };
 
@@ -56,6 +60,7 @@ export const SECTIONS = {
     adding: "Add a project",
     intro: "Projects show on your Projects & Activities page with how far along they are.",
     canDelete: true,
+    photos: true,
     publicPath: (branch) => `/${branch}/projects-and-activities`,
     fields: [
       { key: "title", label: "Title", type: "text", max: 300, required: true },
@@ -74,6 +79,7 @@ export const SECTIONS = {
     adding: "Add an activity",
     intro: "Activities show on your Projects & Activities page, and upcoming ones on the national home page too.",
     canDelete: true,
+    photos: true,
     publicPath: (branch) => `/${branch}/projects-and-activities`,
     fields: [
       { key: "title", label: "Title", type: "text", max: 300, required: true },

@@ -202,3 +202,45 @@ export async function setMessageStatus(branch, id, status) {
   if (failure.signedOut) redirect("/dashboard/login");
   return { error: failure.error || Object.values(failure.fields).join(" ") || "It couldn't be changed right now." };
 }
+
+// Photos of a project or activity (owner's request, 2026-11-08).
+function photoFailure(status, data) {
+  if (status === 401) return { signedOut: true };
+  if (status === 403) return { error: "You can't change this branch's content." };
+  if (status === 404) return { error: "This no longer exists. Please reload the page." };
+  if (status === 400 && data?.image?.length) return { error: data.image.join(" ") };
+  return { error: "The photo couldn't be saved right now. Please try again in a moment." };
+}
+
+function photoAllowed(branch, name, id) {
+  return allowed(branch, name, id) && id !== null && Boolean(section(name)?.photos);
+}
+
+export async function uploadItemPhoto(branch, name, id, formData) {
+  const file = formData.get("image");
+  if (!photoAllowed(branch, name, id) || !(file instanceof Blob)) return { error: "Please choose a photo." };
+  const upload = new FormData();
+  upload.append("image", file, "photo.jpg");
+  const { status, data } = await staffRequest(`${apiPath(branch, name, id)}photos/`, {
+    method: "POST", formData: upload, timeoutMs: UPLOAD_TIMEOUT_MS,
+  });
+  if (status === 201) {
+    for (const tag of tagsToClear(name, branch)) updateTag(tag);
+    return { photos: data.photos };
+  }
+  const failure = photoFailure(status, data);
+  if (failure.signedOut) redirect("/dashboard/login");
+  return failure;
+}
+
+export async function removeItemPhoto(branch, name, id, photoId) {
+  if (!photoAllowed(branch, name, id) || !isRowId(String(photoId))) return { error: "This photo can't be removed." };
+  const { status, data } = await staffRequest(`${apiPath(branch, name, id)}photos/${photoId}/`, { method: "DELETE" });
+  if (status === 200) {
+    for (const tag of tagsToClear(name, branch)) updateTag(tag);
+    return { photos: data.photos };
+  }
+  const failure = photoFailure(status, data);
+  if (failure.signedOut) redirect("/dashboard/login");
+  return failure;
+}
