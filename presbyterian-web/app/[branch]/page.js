@@ -55,7 +55,7 @@ export default async function BranchHome({ params }) {
   return (
     <>
 
-      <HeroCarousel slides={branchSlides(f, { slug, hasServices: services.length > 0 })} label={branch?.name} />
+      <HeroCarousel slides={branchSlides(f, { hasServices: services.length > 0 })} label={branch?.name} />
 
       {f.year_theme_title && (
         <section className="year-theme">

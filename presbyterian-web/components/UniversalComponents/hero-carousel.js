@@ -16,10 +16,8 @@ function watchMotion(onChange) {
 }
 
 function Action({ action }) {
-  const className = action.primary ? "btn-primary" : "hero-slide-quiet";
-  const inner = <>{action.label}{!action.primary && <span aria-hidden="true"> →</span>}</>;
-  if (action.href.startsWith("/")) return <Link href={action.href} className={className}>{inner}</Link>;
-  return <a href={action.href} className={className}>{inner}</a>;
+  if (action.href.startsWith("/")) return <Link href={action.href} className="btn-primary">{action.label}</Link>;
+  return <a href={action.href} className="btn-primary">{action.label}</a>;
 }
 
 export default function HeroCarousel({ slides, label = "Welcome" }) {

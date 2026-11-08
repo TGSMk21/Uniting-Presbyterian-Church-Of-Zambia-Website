@@ -14,14 +14,14 @@ test("with nothing added, each home page has one slide made of its usual heading
   assert.equal(national.length, 1);
   assert.equal(national[0].image, "");
   assert.match(national[0].title, /One family/);
-  assert.deepEqual(national[0].actions.map((a) => a.href), ["/find-a-branch", "#welcome"]);
+  assert.deepEqual(national[0].actions.map((a) => a.href), ["/find-a-branch"]);
 
-  const branch = branchSlides(pageFields("branch", "home", {}, { branchName: "Chilanga" }), { slug: "chilanga", hasServices: true });
+  const branch = branchSlides(pageFields("branch", "home", {}, { branchName: "Chilanga" }), { hasServices: true });
   assert.equal(branch.length, 1);
-  assert.deepEqual(branch[0].actions.map((a) => a.href), ["#schedule", "/chilanga/about"]);
+  assert.deepEqual(branch[0].actions.map((a) => a.href), ["#schedule"]);
   // No service times: no button to them.
-  const quiet = branchSlides(pageFields("branch", "home", {}), { slug: "chilanga", hasServices: false });
-  assert.deepEqual(quiet[0].actions.map((a) => a.href), ["/chilanga/about"]);
+  const quiet = branchSlides(pageFields("branch", "home", {}), { hasServices: false });
+  assert.deepEqual(quiet[0].actions, []);
 });
 
 test("the first slide takes the banner photo; extra slides show once they have a photo or heading", () => {
@@ -43,7 +43,7 @@ test("the first slide takes the banner photo; extra slides show once they have a
 
 test("a button without a usable link isn't shown", () => {
   const f = pageFields("branch", "home", { slide2_title: "T", slide2_button: "Go", slide2_link: "javascript:alert(1)" });
-  assert.deepEqual(branchSlides(f, { slug: "x" })[1].actions, []);
+  assert.deepEqual(branchSlides(f, {})[1].actions, []);
   assert.equal(safeLink("/find-a-branch"), "/find-a-branch");
   assert.equal(safeLink("https://youtube.com/@upcz"), "https://youtube.com/@upcz");
   for (const bad of ["//evil.example", "http://a.b", "data:x", "", "/a b"]) assert.equal(safeLink(bad), null, bad);
@@ -70,6 +70,12 @@ test("both home pages open with the carousel", () => {
   assert.match(carousel, /shouldAdvance\(/);
   assert.match(carousel, /aria-roledescription="carousel"/);
   assert.match(carousel, /Pause slides|Play slides/);
+  // No "Our story" button beside the main one (owner's request, 2026-11-08).
+  assert.doesNotMatch(carousel, /hero-slide-quiet/);
+  for (const kind of ["national", "branch"]) {
+    const keys = schema[kind].home.sections.flatMap((s) => s.fields.map((f) => f.key));
+    assert.ok(!keys.includes("story_link") && !keys.includes("story_button"), kind);
+  }
   // No small label above the heading (owner's request, 2026-11-08).
   assert.doesNotMatch(carousel, /hero-slide-label/);
   for (const kind of ["national", "branch"]) {

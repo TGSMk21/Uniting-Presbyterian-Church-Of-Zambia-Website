@@ -10,8 +10,7 @@
             { "key": "hero_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
             { "key": "hero_title", "label": "Main heading", "type": "title", "max": 120, "default": "One family.\n*Many houses.*" },
             { "key": "hero_text", "label": "Introduction", "type": "text", "max": 400, "default": "Wherever you are in Zambia, there is a branch of our family near you — a place to worship, to grow, and to belong." },
-            { "key": "hero_button", "label": "Button", "type": "line", "max": 40, "default": "Find a branch near you" },
-            { "key": "story_link", "label": "Link beside the button", "type": "line", "max": 40, "default": "Our story" }
+            { "key": "hero_button", "label": "Button", "type": "line", "max": 40, "default": "Find a branch near you" }
           ]
         },
         {
@@ -155,8 +154,7 @@
             { "key": "hero_image", "label": "Banner photo", "type": "image", "max_side": 2000, "store": "branch", "default": "" },
             { "key": "tagline", "label": "Main heading", "type": "title", "max": 200, "store": "branch", "default": "A place of *grace,* belonging & purpose." },
             { "key": "welcome_text", "label": "Welcome message", "type": "text", "max": 1000, "store": "branch", "default": "Whether you are exploring faith or looking for a church home, you are welcome here at {branch}." },
-            { "key": "schedule_button", "label": "Button to the service times", "type": "line", "max": 40, "default": "Join Us This Sunday" },
-            { "key": "story_button", "label": "Button to the About page", "type": "line", "max": 40, "default": "Our Story" }
+            { "key": "schedule_button", "label": "Button to the service times", "type": "line", "max": 40, "default": "Join Us This Sunday" }
           ]
         },
         {

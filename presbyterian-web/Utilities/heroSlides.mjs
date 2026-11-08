@@ -34,26 +34,20 @@ export function nationalSlides(f) {
       image: f.hero_image || "",
       title: f.hero_title,
       text: f.hero_text,
-      actions: [
-        { label: f.hero_button, href: "/find-a-branch", primary: true },
-        { label: f.story_link, href: "#welcome", primary: false },
-      ].filter((a) => a.label),
+      actions: [{ label: f.hero_button, href: "/find-a-branch", primary: true }].filter((a) => a.label),
     },
     ...extraSlides(f),
   ];
 }
 
-export function branchSlides(f, { slug, hasServices = false }) {
+export function branchSlides(f, { hasServices = false }) {
   return [
     {
       key: "hero",
       image: f.hero_image || "",
       title: f.tagline,
       text: f.welcome_text,
-      actions: [
-        hasServices && { label: f.schedule_button, href: "#schedule", primary: true },
-        { label: f.story_button, href: `/${slug}/about`, primary: false },
-      ].filter((a) => a && a.label),
+      actions: [hasServices && { label: f.schedule_button, href: "#schedule", primary: true }].filter((a) => a && a.label),
     },
     ...extraSlides(f),
   ];
