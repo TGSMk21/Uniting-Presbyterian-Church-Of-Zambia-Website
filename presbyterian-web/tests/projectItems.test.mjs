@@ -50,3 +50,24 @@ test("activities split into coming up (soonest first) and past (latest first), b
   assert.deepEqual(upcoming.map((a) => a.key), ["activity-3", "activity-1"]);
   assert.deepEqual(past.map((a) => a.key), ["activity-2", "activity-4"]);
 });
+
+test("the home page's glimpse: upcoming activities first, then projects in progress, three at most", async () => {
+  const { glimpseItems } = await import("../Utilities/projectItems.mjs");
+  const now = new Date("2026-11-08T08:00:00Z");
+  const act = (id, date) => ({ id, title: `A${id}`, date, start_time: "09:00", end_time: "10:00", location: "", details: "" });
+  const proj = (id, status) => ({ id, title: `P${id}`, status, progress: 10, description: "", start_date: "2026-01-01" });
+  const pick = (projects, activities) => glimpseItems(projects, activities, now).map((item) => item.key);
+  assert.deepEqual(pick([proj(1, "ONGOING")], [act(2, "2026-12-01"), act(3, "2026-11-10"), act(4, "2026-10-01")]),
+    ["activity-3", "activity-2", "project-1"]);
+  assert.deepEqual(pick([proj(1, "COMPLETED"), proj(2, "ONGOING"), proj(3, "PENDING")], []), ["project-2", "project-3", "project-1"]);
+  assert.deepEqual(pick([], [act(4, "2026-10-01")]), []);
+  assert.equal(pick([proj(1, "ONGOING"), proj(2, "ONGOING")], [act(5, "2026-11-20"), act(6, "2026-11-21"), act(7, "2026-11-22")]).length, 3);
+});
+
+test("the branch home page shows the glimpse with a link to each one and to the page", async () => {
+  const { readFileSync } = await import("node:fs");
+  const home = readFileSync(new URL("../app/[branch]/page.js", import.meta.url), "utf8");
+  assert.match(home, /glimpseItems\(/);
+  assert.match(home, /projects-and-activities#\$\{item\.key\}/);
+  assert.match(home, /f\.glimpse_button/);
+});

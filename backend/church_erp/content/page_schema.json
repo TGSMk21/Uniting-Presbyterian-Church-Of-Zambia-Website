@@ -170,6 +170,14 @@
           ]
         },
         {
+          "title": "Projects & Activities",
+          "fields": [
+            { "key": "glimpse_label", "label": "Small heading", "type": "line", "max": 80, "default": "Projects & Activities" },
+            { "key": "glimpse_title", "label": "Heading", "type": "title", "max": 120, "default": "Life in *our church*" },
+            { "key": "glimpse_button", "label": "Button to the page", "type": "line", "max": 60, "default": "See all projects & activities" }
+          ]
+        },
+        {
           "title": "Get in touch",
           "fields": [
             { "key": "contact_label", "label": "Small heading", "type": "line", "max": 80, "default": "Get In Touch" },

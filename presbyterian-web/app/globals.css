@@ -2757,3 +2757,12 @@ body::after {
   .pa-dialog[open], .pa-gallery-stage img { animation: none; }
   .pa-media img { transition: none; }
 }
+
+/* ===== A glimpse of Projects & Activities on a branch's home page ===== */
+.glimpse-section { padding: 6rem 2.5rem; }
+.glimpse-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.5rem; margin-bottom: 2.25rem; }
+.glimpse-all { flex: none; }
+a.pa-card { text-decoration: none; }
+.pa-card-kind { color: var(--red); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.pa-media .pa-media-empty { display: grid; }
+@media (max-width: 640px) { .glimpse-section { padding: 4rem 1.25rem; } }

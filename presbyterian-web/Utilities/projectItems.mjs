@@ -74,3 +74,13 @@ export function splitActivities(activities, now = new Date()) {
     past: items.filter((a) => a.date < today).sort((a, b) => b.date.localeCompare(a.date)),
   };
 }
+
+// A few items for the branch home page: upcoming activities (soonest first), then
+// projects in progress, then planned and finished ones. Past activities aren't shown.
+const PROJECT_ORDER = { ongoing: 0, planned: 1, done: 2 };
+
+export function glimpseItems(projects, activities, now = new Date(), most = 3) {
+  const { upcoming } = splitActivities(activities, now);
+  const ranked = (projects || []).map(projectItem).sort((a, b) => PROJECT_ORDER[a.status.tone] - PROJECT_ORDER[b.status.tone]);
+  return [...upcoming, ...ranked].slice(0, most);
+}

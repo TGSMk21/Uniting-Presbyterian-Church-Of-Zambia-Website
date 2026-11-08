@@ -1,6 +1,8 @@
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
 import RichText from "@/components/UniversalComponents/rich-text";
-import { getAnnouncements, getBranch, getDailyMessages, getPageContent } from "@/Services/api";
+import { CalendarDays, FolderKanban } from "lucide-react";
+import { getActivities, getAnnouncements, getBranch, getDailyMessages, getPageContent, getProjects } from "@/Services/api";
+import { glimpseItems } from "@/Utilities/projectItems.mjs";
 import { pageFields } from "@/Utilities/pageContent.mjs";
 import ContactForm from "@/components/UniversalComponents/contact-form";
 import { dateFormat } from "@/Utilities/DateFormatter";
@@ -16,12 +18,15 @@ function announceDate(iso) {
 export default async function BranchHome({ params }) {
   const { branch: slug } = await params;
   // The layout already 404s unknown branches; both requests are deduplicated by Next.
-  const [branch, messages, content, announcementData] = await Promise.all([
+  const [branch, messages, content, announcementData, projectData, activityData] = await Promise.all([
     getBranch(slug),
     getDailyMessages(slug),
     getPageContent(slug),
     getAnnouncements(slug),
+    getProjects(slug),
+    getActivities(slug),
   ]);
+  const glimpse = glimpseItems(projectData?.results, activityData?.results);
   const announcements = announcementData?.results || [];
   // The tagline, welcome text, year theme and photos are stored on the branch itself.
   const f = pageFields(
@@ -236,6 +241,49 @@ export default async function BranchHome({ params }) {
                 </ScrollReveal>
               ))}
             </div>
+          </div>
+        </section>
+      )}
+
+      {glimpse.length > 0 && (
+        <section className="glimpse-section" aria-labelledby="glimpse-title">
+          <div className="section-inner">
+            <div className="glimpse-head">
+              <div>
+                <div className="section-label">{f.glimpse_label}</div>
+                <h2 id="glimpse-title" className="section-title" style={{ fontFamily: "var(--font-playfair)" }}>
+                  <RichText text={f.glimpse_title} />
+                </h2>
+              </div>
+              <a href={`/${slug}/projects-and-activities`} className="btn-ghost glimpse-all">{f.glimpse_button}</a>
+            </div>
+            <ul className="pa-grid">
+              {glimpse.map((item) => (
+                <li key={item.key}>
+                  <a href={`/${slug}/projects-and-activities#${item.key}`} className="pa-card">
+                    <span className="pa-media">
+                      {item.cover ? (
+                        <img src={item.cover} alt="" loading="lazy" />
+                      ) : (
+                        <span className="pa-media-empty" aria-hidden="true">
+                          {item.kind === "Project" ? <FolderKanban size={32} strokeWidth={1.25} /> : <CalendarDays size={32} strokeWidth={1.25} />}
+                        </span>
+                      )}
+                      {item.kind === "Activity" && (
+                        <span className="pa-date" aria-hidden="true"><strong>{item.day.number}</strong><span>{item.day.month}</span></span>
+                      )}
+                    </span>
+                    <span className="pa-card-body">
+                      <span className="pa-card-kind">{item.kind === "Project" ? item.status.text : "Coming up"}</span>
+                      <span className="pa-card-title">{item.title}</span>
+                      <span className="pa-card-meta">
+                        {item.kind === "Project" ? `${item.when} · ${item.progress}% done` : [item.day.weekday, item.time, item.location].filter(Boolean).join(" · ")}
+                      </span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       )}
