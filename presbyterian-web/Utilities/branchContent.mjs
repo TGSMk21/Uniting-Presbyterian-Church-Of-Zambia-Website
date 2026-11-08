@@ -84,6 +84,26 @@ export const SECTIONS = {
       { key: "details", label: "Details", type: "textarea", max: LONG_TEXT, required: true },
     ],
   },
+  // General announcements on the branch's home page (owner's request, 2026-11-08).
+  announcements: {
+    summary: "Notices on your home page, for as long as you choose",
+    sorts: [{ value: "", label: "Pinned, then newest" }, { value: "starts_on", label: "Earliest first" }, { value: "title", label: "Title A–Z" }],
+    label: "Announcements",
+    singular: "announcement",
+    adding: "Add an announcement",
+    intro: "Announcements show on your home page from their first day until their last day. Pinned ones stay at the top.",
+    canDelete: true,
+    publicPath: (branch) => `/${branch}#announcements`,
+    fields: [
+      { key: "title", label: "Title", type: "text", max: 200, required: true },
+      { key: "body", label: "Announcement", type: "textarea", max: 2000, required: true,
+        help: "Leave an empty line between paragraphs." },
+      { key: "starts_on", label: "First day on the website", type: "date", required: true },
+      { key: "ends_on", label: "Last day on the website", type: "date",
+        help: "Leave empty to keep it up until you remove it." },
+      { key: "is_pinned", label: "Keep it at the top", type: "checkbox" },
+    ],
+  },
   ministers: {
     summary: "Ministers, their photos and AI draft settings",
     label: "Ministers",
@@ -179,6 +199,7 @@ export const NEW_DEFAULTS = {
   sermons: {},
   projects: { status: "PENDING", progress: "0" },
   activities: {},
+  announcements: { is_pinned: false },
   ministers: { order: "0" },
   services: { order: "0" },
   messages: { status: "pending_review" },
@@ -199,6 +220,7 @@ export function ministerChoices(ministers = []) {
 export function newRowDefaults(name, { ministers = [], now = new Date() } = {}) {
   const firstMinister = ministers[0] ? String(ministers[0].id) : "";
   if (name === "writings") return { ...NEW_DEFAULTS.writings, minister: firstMinister };
+  if (name === "announcements") return { ...NEW_DEFAULTS.announcements, starts_on: todayInZambia(now) };
   if (name !== "messages") return NEW_DEFAULTS[name];
   return { ...NEW_DEFAULTS.messages, date: todayInZambia(now), minister: firstMinister };
 }
@@ -345,6 +367,11 @@ export function rowSummary(name, row) {
     // The status is shown as a label beside it (rowBadges).
     return [day, row.minister_name].filter(Boolean).join(" · ");
   }
+  if (name === "announcements") {
+    const short = (iso, year) => formatted(new Date(`${iso}T12:00:00Z`), { day: "numeric", month: "short", ...(year && { year: "numeric" }), timeZone: "UTC" });
+    if (!row.ends_on) return `From ${short(row.starts_on, true)}`;
+    return `${short(row.starts_on, false)} – ${short(row.ends_on, true)}`;
+  }
   if (name === "writings") {
     const day = row.preached_on ? formatted(new Date(`${row.preached_on}T12:00:00Z`), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
     const words = `${new Intl.NumberFormat("en-GB").format(row.word_count)} ${row.word_count === 1 ? "word" : "words"}`;
@@ -365,7 +392,14 @@ export function rowSummary(name, row) {
 }
 
 // Short coloured labels beside a row in a list (Task 7.3).
-export function rowBadges(name, row) {
+export function rowBadges(name, row, now = new Date()) {
+  if (name === "announcements") {
+    const today = todayInZambia(now);
+    const badges = row.is_pinned ? [{ text: "Pinned", tone: "warning" }] : [];
+    if (row.starts_on > today) return [...badges, { text: "Starts later", tone: "neutral" }];
+    if (row.ends_on && row.ends_on < today) return [{ text: "Ended", tone: "neutral" }];
+    return [...badges, { text: "Showing", tone: "success" }];
+  }
   if (name === "messages") {
     if (row.status === "published") return [{ text: "Published", tone: "success" }];
     if (row.status === "rejected") return [{ text: "Turned down", tone: "neutral" }];

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Sermon, Project, Activity
+from .models import Activity, Announcement, Project, Sermon
 
 
 class SermonSerializer(serializers.ModelSerializer):
@@ -13,6 +13,14 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = '__all__'
+
+
+class AnnouncementSerializer(serializers.ModelSerializer):
+    """What the public sees of an announcement."""
+
+    class Meta:
+        model = Announcement
+        fields = ['id', 'title', 'body', 'starts_on', 'ends_on', 'is_pinned']
 
 
 class ActivitySerializer(serializers.ModelSerializer):

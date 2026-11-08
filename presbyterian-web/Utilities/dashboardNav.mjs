@@ -12,6 +12,7 @@ export function navGroups(staff) {
     const base = `/dashboard/content/${encodeURIComponent(branch)}`;
     content.push(
       { href: `${base}/messages`, label: "Daily messages", icon: "messages" },
+      { href: `${base}/announcements`, label: "Announcements", icon: "announcements" },
       { href: `${base}/writings`, label: "Written sermons", icon: "writings" },
       { href: "/dashboard/content", label: "Branch content", icon: "content" },
       { href: `${base}/media`, label: "Media library", icon: "media" },

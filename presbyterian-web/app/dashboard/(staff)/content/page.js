@@ -1,18 +1,18 @@
 import Link from "next/link";
 import {
-  BookOpen, CalendarDays, Church, Clock, FolderKanban, Image as ImageIcon, MapPin, MessageSquareText, PlaySquare,
+  BookOpen, CalendarDays, Church, Clock, FolderKanban, Image as ImageIcon, MapPin, Megaphone, MessageSquareText, PlaySquare,
 } from "lucide-react";
 import { getBranches } from "@/Services/api";
 import { SECTIONS, manageableBranches } from "@/Utilities/branchContent.mjs";
 import { requireStaff } from "../../session";
 
 const ICONS = {
-  sermons: PlaySquare, projects: FolderKanban, activities: CalendarDays, ministers: Church, services: Clock,
+  sermons: PlaySquare, projects: FolderKanban, activities: CalendarDays, announcements: Megaphone, ministers: Church, services: Clock,
   messages: MessageSquareText, writings: BookOpen, media: ImageIcon, details: MapPin,
 };
 // The sections grouped by what they're for (Task 7.3).
 const GROUPS = [
-  { label: "On your website", items: ["sermons", "projects", "activities", "ministers", "services", "details"] },
+  { label: "On your website", items: ["announcements", "sermons", "projects", "activities", "ministers", "services", "details"] },
   { label: "Daily messages", items: ["messages", "writings"] },
   { label: "Private to your branch", items: ["media"] },
 ];

@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { EXPORT_SECTIONS, exportApiPath, exportHref, safeDisposition } from "../Utilities/csvExport.mjs";
 
 test("every section can be exported, and nothing else", () => {
-  assert.deepEqual(EXPORT_SECTIONS, ["sermons", "projects", "activities", "ministers", "services", "messages", "writings", "media"]);
+  assert.deepEqual(EXPORT_SECTIONS, ["sermons", "projects", "activities", "announcements", "ministers", "services", "messages", "writings", "media"]);
   assert.equal(exportApiPath("chilanga", "projects"), "/staff/chilanga/projects/export/");
   assert.equal(exportApiPath("chilanga", "pages"), null);
   assert.equal(exportApiPath("chilanga", "toString"), null);

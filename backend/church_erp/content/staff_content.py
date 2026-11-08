@@ -25,7 +25,7 @@ from church_erp.accounts.auth_views import IsStaff
 from church_erp.core.changes import changed, editable_names, record, row_title
 from church_erp.core.models import Branch, Minister, ServiceTime
 
-from .models import Activity, Project, Sermon
+from .models import Activity, Announcement, Project, Sermon
 from .page_content import can_edit
 from .page_images import delete_quietly, prepared_image
 from .staff_export import EXPORT_LIMIT, csv_response, export_filename
@@ -130,6 +130,22 @@ class ActivitySerializer(serializers.ModelSerializer):
         end = attrs.get("end_time", getattr(self.instance, "end_time", None))
         if start and end and end <= start:
             raise serializers.ValidationError({"end_time": ["The end time must be after the start time."]})
+        return attrs
+
+
+class AnnouncementStaffSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(max_length=200)
+    body = serializers.CharField(max_length=2000)
+
+    class Meta:
+        model = Announcement
+        fields = ["id", "title", "body", "starts_on", "ends_on", "is_pinned"]
+
+    def validate(self, attrs):
+        start = attrs.get("starts_on", getattr(self.instance, "starts_on", None))
+        end = attrs.get("ends_on", getattr(self.instance, "ends_on", None))
+        if start and end and end < start:
+            raise serializers.ValidationError({"ends_on": ["The last day can't be before the first day."]})
         return attrs
 
 
@@ -385,3 +401,10 @@ class BranchDetailsView(APIView):
             record(request.user, "details", "changed", branch=self.branch, target=self.branch.name,
                    target_id=self.branch.pk, changes=changes)
         return Response(serializer.data)
+
+
+class StaffAnnouncementViewSet(BranchContentViewSet):
+    """General announcements on the branch's home page (owner's request, 2026-11-08)."""
+    queryset = Announcement.objects.order_by("-is_pinned", "-starts_on", "-pk")
+    serializer_class = AnnouncementStaffSerializer
+    ordering_fields = ["starts_on", "title"]

@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter, SimpleRouter
 from church_erp.core.views import BranchViewSet, MinisterViewSet
-from church_erp.content.views import SermonViewSet, ProjectViewSet, ActivityViewSet
+from church_erp.content.views import ActivityViewSet, AnnouncementViewSet, ProjectViewSet, SermonViewSet
 from church_erp.media_library.views import MediaAssetViewSet
 from church_erp.ai_messages.views import DailyMessageViewSet
 from church_erp.ai_messages.staff_messages import StaffMessageViewSet
@@ -18,6 +18,7 @@ from church_erp.content.page_content_views import PageContentPageView, PageConte
 from church_erp.content.staff_content import (
     BranchDetailsView,
     StaffActivityViewSet,
+    StaffAnnouncementViewSet,
     StaffMinisterViewSet,
     StaffProjectViewSet,
     StaffSermonViewSet,
@@ -30,6 +31,7 @@ router.register(r'ministers', MinisterViewSet)
 router.register(r'sermons', SermonViewSet)
 router.register(r'projects', ProjectViewSet)
 router.register(r'activities', ActivityViewSet)
+router.register(r'announcements', AnnouncementViewSet)
 router.register(r'media', MediaAssetViewSet)
 router.register(r'daily-messages', DailyMessageViewSet)
 router.register(r'giving-records', GivingRecordViewSet)
@@ -39,6 +41,7 @@ staff_router = SimpleRouter()
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/sermons', StaffSermonViewSet, basename='staff-sermons')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/projects', StaffProjectViewSet, basename='staff-projects')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/activities', StaffActivityViewSet, basename='staff-activities')
+staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/announcements', StaffAnnouncementViewSet, basename='staff-announcements')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/ministers', StaffMinisterViewSet, basename='staff-ministers')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/services', StaffServiceTimeViewSet, basename='staff-services')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/messages', StaffMessageViewSet, basename='staff-messages')

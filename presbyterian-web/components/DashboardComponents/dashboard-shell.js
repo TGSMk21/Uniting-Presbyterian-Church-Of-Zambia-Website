@@ -5,12 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpen, Building2, FileText, History, Image as ImageIcon, KeyRound, Layers, LayoutDashboard,
-  LogOut, Menu, MessageSquareText, UserPlus, Users, X,
+  LogOut, Megaphone, Menu, MessageSquareText, UserPlus, Users, X,
 } from "lucide-react";
 import { activeHref } from "@/Utilities/dashboardNav.mjs";
 
 const ICONS = {
-  overview: LayoutDashboard, messages: MessageSquareText, writings: BookOpen, content: Layers, media: ImageIcon,
+  overview: LayoutDashboard, messages: MessageSquareText, announcements: Megaphone, writings: BookOpen, content: Layers, media: ImageIcon,
   pages: FileText, staff: Users, requests: UserPlus, branches: Building2, history: History,
 };
 

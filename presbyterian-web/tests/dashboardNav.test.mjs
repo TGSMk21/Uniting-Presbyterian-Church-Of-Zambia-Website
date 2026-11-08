@@ -16,6 +16,7 @@ test("a branch's staff go straight to their own branch's sections", () => {
   assert.deepEqual(hrefs(editor), [
     "/dashboard",
     "/dashboard/content/chilanga/messages",
+    "/dashboard/content/chilanga/announcements",
     "/dashboard/content/chilanga/writings",
     "/dashboard/content",
     "/dashboard/content/chilanga/media",

@@ -1,11 +1,15 @@
+from django.db.models import Q
+from django.utils import timezone
 from rest_framework import permissions, viewsets
 from rest_framework.exceptions import NotFound
+
 from church_erp.core.api_mixins import BranchScopedViewSetMixin
-from church_erp.content.models import Sermon, Project, Activity
+from church_erp.content.models import Activity, Announcement, Project, Sermon
 from church_erp.content.serializers import (
     SermonSerializer,
     ProjectSerializer,
     ActivitySerializer,
+    AnnouncementSerializer,
 )
 
 
@@ -42,3 +46,14 @@ class ActivityViewSet(BranchScopedViewSetMixin, viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.AllowAny]
     filterset_fields = {'date': ['gte', 'lte']}  # e.g. ?date__gte=2026-11-02 for upcoming
 
+
+
+class AnnouncementViewSet(BranchScopedViewSetMixin, viewsets.ReadOnlyModelViewSet):
+    """Announcements whose dates are current, pinned first (?branch=<slug>)."""
+    queryset = Announcement.objects.filter(branch__is_active=True)
+    serializer_class = AnnouncementSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        today = timezone.localdate()
+        return super().get_queryset().filter(starts_on__lte=today).filter(Q(ends_on__isnull=True) | Q(ends_on__gte=today))

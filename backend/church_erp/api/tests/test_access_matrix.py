@@ -12,7 +12,7 @@ from rest_framework.test import APITestCase
 
 from church_erp.accounts.models import AccessRequest, User
 from church_erp.ai_messages.models import DailyMessage, SermonDocument
-from church_erp.content.models import Activity, Project, Sermon
+from church_erp.content.models import Activity, Announcement, Project, Sermon
 from church_erp.core.models import Minister, ServiceTime
 from church_erp.core.tests.helpers import make_branch
 from church_erp.media_library.models import MediaAsset
@@ -23,6 +23,7 @@ SECTIONS = {
     "ministers": ["photo"],
     "media": ["tags"],
     "writings": ["upload"],
+    "announcements": [],
 }
 POST_EXTRAS = {"upload"}
 PEOPLE_ACTIONS = ["suspend", "restore", "reset-password", "reset-two-factor"]
@@ -82,6 +83,7 @@ class AccessMatrixTests(APITestCase):
             "messages": DailyMessage.objects.create(minister=minister, title="B", message="m", date=date(2026, 11, 1)),
             "media": MediaAsset.objects.create(branch=cls.beta, file="media_library/b.pdf", file_type="document", title="B"),
             "writings": SermonDocument.objects.create(minister=minister, title="B", text="Words"),
+            "announcements": Announcement.objects.create(branch=cls.beta, title="B", body="b", starts_on=date(2026, 11, 1)),
         }
 
     def setUp(self):

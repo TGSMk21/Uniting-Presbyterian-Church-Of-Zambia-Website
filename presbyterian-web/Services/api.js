@@ -73,6 +73,11 @@ export async function getUpcomingActivities() {
   return fetchAPI(`/activities/?date__gte=${today}`, { next: { revalidate: 3600, tags: [UPCOMING_ACTIVITIES_TAG] } })
 }
 
+// General announcements whose dates are current, pinned first.
+export async function getAnnouncements(branch) {
+  return fetchAPI(`/announcements/?branch=${branch}`, cachedFor(sectionTag('announcements', branch)))
+}
+
 export async function getMinisters(branch) {
   return fetchAPI(`/ministers/?branch=${branch}`, cachedFor(sectionTag('ministers', branch)))
 }

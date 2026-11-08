@@ -1,6 +1,6 @@
 import { ScrollReveal } from "@/components/UniversalComponents/scroll-reveal";
 import RichText from "@/components/UniversalComponents/rich-text";
-import { getBranch, getDailyMessages, getPageContent } from "@/Services/api";
+import { getAnnouncements, getBranch, getDailyMessages, getPageContent } from "@/Services/api";
 import { pageFields } from "@/Utilities/pageContent.mjs";
 import ContactForm from "@/components/UniversalComponents/contact-form";
 import { dateFormat } from "@/Utilities/DateFormatter";
@@ -8,14 +8,21 @@ import { formatTime } from "@/Utilities/timeFormat";
 
 export const revalidate = 3600;
 
+function announceDate(iso) {
+  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
+    .format(new Date(`${iso}T12:00:00Z`));
+}
+
 export default async function BranchHome({ params }) {
   const { branch: slug } = await params;
   // The layout already 404s unknown branches; both requests are deduplicated by Next.
-  const [branch, messages, content] = await Promise.all([
+  const [branch, messages, content, announcementData] = await Promise.all([
     getBranch(slug),
     getDailyMessages(slug),
     getPageContent(slug),
+    getAnnouncements(slug),
   ]);
+  const announcements = announcementData?.results || [];
   // The tagline, welcome text, year theme and photos are stored on the branch itself.
   const f = pageFields(
     "branch",
@@ -109,6 +116,33 @@ export default async function BranchHome({ params }) {
           </div>
         </section>
       </ScrollReveal>
+
+      {announcements.length > 0 && (
+        <section className="announce-section" id="announcements">
+          <div className="section-inner announce-layout">
+            <div className="announce-head">
+              <div className="section-label">{f.announcements_label}</div>
+              <h2 className="section-title" style={{ fontFamily: "var(--font-playfair)" }}>
+                <RichText text={f.announcements_title} />
+              </h2>
+            </div>
+            <ul className="announce-list">
+              {announcements.map((item) => (
+                <li key={item.id} className="announce-card" data-pinned={item.is_pinned || undefined}>
+                  <div className="announce-meta">
+                    {item.is_pinned && <span className="announce-pin">Pinned</span>}
+                    <time dateTime={item.starts_on}>{announceDate(item.starts_on)}</time>
+                  </div>
+                  <h3 className="announce-title">{item.title}</h3>
+                  {item.body.split(/\n\s*\n/).map((paragraph, i) => (
+                    <p key={i} className="announce-body">{paragraph}</p>
+                  ))}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {msg && (
         <section className="devotion">

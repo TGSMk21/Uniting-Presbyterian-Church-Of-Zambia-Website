@@ -2512,3 +2512,41 @@ body::after {
 
 /* The crest in the navy footer (owner's request, 2026-11-08). */
 .footer-logo { height: 88px; width: auto; object-fit: contain; }
+
+/* ===== Announcements on a branch's home page (owner's request, 2026-11-08) ===== */
+.announce-section { padding: 6rem 2.5rem; background: var(--warm-white); border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+.announce-layout { display: grid; gap: 2.5rem; }
+.announce-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
+.announce-card {
+  padding: 1.5rem 1.75rem;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.announce-card[data-pinned] { border-left: 3px solid var(--red); }
+.announce-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+.announce-pin {
+  padding: 0.15rem 0.6rem;
+  border-radius: 100px;
+  background: rgba(200, 16, 46, 0.08);
+  color: var(--red);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.announce-title { margin-top: 0.5rem; font-size: 1.2rem; font-weight: 600; color: var(--navy); line-height: 1.35; }
+.announce-body { margin-top: 0.6rem; color: var(--text-soft); line-height: 1.75; white-space: pre-line; }
+@media (min-width: 900px) {
+  .announce-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: start; }
+  .announce-head { position: sticky; top: 7rem; }
+}
+@media (max-width: 640px) { .announce-section { padding: 4rem 1.25rem; } .announce-card { padding: 1.25rem; } }

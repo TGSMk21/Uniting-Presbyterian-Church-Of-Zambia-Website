@@ -96,3 +96,22 @@ class PageContent(models.Model):
 
     def __str__(self):
         return f"{self.branch or 'National'}: {self.page}"
+
+
+class Announcement(models.Model):
+    """A general announcement on a branch's home page (owner's request, 2026-11-08).
+
+    Shown from `starts_on` until `ends_on` (or until removed); pinned ones first."""
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='announcements')
+    title = models.CharField(max_length=200)
+    body = models.TextField(max_length=2000)
+    starts_on = models.DateField(help_text="Shown on the website from this day")
+    ends_on = models.DateField(null=True, blank=True, help_text="Taken off the website after this day; empty keeps it up")
+    is_pinned = models.BooleanField(default=False, help_text="Keep it at the top")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-is_pinned', '-starts_on', '-created_at']
+
+    def __str__(self):
+        return self.title

@@ -149,6 +149,13 @@
           ]
         },
         {
+          "title": "Announcements",
+          "fields": [
+            { "key": "announcements_label", "label": "Small heading", "type": "line", "max": 80, "default": "Announcements" },
+            { "key": "announcements_title", "label": "Heading", "type": "title", "max": 120, "default": "News from *our church*" }
+          ]
+        },
+        {
           "title": "Daily devotion",
           "fields": [
             { "key": "devotion_label", "label": "Small heading", "type": "line", "max": 80, "default": "Daily Devotion" },
