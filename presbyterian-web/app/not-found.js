@@ -9,7 +9,7 @@ export default function NotFound() {
           We couldn&apos;t find <em>that page.</em>
         </h1>
         <p className="nat-lede">
-          The branch or page you&apos;re looking for doesn&apos;t exist — but
+          The branch or page you&apos;re looking for doesn&apos;t exist, but
           you&apos;re always welcome at one of our homes.
         </p>
         <div className="nat-hero-actions" style={{ justifyContent: "center" }}>

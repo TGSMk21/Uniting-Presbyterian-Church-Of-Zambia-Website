@@ -12,7 +12,7 @@ export async function generateMetadata({ params }) {
     title: `${data.name} — Uniting Presbyterian Church In Zambia`,
     description: data.address
       ? `${data.name}, ${data.address}. A branch of the Uniting Presbyterian Church In Zambia.`
-      : `${data.name} — a branch of the Uniting Presbyterian Church In Zambia.`,
+      : `${data.name}, a branch of the Uniting Presbyterian Church In Zambia.`,
   };
 }
 

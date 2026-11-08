@@ -2,6 +2,7 @@
 // renamed "events" the same day, but keep their name in the code and API): projects and
 // events as cards that open into an overlay with their photos and details.
 import { todayInZambia } from "./branchContent.mjs";
+import { plainDashes } from "./plainText.mjs";
 
 const STATUS = {
   ONGOING: { text: "In progress", tone: "ongoing" },
@@ -14,7 +15,7 @@ const format = (iso, options) => new Intl.DateTimeFormat("en-GB", { timeZone: "U
 const monthYear = (iso) => format(iso, { month: "short", year: "numeric" });
 
 function paragraphs(text) {
-  return String(text || "").split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
+  return plainDashes(text).split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
 }
 
 function photos(list) {
@@ -36,7 +37,7 @@ export function projectItem(project) {
   return {
     key: `project-${project.id}`,
     kind: "Project",
-    title: project.title,
+    title: plainDashes(project.title),
     status: STATUS[project.status] || STATUS.PENDING,
     progress: Math.min(100, Math.max(0, Number(project.progress) || 0)),
     when,
@@ -51,7 +52,7 @@ export function activityItem(activity) {
   return {
     key: `event-${activity.id}`,
     kind: "Event",
-    title: activity.title,
+    title: plainDashes(activity.title),
     date: activity.date,
     day: {
       number: format(activity.date, { day: "numeric" }),

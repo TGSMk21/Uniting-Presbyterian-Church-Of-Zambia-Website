@@ -1,3 +1,4 @@
+import { plainDashes } from "./plainText.mjs";
 // Editable page wording. pageSchema.json lists every field with today's wording as
 // its default, and the backend keeps an identical copy (a test there compares them).
 // Only changes are stored, so pages always have something to show.
@@ -29,7 +30,7 @@ export function pageFields(kind, page, overrides, { branchName } = {}) {
   return Object.fromEntries(
     pageFieldSpecs(kind, page).map(({ key, default: original }) => [
       key,
-      (overrides?.[key] || original).replaceAll("{branch}", name),
+      plainDashes((overrides?.[key] || original).replaceAll("{branch}", name)),
     ]),
   );
 }

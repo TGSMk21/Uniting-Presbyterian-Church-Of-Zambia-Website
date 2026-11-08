@@ -9,6 +9,7 @@ import { pageFields } from "@/Utilities/pageContent.mjs";
 import ContactForm from "@/components/UniversalComponents/contact-form";
 import { dateFormat } from "@/Utilities/DateFormatter";
 import { formatTime } from "@/Utilities/timeFormat";
+import { plainDashes } from "@/Utilities/plainText.mjs";
 
 export const revalidate = 3600;
 
@@ -83,7 +84,7 @@ export default async function BranchHome({ params }) {
             <p className="daily-verse-text" style={{ fontFamily: "var(--font-cormorant)" }}>
               {verse.text}
             </p>
-            <p className="daily-verse-ref">{verse.ref && `— ${verse.ref}`}</p>
+            <p className="daily-verse-ref">{verse.ref}</p>
           </div>
         </section>
       </ScrollReveal>
@@ -107,8 +108,8 @@ export default async function BranchHome({ params }) {
                   {item.is_pinned && <span className="announce-pin">Pinned</span>}
                   <time dateTime={item.starts_on}>{announceDate(item.starts_on)}</time>
                 </div>
-                <h3 className="announce-title">{item.title}</h3>
-                {item.body.split(/\n\s*\n/).map((paragraph, i) => (
+                <h3 className="announce-title">{plainDashes(item.title)}</h3>
+                {plainDashes(item.body).split(/\n\s*\n/).map((paragraph, i) => (
                   <p key={i} className="announce-body">{paragraph}</p>
                 ))}
               </li>
@@ -135,9 +136,9 @@ export default async function BranchHome({ params }) {
                   <div>
                     <div className="devotion-badge">{f.devotion_label}</div>
                     <h3 className="devotion-title" style={{ fontFamily: "var(--font-playfair)" }}>
-                      {msg.title}
+                      {plainDashes(msg.title)}
                     </h3>
-                    <p className="devotion-ref">{msg.reference_verse && `— ${msg.reference_verse}`}</p>
+                    <p className="devotion-ref">{msg.reference_verse}</p>
                   </div>
                   {formattedDate && (
                     <div className="devotion-date-block">
@@ -147,7 +148,7 @@ export default async function BranchHome({ params }) {
                   )}
                 </div>
                 <div className="devotion-body">
-                  {msg.message.split(/\n\s*\n/).map((paragraph, i) => (
+                  {plainDashes(msg.message).split(/\n\s*\n/).map((paragraph, i) => (
                     <p key={i}>{paragraph}</p>
                   ))}
                   {msg.minister_name && (

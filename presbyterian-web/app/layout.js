@@ -5,7 +5,7 @@ import { themeScript } from "@/Utilities/theme.mjs";
 
 export const metadata = {
   title: "Uniting Presbyterian Church In Zambia",
-  description: "One church, many homes — a family of branches across Zambia, rooted in the Gospel.",
+  description: "One church, many homes. A family of branches across Zambia, rooted in the Gospel.",
 };
 
 export default function RootLayout({ children }) {

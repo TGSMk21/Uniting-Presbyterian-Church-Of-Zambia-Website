@@ -9,7 +9,7 @@
           "fields": [
             { "key": "hero_image", "label": "Banner photo", "type": "image", "max_side": 2000, "default": "" },
             { "key": "hero_title", "label": "Main heading", "type": "title", "max": 120, "default": "One family.\n*Many houses.*" },
-            { "key": "hero_text", "label": "Introduction", "type": "text", "max": 400, "default": "Wherever you are in Zambia, there is a branch of our family near you — a place to worship, to grow, and to belong." },
+            { "key": "hero_text", "label": "Introduction", "type": "text", "max": 400, "default": "Wherever you are in Zambia, there is a branch of our family near you, a place to worship, to grow, and to belong." },
             { "key": "hero_button", "label": "Button", "type": "line", "max": 40, "default": "Find a branch near you" }
           ]
         },
@@ -47,7 +47,7 @@
           "title": "Welcome",
           "fields": [
             { "key": "welcome_label", "label": "Small heading", "type": "line", "max": 80, "default": "Welcome home" },
-            { "key": "welcome_text", "label": "Message", "type": "title", "max": 800, "default": "Faith is not a building you visit on a Sunday — it is a family you belong to every day. Across Zambia, our branches gather in cities and villages, in sanctuaries and living rooms, to worship, to serve, and to walk together. *And there is always room for one more.*" }
+            { "key": "welcome_text", "label": "Message", "type": "title", "max": 800, "default": "Faith is not a building you visit on a Sunday. It is a family you belong to every day. Across Zambia, our branches gather in cities and villages, in sanctuaries and living rooms, to worship, to serve, and to walk together. *And there is always room for one more.*" }
           ]
         },
         {
@@ -74,9 +74,9 @@
           ]
         },
         {
-          "title": "Nationwide events",
+          "title": "Events",
           "fields": [
-            { "key": "events_label", "label": "Small heading", "type": "line", "max": 80, "default": "Nationwide events" },
+            { "key": "events_label", "label": "Small heading", "type": "line", "max": 80, "default": "Events" },
             { "key": "events_title", "label": "Heading", "type": "title", "max": 120, "default": "Gather *together*" },
             { "key": "events_text", "label": "Introduction", "type": "text", "max": 400, "default": "Across the year, we come together as one family for conferences, assemblies, and celebrations." },
             { "key": "events_empty", "label": "When nothing is coming up", "type": "text", "max": 300, "default": "Nothing is planned just now. New events appear here as branches add them, so please check back soon." }
@@ -116,7 +116,7 @@
           "fields": [
             { "key": "banner_label", "label": "Small heading", "type": "line", "max": 80, "default": "Contact Us" },
             { "key": "banner_title", "label": "Main heading", "type": "title", "max": 120, "default": "We'd love to *hear* from you" },
-            { "key": "banner_text", "label": "Introduction", "type": "text", "max": 400, "default": "A question, a prayer request, or simply a hello — reach out and we'll be in touch." }
+            { "key": "banner_text", "label": "Introduction", "type": "text", "max": 400, "default": "A question, a prayer request, or simply a hello. Reach out and we'll be in touch." }
           ]
         },
         {
