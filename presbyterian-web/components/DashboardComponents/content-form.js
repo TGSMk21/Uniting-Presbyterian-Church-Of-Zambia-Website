@@ -99,7 +99,7 @@ export default function ContentForm({ branch, name, id, values, choices = {} }) 
 
   return (
     <>
-      <form action={action} className="dash-editor" {...unsaved}>
+      <form action={action} className="dash-editor" {...unsaved.handlers}>
         <div className="dash-section">
           {fields.map((field) => (
             <Box key={field.key} field={field} value={shown[field.key] ?? ""} error={state.fields[field.key]} choices={choices} />
@@ -118,6 +118,7 @@ export default function ContentForm({ branch, name, id, values, choices = {} }) 
         </div>
       </form>
       {!isNew && spec.canDelete && <DeleteButton branch={branch} name={name} id={id} />}
+      {unsaved.dialog}
     </>
   );
 }

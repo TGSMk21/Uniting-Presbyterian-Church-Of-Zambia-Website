@@ -49,7 +49,7 @@ export default function PageEditor({ scope, page, sections, values, viewHref }) 
   const hasErrors = state.error || Object.keys(state.fields).length > 0;
 
   return (
-    <form action={action} className="dash-editor" {...unsaved}>
+    <form action={action} className="dash-editor" {...unsaved.handlers}>
       {sections.map((section) => (
         <fieldset key={section.title} className="dash-section">
           <legend>{section.title}</legend>
@@ -92,6 +92,7 @@ export default function PageEditor({ scope, page, sections, values, viewHref }) 
           )}
         </p>
       </div>
+      {unsaved.dialog}
     </form>
   );
 }

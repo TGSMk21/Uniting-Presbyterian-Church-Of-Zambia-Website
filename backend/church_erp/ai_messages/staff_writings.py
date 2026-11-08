@@ -109,6 +109,7 @@ class StaffWritingViewSet(BranchContentViewSet):
     queryset = SermonDocument.objects.select_related("minister").order_by("-created_at", "-pk")
     serializer_class = WritingSerializer
     parser_classes = [JSONParser, MultiPartParser]
+    ordering_fields = ["created_at", "preached_on", "title"]
 
     def get_queryset(self):
         return self.queryset.filter(minister__branch=self.branch)

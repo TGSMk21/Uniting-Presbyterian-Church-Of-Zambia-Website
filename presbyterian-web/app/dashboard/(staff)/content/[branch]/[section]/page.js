@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getBranch } from "@/Services/api";
-import { apiPath, isBranchSlug, isRowId, rowBadges, rowSummary, rowTitle, section } from "@/Utilities/branchContent.mjs";
+import { apiPath, isBranchSlug, listQuery, rowBadges, rowSummary, rowTitle, section } from "@/Utilities/branchContent.mjs";
 import { exportHref } from "@/Utilities/csvExport.mjs";
 import { requireStaff, staffRequest } from "../../../../session";
 
@@ -13,15 +13,13 @@ export default async function SectionList({ params, searchParams }) {
   const spec = section(name);
   if (!spec || !isBranchSlug(branch)) notFound();
   const query = await searchParams;
-  const page = isRowId(query.page) ? Number(query.page) : 1;
-  // Only a listed status goes into the address.
-  const filter = spec.filters?.some(({ value }) => value && value === query.status) ? query.status : "";
-  const filtered = filter ? `&status=${filter}` : "";
+  // Only listed statuses and sorts go into the address.
+  const { page, status: filter, sort, api, keep } = listQuery(name, query);
   const saved = Object.hasOwn(SAVED, query.saved ?? "") ? SAVED[query.saved] : null;
 
   // The API decides who can manage which branch; this page only asks it.
   const [{ status, data }, branchData] = await Promise.all([
-    staffRequest(`${apiPath(branch, name)}?page=${page}${filtered}`),
+    staffRequest(`${apiPath(branch, name)}${api}`),
     getBranch(branch),
   ]);
   if (status === 401) redirect("/dashboard/login");
@@ -32,6 +30,15 @@ export default async function SectionList({ params, searchParams }) {
   // Private sections, such as written sermons, aren't on the website.
   const publicHref = spec.publicPath ? spec.publicPath(branch) : null;
   const rows = data.results || [];
+  const link = (extra) => {
+    const params = new URLSearchParams(keep);
+    for (const [key, value] of Object.entries(extra)) {
+      if (value) params.set(key, value);
+      else params.delete(key);
+    }
+    const text = params.toString();
+    return text ? `${base}?${text}` : base;
+  };
 
   return (
     <main className="dash-main">
@@ -57,12 +64,25 @@ export default async function SectionList({ params, searchParams }) {
       {spec.filters && (
         <nav className="dash-tabs" aria-label={`${spec.label} by status`}>
           {spec.filters.map(({ value, label }) => (
-            <Link key={value || "all"} href={value ? `${base}?status=${value}` : base} prefetch={false}
+            <Link key={value || "all"} href={link({ status: value })} prefetch={false}
               aria-current={value === filter ? "page" : undefined}>
               {label}
             </Link>
           ))}
         </nav>
+      )}
+
+      {spec.sorts && rows.length > 1 && (
+        <form method="get" action={base} className="dash-sort">
+          {filter && <input type="hidden" name="status" value={filter} />}
+          <label>
+            <span>Sort</span>
+            <select name="sort" defaultValue={sort}>
+              {spec.sorts.map(({ value, label }) => <option key={value || "usual"} value={value}>{label}</option>)}
+            </select>
+          </label>
+          <button type="submit" className="dash-quiet-button">Apply</button>
+        </form>
       )}
 
       {rows.length === 0 && filter ? (
@@ -93,9 +113,9 @@ export default async function SectionList({ params, searchParams }) {
 
       {(data.previous || data.next) && (
         <nav className="dash-pager" aria-label="More">
-          {data.previous ? <Link href={`${base}?page=${page - 1}${filtered}`} prefetch={false}>← Newer</Link> : <span />}
+          {data.previous ? <Link href={link({ page: String(page - 1) })} prefetch={false}>← Previous</Link> : <span />}
           <span>Page {page}</span>
-          {data.next ? <Link href={`${base}?page=${page + 1}${filtered}`} prefetch={false}>Older →</Link> : <span />}
+          {data.next ? <Link href={link({ page: String(page + 1) })} prefetch={false}>Next →</Link> : <span />}
         </nav>
       )}
     </main>

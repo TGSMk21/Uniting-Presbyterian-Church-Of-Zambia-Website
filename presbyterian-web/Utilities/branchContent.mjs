@@ -29,6 +29,7 @@ export const MESSAGE_STATUSES = [
 
 export const SECTIONS = {
   sermons: {
+    sorts: [{ value: "", label: "Newest first" }, { value: "preached_at", label: "Oldest first" }, { value: "title", label: "Title A–Z" }],
     summary: "Sermon videos from your YouTube channel",
     label: "Sermons",
     singular: "sermon",
@@ -48,6 +49,7 @@ export const SECTIONS = {
     ],
   },
   projects: {
+    sorts: [{ value: "", label: "Newest added first" }, { value: "start_date", label: "Earliest start first" }, { value: "title", label: "Title A–Z" }],
     summary: "Building and outreach projects, with progress",
     label: "Projects",
     singular: "project",
@@ -65,6 +67,7 @@ export const SECTIONS = {
     ],
   },
   activities: {
+    sorts: [{ value: "", label: "Latest date first" }, { value: "date", label: "Earliest date first" }, { value: "title", label: "Title A–Z" }],
     summary: "Events, also shown on the national home page",
     label: "Activities",
     singular: "activity",
@@ -121,6 +124,7 @@ export const SECTIONS = {
     ],
   },
   messages: {
+    sorts: [{ value: "", label: "Latest day first" }, { value: "date", label: "Earliest day first" }, { value: "title", label: "Title A–Z" }],
     summary: "The message on your home page each day",
     // Tabs above the list, as ?status= (Task 7.3).
     filters: [
@@ -152,6 +156,7 @@ export const SECTIONS = {
   },
   // Pastors' sermons, for the AI's daily message drafts (Task 4.1). Never on the website.
   writings: {
+    sorts: [{ value: "", label: "Newest added first" }, { value: "-preached_on", label: "Latest preached first" }, { value: "title", label: "Title A–Z" }],
     summary: "Sermons the AI drafts are written from",
     label: "Written sermons",
     singular: "written sermon",
@@ -200,6 +205,26 @@ export function newRowDefaults(name, { ministers = [], now = new Date() } = {}) 
 
 export function section(name) {
   return Object.hasOwn(SECTIONS, name) ? SECTIONS[name] : undefined;
+}
+
+// A list page's address, made safe: only listed statuses and sorts reach the API.
+// `keep` carries the choices into the page's own links, such as the pager.
+export function listQuery(name, params = {}) {
+  const spec = section(name);
+  const page = isRowId(params.page) ? Number(params.page) : 1;
+  const status = spec?.filters?.some(({ value }) => value && value === params.status) ? params.status : "";
+  const sort = spec?.sorts?.some(({ value }) => value && value === params.sort) ? params.sort : "";
+  const api = new URLSearchParams({ page: String(page) });
+  const keep = new URLSearchParams();
+  if (status) {
+    api.set("status", status);
+    keep.set("status", status);
+  }
+  if (sort) {
+    api.set("ordering", sort);
+    keep.set("sort", sort);
+  }
+  return { page, status, sort, api: `?${api}`, keep: keep.toString() };
 }
 
 // Only safe pieces go into API addresses.

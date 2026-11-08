@@ -877,3 +877,36 @@ body:has(.dash)::after { display: none; }
   border-radius: var(--d-radius-lg);
 }
 .dash-empty .btn-primary { margin-top: 1rem; }
+
+/* ===== Sorting a list ===== */
+.dash-sort { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0 0 0.75rem; }
+.dash-sort label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--d-text-2); }
+.dash-sort select {
+  min-height: 2.5rem;
+  padding: 0 0.625rem;
+  border: 1px solid var(--d-border-strong);
+  border-radius: var(--d-radius);
+  background: var(--d-surface);
+  color: var(--d-text);
+  font: inherit;
+  font-size: 0.875rem;
+}
+.dash .dash-sort .dash-quiet-button { min-height: 2.5rem; }
+
+/* ===== File pickers: the browser's own button, in the dashboard's style ===== */
+.dash input[type="file"] { font: inherit; font-size: 0.875rem; color: var(--d-text-2); max-width: 100%; }
+.dash input[type="file"]::file-selector-button {
+  margin-right: 0.75rem;
+  min-height: 2.5rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--d-border-strong);
+  border-radius: var(--d-radius);
+  background: var(--d-surface);
+  color: var(--d-text);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.dash input[type="file"]::file-selector-button:hover { background: var(--d-surface-2); border-color: var(--d-text-3); }
+.dash .dash-field input[type="file"] { min-height: auto; padding: 0.5rem; border-style: dashed; background: var(--d-surface-2); }

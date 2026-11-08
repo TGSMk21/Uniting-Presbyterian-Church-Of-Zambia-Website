@@ -59,6 +59,7 @@ class StaffMessageViewSet(BranchContentViewSet):
     serializer_class = StaffMessageSerializer
     # ?status=pending_review and so on, for the dashboard's tabs (Task 7.3).
     filterset_fields = ["status"]
+    ordering_fields = ["date", "title"]
 
     def get_queryset(self):
         return self.queryset.filter(minister__branch=self.branch)

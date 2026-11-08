@@ -136,6 +136,8 @@ class ActivitySerializer(serializers.ModelSerializer):
 class BranchContentViewSet(viewsets.ModelViewSet):
     """One branch's rows, chosen by the branch slug in the address."""
     permission_classes = [IsStaff]
+    # ?ordering= is only allowed on the fields each list names (Task 7.3).
+    ordering_fields = []
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
@@ -200,16 +202,19 @@ class StaffSermonViewSet(BranchContentViewSet):
     http_method_names = ["get", "post", "put", "patch", "head", "options"]
     queryset = Sermon.objects.order_by("-preached_at", "-pk")
     serializer_class = SermonSerializer
+    ordering_fields = ["preached_at", "title"]
 
 
 class StaffProjectViewSet(BranchContentViewSet):
     queryset = Project.objects.order_by("-created_at", "-pk")
     serializer_class = ProjectSerializer
+    ordering_fields = ["start_date", "title"]
 
 
 class StaffActivityViewSet(BranchContentViewSet):
     queryset = Activity.objects.order_by("-date", "-start_time", "-pk")
     serializer_class = ActivitySerializer
+    ordering_fields = ["date", "title"]
 
 
 class MinisterSerializer(serializers.ModelSerializer):
