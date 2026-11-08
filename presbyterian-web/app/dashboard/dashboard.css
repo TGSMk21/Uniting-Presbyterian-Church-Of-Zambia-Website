@@ -181,7 +181,7 @@ body:has(.dash)::after { display: none; }
   padding: 2rem 1.5rem;
 }
 .dash-card-wide { max-width: 32rem; }
-.dash-card-logo { margin-bottom: 1.25rem; }
+.dash-card-crest { --crest-h: 64px; margin-bottom: 1.25rem; color: var(--d-text); }
 .dash-card-footer,
 .dash-text.dash-card-footer {
   margin-top: 1.5rem;
@@ -238,9 +238,9 @@ body:has(.dash)::after { display: none; }
   font-weight: 600;
   font-size: 0.9375rem;
 }
-.dash-brand img { border-radius: 6px; }
+.dash-crest { --crest-h: 30px; }
 .dash-brand-side { padding: 0 0.75rem; margin-bottom: 1.25rem; }
-.dash-brand-side span { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.dash-brand-side > span:not(.crest) { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
 .dash-brand-side small {
   color: var(--d-text-3);
   font-size: 0.75rem;

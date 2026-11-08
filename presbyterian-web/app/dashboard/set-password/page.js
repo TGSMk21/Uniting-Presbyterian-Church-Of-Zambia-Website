@@ -1,4 +1,5 @@
 import SetPasswordForm from "@/components/DashboardComponents/set-password-form";
+import CrestLogo from "@/components/UniversalComponents/crest-logo";
 
 export const metadata = { title: "Choose your password" };
 
@@ -8,7 +9,7 @@ export default function SetPassword() {
   return (
     <main className="dash-center">
       <div className="dash-card">
-        <img src="/logo.png" alt="" width="56" height="56" className="dash-card-logo" />
+        <CrestLogo className="dash-card-crest" />
         <h1 className="dash-title">Choose your password</h1>
         <SetPasswordForm />
       </div>

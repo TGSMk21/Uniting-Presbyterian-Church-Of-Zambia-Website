@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CrestLogo from "@/components/UniversalComponents/crest-logo";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import RequestAccessForm from "@/components/DashboardComponents/request-access-form";
@@ -18,7 +19,7 @@ export default async function RequestAccess() {
   return (
     <main className="dash-center">
       <div className="dash-card dash-card-wide">
-        <img src="/logo.png" alt="" width="56" height="56" className="dash-card-logo" />
+        <CrestLogo className="dash-card-crest" />
         <h1 className="dash-title">Ask for access</h1>
         <p className="dash-text">
           For ministers and staff of a UPCZ branch. Once your request is approved, you&apos;ll be sent a link to choose

@@ -92,11 +92,3 @@ test("cards and panels use colour tokens instead of plain white", () => {
   assert.doesNotMatch(css, /background(-color)?:\s*white/);
   assert.doesNotMatch(css, /^\s*color:\s*var\(--navy\)/m);
 });
-
-test("the header uses the crest without its white edge on the dark theme", () => {
-  const nav = read("components/UniversalComponents/nav-client.js");
-  assert.match(nav, /src="\/logo-on-dark\.png"[^>]*className="nav-logo-dark"/);
-  const css = read("app/globals.css");
-  assert.match(css, /:root\[data-theme="dark"\] \.nav-logo-light \{ display: none; \}/);
-  assert.match(css, /:root:not\(\[data-theme="light"\]\) \.nav-logo-dark \{ display: block; \}/);
-});

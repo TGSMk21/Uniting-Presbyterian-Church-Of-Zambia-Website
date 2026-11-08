@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import ThemeToggle from "./theme-toggle";
+import CrestLogo from "./crest-logo";
 
 export default function NavClient({ brand, links }) {
   const pathname = usePathname();
@@ -22,12 +23,7 @@ export default function NavClient({ brand, links }) {
       <nav className="nav">
         <div className="nav-inner">
           <Link href={brand.href} className="nav-brand">
-            <img src={brand.logo || "/logo.png"} alt="Church logo" className={brand.logo ? undefined : "nav-logo-light"}
-              style={{ height: 80, width: "auto", maxWidth: 160, objectFit: "contain" }} />
-            {/* The crest's white edge looks harsh on the dark theme, as on the footer. */}
-            {!brand.logo && (
-              <img src="/logo-on-dark.png" alt="" className="nav-logo-dark" width="58" height="80" />
-            )}
+            <CrestLogo src={brand.logo} className="nav-crest" />
             <div className="nav-title">
               {brand.name}
               {brand.sub && <span>{brand.sub}</span>}

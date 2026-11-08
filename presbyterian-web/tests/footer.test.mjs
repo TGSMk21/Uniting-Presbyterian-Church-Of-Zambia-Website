@@ -6,9 +6,9 @@ import { existsSync, readFileSync } from "node:fs";
 const footer = readFileSync(new URL("../components/UniversalComponents/footer-client.js", import.meta.url), "utf8");
 
 test("the navy footer uses the crest without its white glow", () => {
-  assert.ok(existsSync(new URL("../public/logo-on-dark.png", import.meta.url)));
-  assert.match(footer, /src="\/logo-on-dark\.png"/);
-  assert.doesNotMatch(footer, /brand\.logo \|\| "\/logo\.png"/);
+  assert.ok(existsSync(new URL("../public/crest.png", import.meta.url)));
+  assert.match(footer, /<CrestLogo className="footer-crest" \/>/);
+  assert.doesNotMatch(footer, /brand\.logo/);
 });
 
 test("the footer doesn't show a phone number", () => {

@@ -8,6 +8,7 @@ import {
   LogOut, Megaphone, Menu, MessageSquareText, UserPlus, Users, X,
 } from "lucide-react";
 import ThemeToggle from "@/components/UniversalComponents/theme-toggle";
+import CrestLogo from "@/components/UniversalComponents/crest-logo";
 import { activeHref } from "@/Utilities/dashboardNav.mjs";
 
 const ICONS = {
@@ -29,7 +30,7 @@ export default function DashboardShell({ groups, person, signOut, children }) {
     <div className="dash-shell">
       <div className="dash-topbar">
         <Link href="/dashboard" className="dash-brand" prefetch={false}>
-          <img src="/logo.png" alt="" width="28" height="28" />
+          <CrestLogo className="dash-crest" motto={false} />
           <span>UPCZ Staff</span>
         </Link>
         <button type="button" className="dash-menu-button" aria-expanded={open} aria-controls="dash-sidebar"
@@ -41,7 +42,7 @@ export default function DashboardShell({ groups, person, signOut, children }) {
 
       <aside id="dash-sidebar" className="dash-sidebar" data-open={open || undefined}>
         <Link href="/dashboard" className="dash-brand dash-brand-side" prefetch={false} onClick={close}>
-          <img src="/logo.png" alt="" width="32" height="32" />
+          <CrestLogo className="dash-crest" motto={false} />
           <span>
             <strong>UPCZ Staff</strong>
             <small>{person.place}</small>

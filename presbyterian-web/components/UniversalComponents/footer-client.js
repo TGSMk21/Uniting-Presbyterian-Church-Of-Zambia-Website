@@ -1,5 +1,6 @@
 'use client';
 import Link from "next/link";
+import CrestLogo from "./crest-logo";
 
 export default function FooterClient({ brand, links, contact }) {
   const year = new Date().getFullYear();
@@ -9,9 +10,9 @@ export default function FooterClient({ brand, links, contact }) {
         <div className="footer-top">
           <div>
             <Link href={brand.href} className="nav-brand" style={{ marginBottom: "0.5rem" }}>
-              {/* The crest without its white glow, which looked rough on navy. A branch's own
-                  logo still shows in the light top bar. */}
-              <img src="/logo-on-dark.png" alt="" width="64" height="88" className="footer-logo" />
+              {/* Always the church's crest and motto on the navy footer; a branch's own
+                  logo shows in the top bar. */}
+              <CrestLogo className="footer-crest" />
               <div className="nav-title" style={{ color: "white" }}>
                 {brand.name}
                 {brand.sub && <span style={{ color: "rgba(255,255,255,0.6)" }}>{brand.sub}</span>}
