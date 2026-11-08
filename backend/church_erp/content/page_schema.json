@@ -47,7 +47,7 @@
           "title": "Welcome",
           "fields": [
             { "key": "welcome_label", "label": "Small heading", "type": "line", "max": 80, "default": "Welcome home" },
-            { "key": "welcome_text", "label": "Message", "type": "title", "max": 800, "default": "Faith is not a building you visit on a Sunday. It is a family you belong to every day. Across Zambia, our branches gather in cities and villages, in sanctuaries and living rooms, to worship, to serve, and to walk together. *And there is always room for one more.*" }
+            { "key": "welcome_text", "label": "Message", "type": "title", "max": 800, "default": "Faith is not a building you visit on a Sunday. It is a family you belong to every day. Across Zambia, our branches gather to worship, to serve, and to walk together. *And there is always room for one more.*" }
           ]
         },
         {
