@@ -7,6 +7,7 @@ import {
   BookOpen, Building2, FileText, History, Image as ImageIcon, KeyRound, Layers, LayoutDashboard,
   LogOut, Megaphone, Menu, MessageSquareText, UserPlus, Users, X,
 } from "lucide-react";
+import ThemeToggle from "@/components/UniversalComponents/theme-toggle";
 import { activeHref } from "@/Utilities/dashboardNav.mjs";
 
 const ICONS = {
@@ -74,6 +75,7 @@ export default function DashboardShell({ groups, person, signOut, children }) {
           <Link href="/dashboard/change-password" className="dash-sidebar-action" prefetch={false} onClick={close}>
             <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" /> Change password
           </Link>
+          <ThemeToggle className="dash-sidebar-action" withLabel iconSize={16} />
           <form action={signOut}>
             <button type="submit" className="dash-sidebar-action">
               <LogOut size={16} strokeWidth={1.75} aria-hidden="true" /> Sign out

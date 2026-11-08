@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import ThemeToggle from "./theme-toggle";
 
 export default function NavClient({ brand, links }) {
   const pathname = usePathname();
@@ -21,7 +22,12 @@ export default function NavClient({ brand, links }) {
       <nav className="nav">
         <div className="nav-inner">
           <Link href={brand.href} className="nav-brand">
-            <img src={brand.logo || "/logo.png"} alt="Church logo" style={{ height: 80, width: "auto", maxWidth: 160, objectFit: "contain" }} />
+            <img src={brand.logo || "/logo.png"} alt="Church logo" className={brand.logo ? undefined : "nav-logo-light"}
+              style={{ height: 80, width: "auto", maxWidth: 160, objectFit: "contain" }} />
+            {/* The crest's white edge looks harsh on the dark theme, as on the footer. */}
+            {!brand.logo && (
+              <img src="/logo-on-dark.png" alt="" className="nav-logo-dark" width="58" height="80" />
+            )}
             <div className="nav-title">
               {brand.name}
               {brand.sub && <span>{brand.sub}</span>}
@@ -36,13 +42,16 @@ export default function NavClient({ brand, links }) {
             ))}
           </ul>
 
-          <button className="nav-toggle" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
+          <div className="nav-actions">
+            <ThemeToggle />
+            <button className="nav-toggle" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="3" y1="6" x2="21" y2="6"/>
               <line x1="3" y1="12" x2="21" y2="12"/>
               <line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
-          </button>
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -65,6 +74,7 @@ export default function NavClient({ brand, links }) {
             <li key={l.href}><Link href={l.href} onClick={closeDrawer}>{l.label}</Link></li>
           ))}
         </ul>
+        <ThemeToggle className="drawer-theme" withLabel />
       </aside>
     </>
   );
