@@ -12,14 +12,16 @@ from rest_framework.test import APITestCase
 
 from church_erp.accounts.models import AccessRequest, User
 from church_erp.ai_messages.models import DailyMessage, SermonDocument
-from church_erp.content.models import Activity, Announcement, Project, Sermon
+from church_erp.content.models import Activity, ActivityPhoto, Announcement, Project, ProjectPhoto, Sermon
 from church_erp.core.models import Minister, ServiceTime
 from church_erp.core.tests.helpers import make_branch
 from church_erp.media_library.models import MediaAsset
 
 # Every branch section, and the extra addresses it has besides list and detail.
 SECTIONS = {
-    "sermons": [], "projects": [], "activities": [], "services": [], "messages": [],
+    "sermons": [], "services": [], "messages": [],
+    # Photos of projects and activities: add (photos) and remove one (photo).
+    "projects": ["photos", "photo"], "activities": ["photos", "photo"],
     "ministers": ["photo"],
     "media": ["tags"],
     "writings": ["upload"],
@@ -86,6 +88,11 @@ class AccessMatrixTests(APITestCase):
             "announcements": Announcement.objects.create(branch=cls.beta, title="B", body="b", starts_on=date(2026, 11, 1)),
         }
 
+        cls.photo_pks = {
+            "projects": ProjectPhoto.objects.create(project=cls.rows["projects"], image="item_photos/b.webp").pk,
+            "activities": ActivityPhoto.objects.create(activity=cls.rows["activities"], image="item_photos/b.webp").pk,
+        }
+
     def setUp(self):
         cache.clear()
         self.addCleanup(cache.clear)
@@ -97,9 +104,13 @@ class AccessMatrixTests(APITestCase):
             yield "post", reverse(f"staff-{section}-list", args=[scope])
             yield "get", reverse(f"staff-{section}-export", args=[scope])
             for extra in extras:
-                if extra == "photo":
+                if section == "ministers" and extra == "photo":
                     yield "post", reverse("staff-ministers-photo", args=[scope, pk(section)])
                     yield "delete", reverse("staff-ministers-photo", args=[scope, pk(section)])
+                elif extra == "photos":
+                    yield "post", reverse(f"staff-{section}-photos", args=[scope, pk(section)])
+                elif extra == "photo":
+                    yield "delete", reverse(f"staff-{section}-photo", args=[scope, pk(section), self.photo_pks[section]])
                 else:
                     method = "post" if extra in POST_EXTRAS else "get"
                     yield method, reverse(f"staff-{section}-{extra}", args=[scope])
@@ -164,13 +175,14 @@ class AccessMatrixTests(APITestCase):
     def test_another_branchs_rows_cant_be_reached_through_your_own_branch(self):
         def own_scope_row_addresses():
             for method, url in self.branch_addresses("alpha", lambda s: self.rows[s].pk):
-                if any(url.endswith(f"/{row.pk}/") or url.endswith(f"/{row.pk}/photo/") for row in self.rows.values()):
+                if any(f"/{name}/{row.pk}/" in url for name, row in self.rows.items()):
                     yield method, url
 
         for user in (self.editor_a, self.admin_a):
             with self.subTest(user=user.username):
                 addresses = list(own_scope_row_addresses())
-                self.assertEqual(len(addresses), len(SECTIONS) * 4 + 2)
+                # Four for each row, plus a minister's photo (2) and project and activity photos (2 each).
+                self.assertEqual(len(addresses), len(SECTIONS) * 4 + 2 + 4)
                 # Sermons can't be deleted by anyone (405), which refuses before any lookup.
                 self.assertEqual(self.refused(user, addresses, {404, 405}), [])
 

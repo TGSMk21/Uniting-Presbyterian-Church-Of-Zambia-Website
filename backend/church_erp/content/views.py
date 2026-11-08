@@ -35,13 +35,13 @@ class SermonViewSet(BranchScopedViewSetMixin, viewsets.ReadOnlyModelViewSet):
 
 
 class ProjectViewSet(BranchScopedViewSetMixin, viewsets.ReadOnlyModelViewSet):
-    queryset = Project.objects.all()
+    queryset = Project.objects.prefetch_related('photos')
     serializer_class = ProjectSerializer
     permission_classes = [permissions.AllowAny]
 
 
 class ActivityViewSet(BranchScopedViewSetMixin, viewsets.ReadOnlyModelViewSet):
-    queryset = Activity.objects.select_related('branch').filter(branch__is_active=True)
+    queryset = Activity.objects.select_related('branch').prefetch_related('photos').filter(branch__is_active=True)
     serializer_class = ActivitySerializer
     permission_classes = [permissions.AllowAny]
     filterset_fields = {'date': ['gte', 'lte']}  # e.g. ?date__gte=2026-11-02 for upcoming

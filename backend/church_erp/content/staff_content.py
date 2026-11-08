@@ -25,9 +25,10 @@ from church_erp.accounts.auth_views import IsStaff
 from church_erp.core.changes import changed, editable_names, record, row_title
 from church_erp.core.models import Branch, Minister, ServiceTime
 
-from .models import Activity, Announcement, Project, Sermon
+from .models import Activity, ActivityPhoto, Announcement, Project, ProjectPhoto, Sermon
 from .page_content import can_edit
 from .page_images import delete_quietly, prepared_image
+from .serializers import PhotoSerializer
 from .staff_export import EXPORT_LIMIT, csv_response, export_filename
 
 VIDEO_ID = re.compile(r"[A-Za-z0-9_-]{11}")
@@ -38,6 +39,9 @@ YOUTUBE_HOSTS = {
 VIDEO_PATHS = {"live", "shorts", "embed", "v"}
 LONG_TEXT = 5000  # YouTube's own limit for a description
 MINISTER_PHOTO_SIDE = 800
+# Photos of projects and activities (owner's request, 2026-11-08).
+ITEM_PHOTO_SIDE = 1600
+MAX_ITEM_PHOTOS = 12
 MAX_ORDER = 999
 
 
@@ -104,10 +108,11 @@ class SermonSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     description = serializers.CharField(max_length=LONG_TEXT)
+    photos = PhotoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Project
-        fields = ["id", "title", "status", "description", "start_date", "end_date", "progress"]
+        fields = ["id", "title", "status", "description", "start_date", "end_date", "progress", "photos"]
         extra_kwargs = {"progress": {"min_value": 0, "max_value": 100}}
 
     def validate(self, attrs):
@@ -120,10 +125,11 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 class ActivitySerializer(serializers.ModelSerializer):
     details = serializers.CharField(max_length=LONG_TEXT)
+    photos = PhotoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Activity
-        fields = ["id", "title", "date", "start_time", "end_time", "details", "location"]
+        fields = ["id", "title", "date", "start_time", "end_time", "details", "location", "photos"]
 
     def validate(self, attrs):
         start = attrs.get("start_time", getattr(self.instance, "start_time", None))
@@ -221,14 +227,69 @@ class StaffSermonViewSet(BranchContentViewSet):
     ordering_fields = ["preached_at", "title"]
 
 
-class StaffProjectViewSet(BranchContentViewSet):
-    queryset = Project.objects.order_by("-created_at", "-pk")
+class ItemPhotosMixin:
+    """Adding and removing an item's photos (owner's request, 2026-11-08).
+    `photo_model` and `photo_link` name the photo table and its link to the item."""
+    export_exclude = ("photos",)
+
+    def photo_answer(self, item):
+        rows = self.photo_model.objects.filter(**{self.photo_link: item}).order_by("order", "pk")
+        return Response({"photos": PhotoSerializer(rows, many=True, context=self.get_serializer_context()).data})
+
+    @action(detail=True, methods=["post"], parser_classes=[MultiPartParser])
+    def photos(self, request, *args, **kwargs):
+        item = self.get_object()
+        uploaded = request.FILES.get("image")
+        if not uploaded:
+            raise serializers.ValidationError({"image": ["Please choose a photo."]})
+        existing = self.photo_model.objects.filter(**{self.photo_link: item})
+        if existing.count() >= MAX_ITEM_PHOTOS:
+            raise serializers.ValidationError({"image": [f"Each one can have up to {MAX_ITEM_PHOTOS} photos. Remove one first."]})
+        try:
+            content = prepared_image(uploaded, ITEM_PHOTO_SIDE)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"image": exc.messages})
+        name = default_storage.save(f"item_photos/{uuid.uuid4().hex}.webp", content)
+        try:
+            last = existing.order_by("-order").values_list("order", flat=True).first()
+            self.photo_model.objects.create(**{self.photo_link: item}, image=name, order=(last + 1) if last is not None else 0)
+        except Exception:
+            delete_quietly(name)
+            raise
+        record(request.user, self.section_name(), "changed", branch=self.branch, target=item.title,
+               target_id=item.pk, changes=["photos"])
+        answer = self.photo_answer(item)
+        answer.status_code = status.HTTP_201_CREATED
+        return answer
+
+    @action(detail=True, methods=["delete"], url_path=r"photos/(?P<photo_id>[0-9]+)", url_name="photo")
+    def remove_photo(self, request, *args, photo_id=None, **kwargs):
+        item = self.get_object()
+        photo = get_object_or_404(self.photo_model, pk=photo_id, **{self.photo_link: item})
+        name = photo.image.name
+        photo.delete()
+        delete_quietly(name)
+        record(request.user, self.section_name(), "changed", branch=self.branch, target=item.title,
+               target_id=item.pk, changes=["photos"])
+        return self.photo_answer(item)
+
+    def perform_destroy(self, instance):
+        names = list(self.photo_model.objects.filter(**{self.photo_link: instance}).values_list("image", flat=True))
+        instance.delete()
+        for name in names:
+            delete_quietly(name)
+
+
+class StaffProjectViewSet(ItemPhotosMixin, BranchContentViewSet):
+    photo_model, photo_link = ProjectPhoto, "project"
+    queryset = Project.objects.prefetch_related("photos").order_by("-created_at", "-pk")
     serializer_class = ProjectSerializer
     ordering_fields = ["start_date", "title"]
 
 
-class StaffActivityViewSet(BranchContentViewSet):
-    queryset = Activity.objects.order_by("-date", "-start_time", "-pk")
+class StaffActivityViewSet(ItemPhotosMixin, BranchContentViewSet):
+    photo_model, photo_link = ActivityPhoto, "activity"
+    queryset = Activity.objects.prefetch_related("photos").order_by("-date", "-start_time", "-pk")
     serializer_class = ActivitySerializer
     ordering_fields = ["date", "title"]
 

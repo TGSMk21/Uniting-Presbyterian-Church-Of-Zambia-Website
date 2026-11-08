@@ -9,7 +9,15 @@ class SermonSerializer(serializers.ModelSerializer):
         exclude = ['is_hidden']
 
 
+class PhotoSerializer(serializers.Serializer):
+    """A project's or activity's photo: its id and full address."""
+    id = serializers.IntegerField(read_only=True)
+    url = serializers.ImageField(source='image', read_only=True)
+
+
 class ProjectSerializer(serializers.ModelSerializer):
+    photos = PhotoSerializer(many=True, read_only=True)
+
     class Meta:
         model = Project
         fields = '__all__'
@@ -26,6 +34,7 @@ class AnnouncementSerializer(serializers.ModelSerializer):
 class ActivitySerializer(serializers.ModelSerializer):
     branch_name = serializers.CharField(source='branch.name', read_only=True)
     branch_slug = serializers.CharField(source='branch.slug', read_only=True)
+    photos = PhotoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Activity

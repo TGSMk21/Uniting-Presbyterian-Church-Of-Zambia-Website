@@ -73,6 +73,26 @@ class Activity(models.Model):
         return self.title
 
 
+class ItemPhoto(models.Model):
+    """A photo of a project or activity, shown on the website (owner's request, 2026-11-08).
+    Uploaded through the staff API, which checks and re-saves it as WebP."""
+    image = models.ImageField(upload_to='item_photos/')
+    order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+        ordering = ['order', 'pk']
+
+
+class ProjectPhoto(ItemPhoto):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='photos')
+
+
+class ActivityPhoto(ItemPhoto):
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='photos')
+
+
 class PageContent(models.Model):
     """Changed wording for one page; see page_content.py. No branch means the national site."""
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True, related_name='page_content')
