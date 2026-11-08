@@ -10,7 +10,32 @@ import {
   sessionAction,
 } from "@/Utilities/staffSession.mjs";
 
+import { BRANCH_COOKIE, STAY_COOKIE, homeRedirect } from "@/Utilities/myBranch.mjs";
+
 const LOGIN_PATH = "/dashboard/login";
+
+// The main link takes a member to the branch they chose (owner's request, 2026-11-08).
+// "?all" is the church-wide site, and stays that way for the rest of the visit.
+// Search engines keep no cookies, so they always see the national page.
+function homeResponse(request) {
+  const all = request.nextUrl.searchParams.has("all");
+  const target = homeRedirect({
+    branch: request.cookies.get(BRANCH_COOKIE)?.value,
+    all,
+    stay: Boolean(request.cookies.get(STAY_COOKIE)?.value),
+  });
+  if (target) {
+    const response = NextResponse.redirect(new URL(target, request.url));
+    // The answer depends on the visitor's cookie, so no shared cache may keep it.
+    response.headers.set("Cache-Control", "private, no-store");
+    return response;
+  }
+  const response = NextResponse.next();
+  // Only a real visit counts: the browser also fetches links in the background (prefetch).
+  const prefetch = request.headers.has("next-router-prefetch") || request.headers.get("purpose") === "prefetch";
+  if (all && !prefetch) response.cookies.set(STAY_COOKIE, "1", { path: "/", sameSite: "lax", secure: process.env.NODE_ENV === "production" });
+  return response;
+}
 
 function toLogin(request) {
   const response = NextResponse.redirect(new URL(LOGIN_PATH, request.url));
@@ -23,6 +48,7 @@ function toLogin(request) {
 // here, before the page runs. Only pages are guarded here: every API call still
 // checks the token, role and branch.
 export async function proxy(request) {
+  if (request.nextUrl.pathname === "/") return homeResponse(request);
   const isLoginPage = isSignInPage(request.nextUrl.pathname);
   const refresh = request.cookies.get(REFRESH_COOKIE)?.value;
   const action = sessionAction({
@@ -59,4 +85,4 @@ export async function proxy(request) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/dashboard/:path*"] };
+export const config = { matcher: ["/", "/dashboard/:path*"] };

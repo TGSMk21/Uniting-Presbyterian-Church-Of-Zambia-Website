@@ -1,10 +1,12 @@
 import NavClient from "@/components/UniversalComponents/nav-client";
 import FooterClient from "@/components/UniversalComponents/footer-client";
-import { getPageContent } from "@/Services/api";
+import { getBranches, getPageContent } from "@/Services/api";
+import { BranchPicker } from "@/components/UniversalComponents/my-branch";
 import { pageFields } from "@/Utilities/pageContent.mjs";
 
 export default async function NationalLayout({ children }) {
-  const content = await getPageContent("national");
+  const [content, branchData] = await Promise.all([getPageContent("national"), getBranches()]);
+  const branches = (branchData?.results || []).map(({ slug, name }) => ({ slug, name }));
   const f = pageFields("national", "contact", content?.pages?.contact);
   const brand = {
     name: "Uniting Presbyterian Church In Zambia",
@@ -24,6 +26,7 @@ export default async function NationalLayout({ children }) {
     <>
       <NavClient brand={brand} links={links} />
       {children}
+      <BranchPicker branches={branches} />
       <FooterClient brand={brand} links={links} contact={contact} />
     </>
   );

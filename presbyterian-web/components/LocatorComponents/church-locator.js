@@ -12,6 +12,7 @@ import {
 } from "@/Utilities/churchLocator";
 import { formatTime } from "@/Utilities/timeFormat";
 import { locate, locationMessage } from "@/Utilities/locate.mjs";
+import { MakeMyBranch } from "@/components/UniversalComponents/my-branch";
 
 export default function ChurchLocator({ branches }) {
   const [query, setQuery] = useState("");
@@ -108,6 +109,7 @@ export default function ChurchLocator({ branches }) {
                 <Link href={`/${branch.slug}`}>Visit this branch</Link>
                 <a href={directionsUrl(branch)} target="_blank" rel="noopener noreferrer">Directions</a>
               </div>
+              <MakeMyBranch slug={branch.slug} name={branch.name} />
             </li>
           ))}
         </ul>

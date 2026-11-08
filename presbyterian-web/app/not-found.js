@@ -13,7 +13,7 @@ export default function NotFound() {
           you&apos;re always welcome at one of our homes.
         </p>
         <div className="nat-hero-actions" style={{ justifyContent: "center" }}>
-          <Link href="/" className="btn-primary">Back to home</Link>
+          <Link href="/?all=1" className="btn-primary">Back to home</Link>
           <Link href="/find-a-branch" className="nat-link-quiet">
             Find a branch <span aria-hidden="true">→</span>
           </Link>

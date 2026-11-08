@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import NavClient from "@/components/UniversalComponents/nav-client";
 import FooterClient from "@/components/UniversalComponents/footer-client";
+import { MyBranchBar, MyBranchPrompt } from "@/components/UniversalComponents/my-branch";
 import { getBranch, getPageContent } from "@/Services/api";
 import { pageFields } from "@/Utilities/pageContent.mjs";
 
@@ -47,6 +48,8 @@ export default async function BranchLayout({ children, params }) {
     <>
       <NavClient brand={brand} links={links} />
       {children}
+      <MyBranchBar slug={branch} name={data.name} />
+      <MyBranchPrompt slug={branch} name={data.name} />
       <FooterClient brand={brand} links={links} contact={contact} />
     </>
   );
