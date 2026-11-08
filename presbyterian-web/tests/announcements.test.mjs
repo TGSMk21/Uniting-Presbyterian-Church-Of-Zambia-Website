@@ -42,4 +42,8 @@ test("the branch home page shows them", () => {
   const home = readFileSync(new URL("../app/[branch]/page.js", import.meta.url), "utf8");
   assert.match(home, /getAnnouncements\(/);
   assert.match(home, /id="announcements"/);
+  // Shown even when there are none, with a note.
+  assert.doesNotMatch(home, /announcements\.length > 0 &&/);
+  assert.match(home, /announcements\.length === 0 \?/);
+  assert.match(home, /f\.announcements_empty/);
 });

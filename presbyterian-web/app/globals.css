@@ -2649,6 +2649,7 @@ body::after {
 /* ===== Announcements on a branch's home page (owner's request, 2026-11-08) ===== */
 .announce-section { padding: 6rem 2.5rem; background: var(--warm-white); border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
 .announce-layout { display: grid; gap: 2.5rem; }
+.announce-empty { align-self: center; padding: 1.5rem 1.75rem; border: 1px dashed var(--line); border-radius: 16px; color: var(--muted); }
 .announce-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
 .announce-card {
   padding: 1.5rem 1.75rem;

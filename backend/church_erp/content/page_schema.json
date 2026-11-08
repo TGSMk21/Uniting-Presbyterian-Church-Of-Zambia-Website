@@ -152,7 +152,8 @@
           "title": "Announcements",
           "fields": [
             { "key": "announcements_label", "label": "Small heading", "type": "line", "max": 80, "default": "Announcements" },
-            { "key": "announcements_title", "label": "Heading", "type": "title", "max": 120, "default": "News from *our church*" }
+            { "key": "announcements_title", "label": "Heading", "type": "title", "max": 120, "default": "News from *our church*" },
+            { "key": "announcements_empty", "label": "When there are none", "type": "line", "max": 160, "default": "No announcements right now. Check back soon." }
           ]
         },
         {

@@ -122,32 +122,35 @@ export default async function BranchHome({ params }) {
         </section>
       </ScrollReveal>
 
-      {announcements.length > 0 && (
-        <section className="announce-section" id="announcements">
-          <div className="section-inner announce-layout">
-            <div className="announce-head">
-              <div className="section-label">{f.announcements_label}</div>
-              <h2 className="section-title" style={{ fontFamily: "var(--font-playfair)" }}>
-                <RichText text={f.announcements_title} />
-              </h2>
-            </div>
-            <ul className="announce-list">
-              {announcements.map((item) => (
-                <li key={item.id} className="announce-card" data-pinned={item.is_pinned || undefined}>
-                  <div className="announce-meta">
-                    {item.is_pinned && <span className="announce-pin">Pinned</span>}
-                    <time dateTime={item.starts_on}>{announceDate(item.starts_on)}</time>
-                  </div>
-                  <h3 className="announce-title">{item.title}</h3>
-                  {item.body.split(/\n\s*\n/).map((paragraph, i) => (
-                    <p key={i} className="announce-body">{paragraph}</p>
-                  ))}
-                </li>
-              ))}
-            </ul>
+      {/* Always shown, so visitors know where notices appear (owner's request, 2026-11-08). */}
+      <section className="announce-section" id="announcements">
+        <div className="section-inner announce-layout">
+          <div className="announce-head">
+            <div className="section-label">{f.announcements_label}</div>
+            <h2 className="section-title" style={{ fontFamily: "var(--font-playfair)" }}>
+              <RichText text={f.announcements_title} />
+            </h2>
           </div>
-        </section>
-      )}
+          {announcements.length === 0 ? (
+            <p className="announce-empty">{f.announcements_empty}</p>
+          ) : (
+          <ul className="announce-list">
+            {announcements.map((item) => (
+              <li key={item.id} className="announce-card" data-pinned={item.is_pinned || undefined}>
+                <div className="announce-meta">
+                  {item.is_pinned && <span className="announce-pin">Pinned</span>}
+                  <time dateTime={item.starts_on}>{announceDate(item.starts_on)}</time>
+                </div>
+                <h3 className="announce-title">{item.title}</h3>
+                {item.body.split(/\n\s*\n/).map((paragraph, i) => (
+                  <p key={i} className="announce-body">{paragraph}</p>
+                ))}
+              </li>
+            ))}
+          </ul>
+          )}
+        </div>
+      </section>
 
       {msg && (
         <section className="devotion">

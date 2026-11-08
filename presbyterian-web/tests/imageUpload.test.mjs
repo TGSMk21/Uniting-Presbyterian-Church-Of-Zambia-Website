@@ -96,7 +96,8 @@ test("the home page shows the fellowship photos from its fields", () => {
 test("branch pages show the branch's logo in the header", () => {
   // The navy footer shows the UPCZ crest without its white glow instead (tests/footer.test.mjs).
   assert.match(source("app/[branch]/layout.js"), /logo: data\.logo/);
-  assert.match(source("components/UniversalComponents/nav-client.js"), /src=\{brand\.logo \|\| "\/logo\.png"\}/);
+  // An uploaded logo replaces the crest; the standard one shows as the crest and motto (tests/crestLogo.test.mjs).
+  assert.match(source("components/UniversalComponents/nav-client.js"), /<CrestLogo src=\{brand\.logo\}/);
 });
 
 test("a file upload lets fetch describe its own body", () => {
