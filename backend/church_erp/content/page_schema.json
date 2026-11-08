@@ -51,7 +51,8 @@
           "fields": [
             { "key": "events_label", "label": "Small heading", "type": "line", "max": 80, "default": "Nationwide events" },
             { "key": "events_title", "label": "Heading", "type": "title", "max": 120, "default": "Gather *together*" },
-            { "key": "events_text", "label": "Introduction", "type": "text", "max": 400, "default": "Across the year, we come together as one family for conferences, assemblies, and celebrations." }
+            { "key": "events_text", "label": "Introduction", "type": "text", "max": 400, "default": "Across the year, we come together as one family for conferences, assemblies, and celebrations." },
+            { "key": "events_empty", "label": "When nothing is coming up", "type": "text", "max": 300, "default": "Nothing is planned just now. New events appear here as branches add them, so please check back soon." }
           ]
         },
         {

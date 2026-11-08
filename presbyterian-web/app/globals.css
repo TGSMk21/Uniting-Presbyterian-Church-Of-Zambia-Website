@@ -2145,6 +2145,14 @@ body::after {
 .nat-events-inner { max-width: 1100px; margin: 0 auto; }
 .nat-events-head { max-width: 640px; margin-bottom: 3.5rem; }
 .nat-events-sub { font-size: 1.05rem; color: var(--text-soft); line-height: 1.7; }
+.nat-events-empty {
+  padding: 1.75rem 0.5rem;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--text-soft);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
 .nat-event-list { border-bottom: 1px solid var(--line); }
 .nat-event-row {
   display: flex;

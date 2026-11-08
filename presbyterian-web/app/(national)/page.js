@@ -119,7 +119,6 @@ export default async function NationalLanding() {
       </section>
 
       {/* ===== NATIONWIDE EVENTS (upcoming activities of every branch) ===== */}
-      {events.length > 0 && (
       <section className="nat-events" id="events">
         <div className="nat-events-inner">
           <div className="nat-events-head">
@@ -130,6 +129,7 @@ export default async function NationalLanding() {
             <p className="nat-events-sub">{f.events_text}</p>
           </div>
 
+          {events.length === 0 && <p className="nat-events-empty">{f.events_empty}</p>}
           <div className="nat-event-list">
             {events.map((e, i) => (
               <ScrollReveal key={e.id} delay={(i % 3) + 1}>
@@ -149,7 +149,6 @@ export default async function NationalLanding() {
           </div>
         </div>
       </section>
-      )}
 
       {/* ===== CLOSING ===== */}
       <section className="nat-closing">

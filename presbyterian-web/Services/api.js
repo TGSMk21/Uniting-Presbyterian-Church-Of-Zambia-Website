@@ -1,5 +1,5 @@
 import { branchTag, contentTag } from '@/Utilities/pageContent.mjs'
-import { BRANCH_LIST_TAG, UPCOMING_ACTIVITIES_TAG, sectionTag } from '@/Utilities/branchContent.mjs'
+import { BRANCH_LIST_TAG, UPCOMING_ACTIVITIES_TAG, sectionTag, todayInZambia } from '@/Utilities/branchContent.mjs'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
@@ -68,7 +68,8 @@ export async function getActivities(branch) {
 
 // Every active branch's activities from today on, soonest first.
 export async function getUpcomingActivities() {
-  const today = new Date().toISOString().slice(0, 10)
+  // The calendar day in Zambia: just after midnight there, UTC is still on yesterday.
+  const today = todayInZambia()
   return fetchAPI(`/activities/?date__gte=${today}`, { next: { revalidate: 3600, tags: [UPCOMING_ACTIVITIES_TAG] } })
 }
 
