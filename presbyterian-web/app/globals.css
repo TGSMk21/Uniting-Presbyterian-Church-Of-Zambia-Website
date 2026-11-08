@@ -2814,12 +2814,12 @@ body::after {
   cursor: pointer;
 }
 .pa-dialog-close:focus-visible { outline: 2px solid var(--heading); outline-offset: 2px; }
-.pa-gallery { background: #0d1b3d; display: flex; flex-direction: column; min-width: 0; }
-.pa-gallery-empty { min-height: 16rem; display: grid; place-items: center; color: rgba(255, 255, 255, 0.35); }
-.pa-gallery-stage { position: relative; aspect-ratio: 4 / 3; touch-action: pan-y; user-select: none; }
-@media (min-width: 900px) { .pa-gallery-stage { aspect-ratio: auto; flex: 1; min-height: 28rem; } }
-.pa-gallery-stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; animation: pa-fade 0.25s ease; }
-@keyframes pa-fade { from { opacity: 0.4; } to { opacity: 1; } }
+.pa-gallery { background: #0b1324; display: flex; flex-direction: column; min-width: 0; }
+.pa-gallery-stage { position: relative; aspect-ratio: 4 / 3; overflow: hidden; touch-action: pan-y; user-select: none; }
+@media (min-width: 900px) { .pa-gallery-stage { aspect-ratio: auto; flex: 1; min-height: 30rem; } }
+.pa-gallery-backdrop { position: absolute; inset: -8%; width: 116%; height: 116%; object-fit: cover; filter: blur(28px) brightness(0.55); }
+.pa-gallery-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; animation: pa-fade 0.45s ease; }
+@keyframes pa-fade { from { opacity: 0; transform: scale(1.015); } to { opacity: 1; transform: none; } }
 .pa-gallery-arrow {
   position: absolute;
   top: 50%;
@@ -2834,35 +2834,61 @@ body::after {
   /* Always a white disc over the photo, so always the navy arrow. */
   color: #142850;
   cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
+.pa-gallery-arrow:hover, .pa-gallery-arrow:focus-visible { opacity: 1; }
 .pa-gallery-arrow[data-side="left"] { left: 0.9rem; }
 .pa-gallery-arrow[data-side="right"] { right: 0.9rem; }
-.pa-gallery-count {
-  position: absolute;
-  left: 50%;
-  bottom: 0.9rem;
-  transform: translateX(-50%);
-  padding: 0.2rem 0.65rem;
-  border-radius: 100px;
-  background: rgba(8, 16, 36, 0.6);
-  color: white;
-  font-size: 0.78rem;
+.pa-gallery-arrow:focus-visible, .pa-gallery-tool:focus-visible, .pa-thumbs button:focus-visible, .pa-grid-view button:focus-visible {
+  outline: 2px solid white; outline-offset: 2px;
 }
-.pa-thumbs { list-style: none; margin: 0; padding: 0.75rem; display: flex; gap: 0.5rem; overflow-x: auto; }
+/* A thin line along the bottom that fills until the next photo. */
+.pa-gallery-timer {
+  position: absolute; left: 0; bottom: 0; height: 3px; width: 100%;
+  background: rgba(255, 255, 255, 0.85); transform-origin: left; animation: pa-timer linear forwards;
+}
+@keyframes pa-timer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.pa-gallery-bar { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; color: rgba(255, 255, 255, 0.85); min-width: 0; }
+.pa-gallery-tool {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; flex: none;
+  min-width: 2.5rem; height: 2.5rem; padding: 0 0.75rem; border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.06); color: white;
+  font: inherit; font-size: 0.82rem; cursor: pointer;
+}
+.pa-gallery-tool:hover { background: rgba(255, 255, 255, 0.14); }
+.pa-gallery-switch { margin-left: auto; }
+.pa-gallery-count { flex: none; font-size: 0.8rem; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.75); }
+.pa-thumbs { list-style: none; margin: 0; padding: 2px; display: flex; gap: 0.5rem; overflow-x: auto; min-width: 0; scrollbar-width: none; }
 .pa-thumbs button {
   display: block;
-  width: 4.5rem;
-  height: 3.25rem;
+  width: 3.75rem;
+  height: 2.6rem;
   padding: 0;
   border: 2px solid transparent;
   border-radius: 8px;
   overflow: hidden;
   background: none;
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: pointer;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
 }
-.pa-thumbs button[aria-current] { border-color: white; opacity: 1; }
+.pa-thumbs button:hover { opacity: 0.85; }
+.pa-thumbs button[aria-current="true"] { opacity: 1; border-color: white; }
 .pa-thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Every photo at once. */
+.pa-grid-view { flex: 1; overflow-y: auto; padding: 0.75rem; aspect-ratio: 4 / 3; }
+@media (min-width: 900px) { .pa-grid-view { aspect-ratio: auto; min-height: 30rem; max-height: 30rem; } }
+/* On a narrow phone, swiping, the count and All photos do the job of the strip. */
+@media (max-width: 520px) { .pa-thumbs { display: none; } .pa-gallery-switch { margin-left: auto; } }
+.pa-grid-view ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 0.5rem; }
+.pa-grid-view button { display: block; width: 100%; aspect-ratio: 4 / 3; padding: 0; border: 0; border-radius: 10px; overflow: hidden; cursor: zoom-in; background: none; }
+.pa-grid-view img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }
+.pa-grid-view button:hover img { transform: scale(1.04); }
+/* No photos: just the details, as a smaller card. */
+.pa-dialog[data-plain] { width: min(640px, calc(100vw - 2rem)); }
+.pa-dialog[data-plain] .pa-dialog-panel { grid-template-columns: 1fr; }
+.pa-dialog[data-plain] .pa-dialog-details { padding-top: 2.5rem; padding-right: 4.5rem; }
 .pa-dialog-details { padding: 2rem 2rem 2.25rem; }
 .pa-dialog-kind {
   display: flex;
@@ -2890,7 +2916,8 @@ body::after {
   .pa-dialog-title { font-size: 1.5rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pa-dialog[open], .pa-gallery-stage img { animation: none; }
+  .pa-dialog[open], .pa-gallery-photo, .pa-gallery-timer { animation: none; }
+  .pa-gallery-timer { display: none; }
   .pa-media img { transition: none; }
 }
 

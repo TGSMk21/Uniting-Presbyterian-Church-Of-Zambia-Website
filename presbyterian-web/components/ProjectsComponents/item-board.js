@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight, Clock, FolderKanban, MapPin, X } from "lucide-react";
+import {
+  CalendarDays, ChevronLeft, ChevronRight, Clock, FolderKanban, GalleryHorizontal, LayoutGrid, MapPin, Pause, Play, X,
+} from "lucide-react";
 import RichText from "@/components/UniversalComponents/rich-text";
+import { SLIDE_SECONDS, prefersReducedMotion, shouldAdvance, step } from "@/Utilities/slideshow.mjs";
 
 // Projects and activities as cards that open into an overlay with their photos and
 // details (owner's request, 2026-11-08). Each card has its own address (#project-12),
@@ -72,63 +75,113 @@ function Card({ item, onOpen, muted }) {
 }
 
 function Gallery({ item }) {
-  const [index, setIndex] = useState(0);
-  const start = useRef(null);
   const count = item.photos.length;
-  const go = useCallback((step) => setIndex((current) => (current + step + count) % count), [count]);
+  const [index, setIndex] = useState(0);
+  const [view, setView] = useState("slides");
+  // It moves on by itself unless the visitor prefers less motion; Pause stops it.
+  const [playing, setPlaying] = useState(() => !prefersReducedMotion());
+  const [held, setHeld] = useState(false);
+  const start = useRef(null);
+  const go = useCallback((by) => setIndex((current) => step(current, by, count)), [count]);
+  // Choosing a photo yourself stops the slideshow, so it doesn't move away from it.
+  const choose = useCallback((by) => { setPlaying(false); go(by); }, [go]);
 
   useEffect(() => {
-    if (count < 2) return undefined;
+    if (view !== "slides" || !shouldAdvance({ count, playing, held })) return undefined;
+    const timer = window.setTimeout(() => go(1), SLIDE_SECONDS * 1000);
+    return () => window.clearTimeout(timer);
+  }, [view, count, playing, held, index, go]);
+
+  useEffect(() => {
+    if (count < 2 || view !== "slides") return undefined;
     const onKey = (event) => {
-      if (event.key === "ArrowLeft") go(-1);
-      if (event.key === "ArrowRight") go(1);
+      if (event.key === "ArrowLeft") choose(-1);
+      if (event.key === "ArrowRight") choose(1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [count, go]);
+  }, [count, view, choose]);
 
-  if (count === 0) {
-    return (
-      <div className="pa-gallery pa-gallery-empty" aria-hidden="true">
-        {item.kind === "Project" ? <FolderKanban size={48} strokeWidth={1} /> : <CalendarDays size={48} strokeWidth={1} />}
-      </div>
-    );
-  }
+  const photo = item.photos[index];
+  const hold = {
+    onPointerEnter: (event) => { if (event.pointerType === "mouse") setHeld(true); },
+    onPointerLeave: () => setHeld(false),
+    onFocus: () => setHeld(true),
+    onBlur: () => setHeld(false),
+  };
+
   return (
-    <div className="pa-gallery">
-      <div
-        className="pa-gallery-stage"
-        onPointerDown={(event) => { start.current = event.clientX; }}
-        onPointerUp={(event) => {
-          if (start.current === null) return;
-          const moved = event.clientX - start.current;
-          start.current = null;
-          if (Math.abs(moved) > 40) go(moved < 0 ? 1 : -1);
-        }}
-      >
-        <img key={item.photos[index].id} src={item.photos[index].url} alt={`${item.title}, photo ${index + 1} of ${count}`} />
-        {count > 1 && (
-          <>
-            <button type="button" className="pa-gallery-arrow" data-side="left" onClick={() => go(-1)} aria-label="Previous photo">
-              <ChevronLeft size={22} aria-hidden="true" />
-            </button>
-            <button type="button" className="pa-gallery-arrow" data-side="right" onClick={() => go(1)} aria-label="Next photo">
-              <ChevronRight size={22} aria-hidden="true" />
-            </button>
-            <span className="pa-gallery-count" aria-live="polite">{index + 1} / {count}</span>
-          </>
-        )}
-      </div>
-      {count > 1 && (
-        <ul className="pa-thumbs" aria-label="Photos">
-          {item.photos.map((photo, i) => (
-            <li key={photo.id}>
-              <button type="button" onClick={() => setIndex(i)} aria-label={`Show photo ${i + 1}`} aria-current={i === index || undefined}>
-                <img src={photo.url} alt="" loading="lazy" />
+    <div className="pa-gallery" data-view={view}>
+      {view === "grid" ? (
+        <div className="pa-grid-view">
+          <ul aria-label={`All ${count} photos`}>
+            {item.photos.map((p, i) => (
+              <li key={p.id}>
+                <button type="button" onClick={() => { setIndex(i); setPlaying(false); setView("slides"); }}
+                  aria-label={`Open photo ${i + 1} of ${count}`}>
+                  <img src={p.url} alt="" loading="lazy" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <div
+          className="pa-gallery-stage"
+          {...hold}
+          onPointerDown={(event) => { start.current = event.clientX; }}
+          onPointerUp={(event) => {
+            if (start.current === null) return;
+            const moved = event.clientX - start.current;
+            start.current = null;
+            if (Math.abs(moved) > 40) choose(moved < 0 ? 1 : -1);
+          }}
+        >
+          {/* The same photo, blurred, fills the space a tall or wide photo leaves. */}
+          <img key={`b${photo.id}`} className="pa-gallery-backdrop" src={photo.url} alt="" aria-hidden="true" />
+          <img key={photo.id} className="pa-gallery-photo" src={photo.url} alt={`${item.title}, photo ${index + 1} of ${count}`} />
+          {count > 1 && (
+            <>
+              <button type="button" className="pa-gallery-arrow" data-side="left" onClick={() => choose(-1)} aria-label="Previous photo">
+                <ChevronLeft size={22} aria-hidden="true" />
               </button>
-            </li>
-          ))}
-        </ul>
+              <button type="button" className="pa-gallery-arrow" data-side="right" onClick={() => choose(1)} aria-label="Next photo">
+                <ChevronRight size={22} aria-hidden="true" />
+              </button>
+              {playing && !held && <span key={index} className="pa-gallery-timer" aria-hidden="true" style={{ animationDuration: `${SLIDE_SECONDS}s` }} />}
+            </>
+          )}
+        </div>
+      )}
+      {count > 1 && (
+        <div className="pa-gallery-bar">
+          {view === "slides" ? (
+            <>
+              <button type="button" className="pa-gallery-tool" onClick={() => setPlaying((value) => !value)}
+                aria-label={playing ? "Pause slideshow" : "Play slideshow"}>
+                {playing ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+              </button>
+              <span className="pa-gallery-count" aria-live={playing ? "off" : "polite"}>{index + 1} / {count}</span>
+              <ul className="pa-thumbs" aria-label="Photos">
+                {item.photos.map((p, i) => (
+                  <li key={p.id}>
+                    <button type="button" onClick={() => { setPlaying(false); setIndex(i); }} aria-label={`Show photo ${i + 1}`}
+                      aria-current={i === index || undefined}>
+                      <img src={p.url} alt="" loading="lazy" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <span className="pa-gallery-count">{count} photos</span>
+          )}
+          <button type="button" className="pa-gallery-tool pa-gallery-switch" onClick={() => setView(view === "slides" ? "grid" : "slides")}
+            aria-pressed={view === "grid"}>
+            {view === "slides" ? <LayoutGrid size={16} aria-hidden="true" /> : <GalleryHorizontal size={16} aria-hidden="true" />}
+            <span>{view === "slides" ? "All photos" : "Slideshow"}</span>
+          </button>
+        </div>
       )}
     </div>
   );
@@ -149,14 +202,14 @@ function Overlay({ item, onClose }) {
   }, []);
 
   return (
-    <dialog ref={ref} className="pa-dialog" aria-labelledby="pa-dialog-title"
+    <dialog ref={ref} className="pa-dialog" aria-labelledby="pa-dialog-title" data-plain={item.photos.length === 0 || undefined}
       onCancel={(event) => { event.preventDefault(); onClose(); }}
       onClick={(event) => { if (event.target === ref.current) onClose(); }}>
       <div className="pa-dialog-panel">
         <button type="button" className="pa-dialog-close" onClick={onClose} aria-label="Close">
           <X size={20} aria-hidden="true" />
         </button>
-        <Gallery item={item} />
+        {item.photos.length > 0 && <Gallery item={item} />}
         <div className="pa-dialog-details">
           <p className="pa-dialog-kind">
             {item.kind}
