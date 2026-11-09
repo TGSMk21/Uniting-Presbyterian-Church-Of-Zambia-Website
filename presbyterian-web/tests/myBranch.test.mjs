@@ -68,12 +68,18 @@ test("branch pages, the branch finder and the national pages let people choose",
   assert.match(read("app/not-found.js"), /href="\/\?all=1"/);
   const ui = read("components/UniversalComponents/my-branch.js");
   assert.match(ui, /Church-wide site/);
-  assert.match(ui, /Make \{name\} my branch/);
+  // Short labels (owner's request, 2026-11-09): the branch name is only read out, not shown.
+  assert.match(ui, /Set as my branch/);
+  assert.match(ui, /aria-label=\{`Set \$\{name\} as my branch`\}/);
+  assert.doesNotMatch(ui, /Make \{name\} my branch/);
 });
 
-// Found on the owner's phone (2026-11-09): the branch list ran off the card.
+// Found on the owner's phone (2026-11-09): the branch list ran off the card. It is now
+// one pill holding the list and a round go button, so it always fits.
 test("on a phone the branch list fits inside the card", () => {
   const css = read("app/globals.css");
+  assert.match(css, /\.mybranch-pick \{[^}]*display: flex/);
+  assert.match(css, /\.mybranch-select \{[^}]*flex: 1; min-width: 0/);
   assert.match(css, /\.mybranch-select select \{[^}]*width: 100%;[^}]*box-sizing: border-box/);
-  assert.match(css, /max-width: 640px[\s\S]*form\.mybranch-prompt-actions \{[^}]*grid-template-columns: 1fr auto/);
+  assert.match(css, /\.mybranch-go \{[^}]*flex: none/);
 });
