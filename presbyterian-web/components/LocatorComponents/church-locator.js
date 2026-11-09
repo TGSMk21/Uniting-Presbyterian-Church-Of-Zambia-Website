@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Navigation } from "lucide-react";
 import Link from "next/link";
 import ChurchMap from "./church-map";
 import {
   directionsUrl,
   filterBranches,
   hasLocation,
+  nearestBranch,
   sortByDistance,
   towns,
 } from "@/Utilities/churchLocator";
@@ -25,6 +27,20 @@ export default function ChurchLocator({ branches }) {
   const matches = filterBranches(branches, query, town);
   const results = userLocation ? sortByDistance(matches, userLocation) : matches;
   const anyApproximate = results.some((b) => hasLocation(b) && !b.location_confirmed);
+  const nearest = nearestBranch(matches, userLocation);
+  const nearestRef = useRef(null);
+  const [justFound, setJustFound] = useState(0);
+
+  // Once found, the nearest branch comes into view and takes focus, so it's the
+  // first thing seen (and read out by screen readers).
+  useEffect(() => {
+    if (!justFound) return;
+    const card = nearestRef.current;
+    if (!card) return;
+    const calm = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    card.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "center" });
+    nearestRef.current?.focus({ preventScroll: true });
+  }, [justFound]);
 
   // The position stays in this browser: it is only used to sort the list.
   async function findNearest() {
@@ -32,6 +48,7 @@ export default function ChurchLocator({ branches }) {
     setLocationError("");
     try {
       setUserLocation(await locate(navigator.geolocation));
+      setJustFound((count) => count + 1);
     } catch (error) {
       setLocationError(locationMessage(error?.code));
     } finally {
@@ -61,6 +78,23 @@ export default function ChurchLocator({ branches }) {
             {locating ? "Finding you..." : "Find the nearest to me"}
           </button>
           {locationError && <p className="loc-error" role="alert">{locationError}</p>}
+          {userLocation && !nearest && (
+            <p className="loc-error" role="status">None of the branches shown have a map location yet. Try searching by town.</p>
+          )}
+          {nearest && (
+            <section key={`${nearest.slug}-${justFound}`} ref={nearestRef} tabIndex={-1} className="loc-nearest" aria-label="Nearest branch to you">
+              <p className="loc-nearest-label"><Navigation size={13} strokeWidth={2.5} aria-hidden="true" /> Nearest to you</p>
+              <h2 className="loc-nearest-name">{nearest.name}</h2>
+              <p className="loc-nearest-meta">
+                About {Math.max(1, Math.round(nearest.distanceKm))} km away{nearest.address ? ` · ${nearest.address}` : ""}
+              </p>
+              <div className="loc-nearest-actions">
+                <Link href={`/${nearest.slug}`} className="loc-nearest-visit">Visit this branch</Link>
+                <a href={directionsUrl(nearest)} target="_blank" rel="noopener noreferrer">Directions</a>
+              </div>
+              <MakeMyBranch slug={nearest.slug} name={nearest.name} />
+            </section>
+          )}
         </div>
 
         <p className="loc-count" aria-live="polite">
@@ -77,6 +111,7 @@ export default function ChurchLocator({ branches }) {
           branches={results}
           selectedSlug={selectedSlug}
           userLocation={userLocation}
+          nearestSlug={nearest?.slug}
           onSelect={setSelectedSlug}
         />
       </div>
@@ -89,7 +124,9 @@ export default function ChurchLocator({ branches }) {
         )}
         <ul className="loc-list">
           {results.map((branch) => (
-            <li key={branch.id} className={`loc-card${branch.slug === selectedSlug ? " selected" : ""}`}>
+            <li key={branch.id} className={`loc-card${branch.slug === selectedSlug ? " selected" : ""}`}
+              data-nearest={branch.slug === nearest?.slug || undefined}>
+              {branch.slug === nearest?.slug && <span className="loc-card-nearest">Nearest</span>}
               <button type="button" className="loc-card-name" onClick={() => setSelectedSlug(branch.slug)}>
                 {branch.name}
               </button>

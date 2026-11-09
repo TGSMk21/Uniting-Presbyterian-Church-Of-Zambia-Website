@@ -3195,6 +3195,31 @@ button.mybranch-chip:hover { border-color: var(--heading); }
 }
 @media (prefers-reduced-motion: reduce) { .mybranch-prompt { animation: none; } }
 
+/* ===== "Find the nearest to me" result (owner's request, 2026-11-09) ===== */
+.loc-nearest {
+  margin-top: 0.75rem;
+  padding: 1.1rem 1.25rem 1.2rem;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1.5px solid var(--red);
+  box-shadow: 0 12px 34px color-mix(in srgb, var(--red) 16%, transparent);
+  animation: loc-found 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.loc-nearest:focus { outline: none; }
+.loc-nearest:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+@keyframes loc-found { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+.loc-nearest-label { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--red); }
+.loc-nearest-name { margin: 0.4rem 0 0; font-family: var(--font-playfair); font-size: 1.35rem; line-height: 1.2; color: var(--heading); text-wrap: balance; }
+.loc-nearest-meta { margin: 0.3rem 0 0; font-size: 0.88rem; color: var(--muted); }
+.loc-nearest-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.25rem; margin-top: 0.9rem; font-size: 0.88rem; font-weight: 600; }
+.loc-nearest-actions a { color: var(--red); }
+.loc-nearest-actions .loc-nearest-visit { padding: 0.55rem 1.1rem; border-radius: 100px; background: var(--action); color: #fff; text-decoration: none; }
+.loc-nearest-actions .loc-nearest-visit:hover { background: var(--red); }
+.loc-nearest .mybranch-chip { margin-top: 0.75rem; }
+.loc-card[data-nearest] { border-color: var(--red); }
+.loc-card-nearest { display: inline-block; margin-bottom: 0.4rem; padding: 0.15rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); background: color-mix(in srgb, var(--red) 10%, transparent); }
+@media (prefers-reduced-motion: reduce) { .loc-nearest { animation: none; } }
+
 /* ===== Polish layer (owner's request, 2026-11-09) =====
    From the apple-design and motionsites-web-builder guidance. Everything here
    refines what is above it: delete this block and the site works as before. */

@@ -27,7 +27,7 @@ function popupContent(branch) {
   return box;
 }
 
-export default function ChurchMap({ branches, selectedSlug, userLocation, onSelect }) {
+export default function ChurchMap({ branches, selectedSlug, userLocation, nearestSlug, onSelect }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
@@ -52,8 +52,9 @@ export default function ChurchMap({ branches, selectedSlug, userLocation, onSele
     branches.filter(hasLocation).forEach((branch) => {
       const point = [Number(branch.latitude), Number(branch.longitude)];
       points.push(point);
+      const isNearest = branch.slug === nearestSlug;
       const marker = L.circleMarker(point, {
-        radius: 9, color: "#fff", weight: 2, fillColor: NAVY, fillOpacity: 1,
+        radius: isNearest ? 12 : 9, color: "#fff", weight: isNearest ? 3 : 2, fillColor: isNearest ? RED : NAVY, fillOpacity: 1,
       }).addTo(layer);
       marker.bindPopup(popupContent(branch));
       marker.on("click", () => onSelectRef.current?.(branch.slug));
@@ -62,11 +63,18 @@ export default function ChurchMap({ branches, selectedSlug, userLocation, onSele
     if (userLocation) {
       const point = [userLocation.lat, userLocation.lng];
       points.push(point);
-      L.circleMarker(point, { radius: 7, color: "#fff", weight: 2, fillColor: RED, fillOpacity: 1 })
+      L.circleMarker(point, { radius: 7, color: "#fff", weight: 2, fillColor: "#2563eb", fillOpacity: 1 })
         .bindTooltip("You are here")
         .addTo(layer);
     }
-    if (points.length) map.fitBounds(points, { padding: [40, 40], maxZoom: 13 });
+    // Found: frame just the visitor and the nearest branch, and open its label.
+    const nearest = nearestSlug && markersRef.current[nearestSlug];
+    if (userLocation && nearest) {
+      map.fitBounds([[userLocation.lat, userLocation.lng], nearest.getLatLng()], { padding: [60, 60], maxZoom: 14 });
+      nearest.openPopup();
+    } else if (points.length) {
+      map.fitBounds(points, { padding: [40, 40], maxZoom: 13 });
+    }
   }
 
   // Leaflet needs `window`, so it can only be loaded in the browser.
@@ -100,7 +108,7 @@ export default function ChurchMap({ branches, selectedSlug, userLocation, onSele
   useEffect(() => {
     drawMarkers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [branches, userLocation]);
+  }, [branches, userLocation, nearestSlug]);
 
   useEffect(() => {
     const marker = markersRef.current[selectedSlug];

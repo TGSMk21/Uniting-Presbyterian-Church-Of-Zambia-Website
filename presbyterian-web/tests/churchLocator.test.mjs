@@ -1,6 +1,7 @@
 // Church locator rules (national "Find a Branch" page). Run: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   branchMapView,
@@ -8,6 +9,7 @@ import {
   distanceKm,
   filterBranches,
   hasLocation,
+  nearestBranch,
   sortByDistance,
   towns,
 } from "../Utilities/churchLocator.js";
@@ -93,4 +95,28 @@ test("no position means no map", () => {
   assert.equal(branchMapView({ latitude: null, longitude: null, location_confirmed: false }), null);
   assert.equal(branchMapView(null), null);
   assert.equal(branchMapView({ latitude: "-15.5", longitude: null }), null);
+});
+
+// "Find the nearest to me" brings the nearest branch into focus (owner's request, 2026-11-09).
+test("the nearest branch is the closest one with a map pin", () => {
+  const nearLusaka = { lat: -15.42, lng: 28.3 };
+  assert.equal(nearestBranch(all, nearLusaka).slug, "kabwata");
+  assert.equal(nearestBranch(all, { lat: -17.8, lng: 25.9 }).slug, "david-livingstone-memorial");
+  assert.ok(nearestBranch(all, nearLusaka).distanceKm < 5);
+  // Branches without a pin are never "nearest"; with none pinned there is no answer.
+  assert.equal(nearestBranch([noPin], nearLusaka), null);
+  assert.equal(nearestBranch([], nearLusaka), null);
+  assert.equal(nearestBranch(all, null), null);
+});
+
+test("the nearest branch is shown at the top, focused, and picked out on the map and list", () => {
+  const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const locator = read("components/LocatorComponents/church-locator.js");
+  assert.match(locator, /className="loc-nearest"/);
+  assert.match(locator, /nearestRef\.current\?\.focus\(/);
+  assert.match(locator, /Nearest to you/);
+  assert.match(locator, /nearestSlug=\{nearest\?\.slug\}/);
+  const map = read("components/LocatorComponents/church-map.js");
+  assert.match(map, /nearestSlug/);
+  assert.match(map, /fitBounds\(\[\[userLocation\.lat, userLocation\.lng\]/);
 });

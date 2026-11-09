@@ -49,6 +49,13 @@ export function sortByDistance(branches, from) {
     .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
 }
 
+// The closest branch with a map pin, or null (owner's request, 2026-11-09).
+export function nearestBranch(branches, from) {
+  if (!from) return null;
+  const [first] = sortByDistance(branches || [], from);
+  return first && first.distanceKm != null ? first : null;
+}
+
 // Approximate pins mark an area, so don't navigate people to that exact spot.
 export function directionsUrl(branch) {
   if (branch.location_confirmed && hasLocation(branch)) {
