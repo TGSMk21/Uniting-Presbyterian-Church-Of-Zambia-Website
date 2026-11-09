@@ -70,3 +70,10 @@ test("branch pages, the branch finder and the national pages let people choose",
   assert.match(ui, /Church-wide site/);
   assert.match(ui, /Make \{name\} my branch/);
 });
+
+// Found on the owner's phone (2026-11-09): the branch list ran off the card.
+test("on a phone the branch list fits inside the card", () => {
+  const css = read("app/globals.css");
+  assert.match(css, /\.mybranch-select select \{[^}]*width: 100%;[^}]*box-sizing: border-box/);
+  assert.match(css, /max-width: 640px[\s\S]*form\.mybranch-prompt-actions \{[^}]*grid-template-columns: 1fr auto/);
+});

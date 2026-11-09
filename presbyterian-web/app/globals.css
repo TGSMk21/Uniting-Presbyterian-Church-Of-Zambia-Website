@@ -3112,7 +3112,7 @@ a.pa-card { text-decoration: none; }
   border: 1px solid var(--line);
   background: var(--cream);
   color: var(--text);
-  max-width: 16rem;
+  max-width: 18rem;
 }
 .mybranch-prompt :focus-visible, .mybranch-bar :focus-visible, .mybranch-button:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 .mybranch-bar { padding: 1.1rem 1.5rem; text-align: center; background: var(--warm-white); border-top: 1px solid var(--line-soft); }
@@ -3120,9 +3120,14 @@ a.pa-card { text-decoration: none; }
 .mybranch-bar a { color: var(--heading); text-underline-offset: 3px; }
 .mybranch-mine { display: inline-block; margin-top: 0.75rem; font-size: 0.85rem; font-weight: 600; color: var(--status-done); }
 .loc-card .mybranch-button { margin-top: 0.75rem; }
+.mybranch-select { display: block; min-width: 0; }
+.mybranch-select select { width: 100%; box-sizing: border-box; padding-right: 2.25rem; text-overflow: ellipsis; }
 @media (max-width: 640px) {
-  .mybranch-prompt { bottom: 0.75rem; padding: 0.9rem 1rem; }
-  .mybranch-select select { max-width: 100%; }
+  .mybranch-prompt { bottom: 0.75rem; padding: 1rem; }
+  /* On a phone the choice takes the full width, with the buttons below it, inside the card. */
+  .mybranch-prompt form.mybranch-prompt-actions { display: grid; grid-template-columns: 1fr auto; width: 100%; }
+  .mybranch-prompt form .mybranch-select { grid-column: 1 / -1; }
+  .mybranch-select select { max-width: none; }
 }
 @media (prefers-reduced-motion: reduce) { .mybranch-prompt { animation: none; } }
 

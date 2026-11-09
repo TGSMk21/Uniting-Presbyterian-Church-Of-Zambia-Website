@@ -1021,3 +1021,67 @@ body:has(.dash)::after { display: none; }
 }
 .dash-photo-remove:hover { background: var(--d-danger); }
 .dash-photo-remove:disabled { opacity: 0.5; cursor: wait; }
+
+/* ===== Polish layer (owner's request, 2026-11-09) =====
+   From the apple-design and motionsites-web-builder guidance, like the public site's
+   polish layer in globals.css. It only refines what is above: delete it and the
+   dashboard works as before. */
+
+.dash .dash-title, .dash h1, .dash h2, .dash-card-title, .dash-dialog h2 { text-wrap: balance; }
+.dash .dash-title { letter-spacing: -0.02em; }
+.dash .dash-text, .dash-card-link small { text-wrap: pretty; }
+/* Dates, counts and percentages line up in columns. */
+.dash-rows, .dash-badge, .dash-key, .dash-attention, .dash-photo-grid, .dash-savebar-status { font-variant-numeric: tabular-nums; }
+
+/* Pressed means pressed: feedback on touch-down, only compositor-friendly properties move. */
+.dash .btn-primary, .dash .dash-quiet-button, .dash .dash-danger-button, .dash .dash-danger-solid,
+.dash-menu-button, .dash-sidebar-action, .dash-sidenav a, .dash-tabs a, .dash-card-link, .dash-rows a {
+  transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms ease, color 160ms ease,
+    border-color 160ms ease, box-shadow 200ms ease;
+}
+.dash .btn-primary:active:not(:disabled), .dash .dash-quiet-button:active:not(:disabled),
+.dash .dash-danger-button:active:not(:disabled), .dash .dash-danger-solid:active:not(:disabled),
+.dash-menu-button:active { transform: scale(0.97); }
+.dash-sidenav a:active, .dash-sidebar-action:active, .dash-tabs a:active { transform: scale(0.98); }
+.dash-card-link:active { transform: scale(0.985); }
+.dash-rows a:active { background: var(--d-surface-2); }
+@media (hover: hover) {
+  .dash-card-link:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06); }
+}
+
+/* On phones the top bar floats over the page as a frosted layer, like the website's.
+   (div.dash-topbar, not .dash-topbar: the build drops the standard blur when a selector repeats.) */
+div.dash-topbar {
+  background: color-mix(in srgb, var(--d-surface) 78%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  backdrop-filter: blur(20px) saturate(170%);
+  border-bottom-color: color-mix(in srgb, var(--d-border) 70%, transparent);
+}
+div.dash-savebar {
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+}
+
+/* The phone menu moves like a sheet (fast start, soft landing) and the dimmer fades in. */
+.dash-sidebar { transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1); }
+@keyframes dash-fade { from { opacity: 0; } to { opacity: 1; } }
+.dash-scrim { animation: dash-fade 0.25s ease-out; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+
+/* The confirm dialog materialises rather than appearing. */
+@keyframes dash-materialise { from { opacity: 0; transform: translateY(8px) scale(0.98); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+.dash-dialog[open] { animation: dash-materialise 0.24s cubic-bezier(0.22, 1, 0.36, 1); }
+.dash-dialog::backdrop { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+
+/* Settings people choose on their device. */
+@media (prefers-reduced-transparency: reduce) {
+  div.dash-topbar { background: var(--d-surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  div.dash-savebar { background: var(--d-bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  .dash { --d-border: var(--d-border-strong); --d-text-3: var(--d-text-2); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-sidebar { transition: none; }
+  .dash-scrim, .dash-dialog[open] { animation: none; }
+  .dash-card-link:hover, .dash-card-link:active { transform: none; }
+}
