@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import { ZAMBIA_CENTRE, roundPosition } from "@/Utilities/branchDetails.mjs";
 
-const NAVY = "#142850";
+const NAVY = "#182868";
 
 // A map to click where the church is. `position` is { latitude, longitude } or null.
 export default function PositionMap({ position, onPick }) {

@@ -5,8 +5,8 @@ import "leaflet/dist/leaflet.css";
 import { hasLocation } from "@/Utilities/churchLocator";
 
 const ZAMBIA_CENTRE = [-14.5, 28];
-const NAVY = "#142850";
-const RED = "#c8102e";
+const NAVY = "#182868";
+const RED = "#c62828";
 
 // Popup content is built from DOM nodes so branch names can't inject markup.
 function popupContent(branch) {

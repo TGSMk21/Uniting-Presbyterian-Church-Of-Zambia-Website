@@ -1,30 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  --navy: #142850;
-  --navy-deep: #0d1b3d;
-  --navy-soft: #1e3a6a;
-  --red: #c8102e;
-  --red-warm: #d93646;
-  --red-soft: #e85a6a;
-  --cream: #fdf9f3;
-  --cream-warm: #f8f1e6;
-  --sand: #f0e6d3;
-  --warm-white: #fffcf7;
+  --navy: #182868;
+  --navy-deep: #0f1a44;
+  --navy-soft: #24367f;
+  --red: #c62828;
+  --red-warm: #b3261e;
+  --red-soft: #e57373;
+  --cream: #faf6ee;
+  --cream-warm: #f4eee2;
+  --sand: #ece4d4;
+  --warm-white: #fdfaf4;
   --ink: #1a1a1a;
   --text: #2d2d2d;
   --text-soft: #4a4a4a;
   --muted: #7a7a7a;
-  --line: #e8dfd2;
-  --line-soft: #f0e8dc;
+  --line: #e6ddcc;
+  --line-soft: #efe8db;
   /* Cards and panels, headings and links, solid buttons, and the see-through menu bar. */
   --surface: #ffffff;
-  --heading: #142850;
-  --action: #142850;
-  --status-ongoing: #1e3a6a;
+  --heading: #182868;
+  /* Italic words in headings: a lighter crest navy, not red (crest palette, 2026-11-09). */
+  --em: #33479e;
+  --action: #182868;
+  --status-ongoing: #24367f;
   --status-done: #1d5a32;
   --status-planned: #7a5b2a;
-  --nav-bg: rgba(253, 249, 243, 0.85);
+  --nav-bg: rgba(250, 246, 238, 0.85);
   --nav-links-bg: rgba(255, 252, 247, 0.6);
   color-scheme: light;
 }
@@ -35,12 +37,12 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --navy: #15274a;
-    --navy-deep: #0b1630;
-    --navy-soft: #1f3765;
-    --red: #e0475b;
-    --red-warm: #e85d6c;
-    --red-soft: #f07a87;
+    --navy: #17235c;
+    --navy-deep: #0c1438;
+    --navy-soft: #22337a;
+    --red: #e0473f;
+    --red-warm: #d23a33;
+    --red-soft: #ef7b73;
     --cream: #0d121d;
     --cream-warm: #121827;
     --sand: #1a2234;
@@ -53,7 +55,8 @@
     --line-soft: #1f2839;
     --surface: #161e2f;
     --heading: #f2ebdc;
-    --action: #2b4d8f;
+    --em: #aab8ec;
+    --action: #2b3f9e;
     --status-ongoing: #9db8ec;
     --status-done: #7ccf9e;
     --status-planned: #e0b46a;
@@ -64,12 +67,12 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --navy: #15274a;
-  --navy-deep: #0b1630;
-  --navy-soft: #1f3765;
-  --red: #e0475b;
-  --red-warm: #e85d6c;
-  --red-soft: #f07a87;
+  --navy: #17235c;
+  --navy-deep: #0c1438;
+  --navy-soft: #22337a;
+  --red: #e0473f;
+  --red-warm: #d23a33;
+  --red-soft: #ef7b73;
   --cream: #0d121d;
   --cream-warm: #121827;
   --sand: #1a2234;
@@ -82,7 +85,8 @@
   --line-soft: #1f2839;
   --surface: #161e2f;
   --heading: #f2ebdc;
-  --action: #2b4d8f;
+  --em: #aab8ec;
+  --action: #2b3f9e;
   --status-ongoing: #9db8ec;
   --status-done: #7ccf9e;
   --status-planned: #e0b46a;
@@ -2847,7 +2851,7 @@ body::after {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
   /* Always a white disc over the photo, so always the navy arrow. */
-  color: #142850;
+  color: #182868;
   cursor: pointer;
   opacity: 0.85;
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -3299,3 +3303,41 @@ aside.mybranch-prompt {
   .hero-slide[data-current] .hero-slide-actions, .pa-dialog[open] { animation: none; }
   .pa-card:hover, .pa-card:active { transform: none; }
 }
+
+/* ===== Crest palette (owner's request, 2026-11-09) =====
+   Colours come only from the crest: its royal navy and warm red on warm paper.
+   No navy-to-red gradients, no glows, no pink. Red is a small accent; warmth
+   comes from photos, paper tones and wording. Delete this block and the colour
+   values at the top go back to give the earlier look. */
+
+/* Flat crest navy instead of navy-to-red gradients. */
+.page-banner, .live-card, .mission-card, .nat-closing { background: var(--navy); }
+/* One step deeper than the banner above it, so the two sections stay apart. */
+.daily-verse { background: var(--navy-deep); }
+.archive-thumb, .project-header, .devotion-visual { background: var(--navy-soft); }
+.project-progress-fill { background: var(--navy); }
+/* The glows and blobs go. */
+.page-banner::before, .page-banner::after, .nat-closing::before, .hero-blob-1, .hero-blob-2,
+.footer::before, .year-theme::before, .contact-section::before, .ministries::before { display: none; }
+
+/* Banner slides: solid crest navy, one short red rule as the only accent. */
+.hero-carousel { background: var(--navy-deep); }
+.hero-slide { background: var(--navy); }
+.hero-slide-copy::before { content: ''; display: block; width: 44px; height: 3px; margin-bottom: 1.75rem; border-radius: 2px; background: var(--red); }
+.hero-slide[data-photo]::after {
+  background:
+    linear-gradient(90deg, rgba(12, 20, 56, 0.88) 0%, rgba(12, 20, 56, 0.6) 42%, rgba(12, 20, 56, 0.1) 100%),
+    linear-gradient(0deg, rgba(12, 20, 56, 0.55) 0%, transparent 38%);
+}
+@media (max-width: 640px) {
+  .hero-slide[data-photo]::after { background: linear-gradient(0deg, rgba(12, 20, 56, 0.92) 0%, rgba(12, 20, 56, 0.7) 55%, rgba(12, 20, 56, 0.35) 100%); }
+}
+/* On navy, the main button is warm paper with navy words (fixed colours: the banner is always navy). */
+.hero-carousel .btn-primary { background: #faf6ee; color: #182868; }
+.hero-carousel .btn-primary:hover { background: #ffffff; color: #182868; }
+.nat-closing .btn-primary { background: #faf6ee; color: #182868; }
+.nat-closing .btn-primary:hover { background: #ffffff; color: #182868; }
+
+/* Italic words: a lighter navy, never red or pink. */
+.section-title em, .hero h1 em, .year-theme-title em, .nat-h1 em, .nat-manifesto-text em, .nat-h2 em { color: var(--em); }
+.hero-slide-title em, .page-banner h1 em, .nat-closing-title em { color: #c9d3f5; }

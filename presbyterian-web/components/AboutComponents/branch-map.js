@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 
-const NAVY = "#142850";
+const NAVY = "#182868";
 const APPROXIMATE_RADIUS_M = 600;
 
 // The branch's own map on its About page. `view` comes from branchMapView().
