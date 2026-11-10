@@ -50,3 +50,13 @@ test("the phone menu shows the crest too", () => {
   assert.match(nav, /<CrestLogo src=\{brand\.logo\} className="drawer-crest" \/>/);
   assert.match(read("app/globals.css"), /\.drawer-crest \{[^}]*color: rgba\(255, 255, 255/);
 });
+
+// The browser tab, bookmark and home-screen icons are the crest, not the host's default (2026-11-10).
+test("the site's icons are the crest", () => {
+  for (const file of ["app/favicon.ico", "app/icon.png", "app/apple-icon.png"]) {
+    assert.ok(existsSync(new URL(`../${file}`, import.meta.url)), file);
+  }
+  const png = readFileSync(new URL("../app/icon.png", import.meta.url));
+  assert.equal(png.readUInt32BE(16), 512);
+  assert.equal(png.readUInt32BE(20), 512);
+});
