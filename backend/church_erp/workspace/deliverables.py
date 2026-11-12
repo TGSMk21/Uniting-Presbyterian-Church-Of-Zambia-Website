@@ -109,6 +109,8 @@ def deliverable_row(row, user):
         "due_on": row.due_on, "status": row.status, "overdue": is_overdue(row),
         "submitted_note": row.submitted_note, "submitted_at": row.submitted_at, "review_note": row.review_note,
         "is_mine": row.assignee_id == user.pk,
+        "document": {"id": row.submitted_document_id, "title": row.submitted_document.title}
+        if row.submitted_document_id else None,
     }
 
 
@@ -119,7 +121,7 @@ def with_meeting(row, user):
 
 
 def meeting_deliverables(meeting, user):
-    return [deliverable_row(row, user) for row in meeting.deliverables.select_related("assignee")]
+    return [deliverable_row(row, user) for row in meeting.deliverables.select_related("assignee", "submitted_document")]
 
 
 def my_open_work(user):
@@ -227,9 +229,13 @@ class DeliverableViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Only the person preparing it can hand it in.")
         if row.status not in Deliverable.OPEN:
             raise serializers.ValidationError({"status": ["This has already been handed in."]})
-        row.status, row.submitted_at = Deliverable.SUBMITTED, timezone.now()
-        row.submitted_note = str(request.data.get("note", ""))[:1000]
-        row.save(update_fields=["status", "submitted_at", "submitted_note"])
+        with transaction.atomic():
+            if request.data.get("document") not in (None, ""):
+                from .documents import attach_to_deliverable
+                row.submitted_document = attach_to_deliverable(row, request.data.get("document"), request.user)
+            row.status, row.submitted_at = Deliverable.SUBMITTED, timezone.now()
+            row.submitted_note = str(request.data.get("note", ""))[:1000]
+            row.save(update_fields=["status", "submitted_at", "submitted_note", "submitted_document"])
         if row.meeting.organiser:
             notify([row.meeting.organiser], "deliverable_submitted",
                    f"{person_name(request.user)} handed in {row.title} for {row.meeting.title}",
@@ -364,6 +370,11 @@ class TemplateViewSet(viewsets.ModelViewSet):
 
 # --- The Overview's reminder list (Task 8.2, A6) ------------------------------------
 
+def unread_count(user):
+    from .documents import unread_count as count
+    return count(user)
+
+
 class AttentionView(APIView):
     """What needs me now: meetings this week, answers owed, work due, work to review."""
     permission_classes = [IsWorkspaceMember]
@@ -380,4 +391,5 @@ class AttentionView(APIView):
             "answer_needed": mine.filter(response=MeetingAttendee.NO_REPLY).count(),
             "deliverables": [with_meeting(row, user) for row in my_open_work(user)[:5]],
             "to_review": len(waiting_for_review(user)),
+            "unread_documents": unread_count(user),
         })

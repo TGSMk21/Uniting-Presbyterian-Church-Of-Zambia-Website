@@ -14,6 +14,7 @@ from church_erp.core.changes import StaffChangeViewSet
 from church_erp.core.staff_overview import StaffOverviewView
 from church_erp.core.staff_presbyteries import StaffPresbyteryViewSet
 from church_erp.workspace.deliverables import AttentionView, DeliverableViewSet, TemplateViewSet
+from church_erp.workspace.documents import DocumentViewSet
 from church_erp.workspace.meetings import CalendarFeedView, MeetingViewSet, calendar_feed
 from church_erp.workspace.notify import NotificationViewSet
 from church_erp.workspace.structure_views import AppointmentViewSet, BranchOfficeView, MeView as WorkspaceMeView, PeopleView, StructureView
@@ -61,6 +62,7 @@ staff_router.register(r'staff-presbyteries', StaffPresbyteryViewSet, basename='s
 staff_router.register(r'workspace/appointments', AppointmentViewSet, basename='workspace-appointments')
 staff_router.register(r'workspace/meetings', MeetingViewSet, basename='workspace-meetings')
 staff_router.register(r'workspace/deliverables', DeliverableViewSet, basename='workspace-deliverables')
+staff_router.register(r'workspace/documents', DocumentViewSet, basename='workspace-documents')
 staff_router.register(r'workspace/templates', TemplateViewSet, basename='workspace-templates')
 staff_router.register(r'workspace/notifications', NotificationViewSet, basename='workspace-notifications')
 

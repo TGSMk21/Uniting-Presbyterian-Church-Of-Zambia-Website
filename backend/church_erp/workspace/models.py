@@ -4,7 +4,10 @@ Task 8.1: the offices people hold. A `Position` is a kind of office at one level
 (branch, presbytery or synod), such as Session Clerk or Treasurer. Positions are
 data, so new ones are added in the dashboard without code. An `Appointment` says
 who holds a position at one place, and when they stopped holding it."""
+import uuid
+
 from django.conf import settings
+from django.core.files.storage import storages
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
@@ -193,6 +196,8 @@ class Deliverable(models.Model):
     due_on = models.DateField()
     status = models.CharField(max_length=10, choices=STATUSES, default=TO_DO)
     submitted_note = models.TextField(blank=True, max_length=1000)
+    submitted_document = models.ForeignKey("Document", on_delete=models.SET_NULL, null=True, blank=True,
+                                           related_name="deliverables")
     submitted_at = models.DateTimeField(null=True, blank=True)
     review_note = models.TextField(blank=True, max_length=1000)
     reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
@@ -237,3 +242,88 @@ class TemplateItem(models.Model):
 
     def __str__(self):
         return self.title
+
+
+# --- The document hub (Task 8.5) ---------------------------------------------------------
+
+def document_storage():
+    """Shared documents are private: a private bucket in production, read only through the API."""
+    return storages["private"]
+
+
+def document_path(version, filename):
+    return f"workspace_documents/{version.document_id}/{uuid.uuid4().hex}{filename[filename.rfind('.'):] if '.' in filename else ''}"
+
+
+class Document(models.Model):
+    WRITTEN, UPLOADED = "written", "uploaded"
+    KINDS = [(WRITTEN, "Written here"), (UPLOADED, "Uploaded file")]
+
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, max_length=1000)
+    kind = models.CharField(max_length=10, choices=KINDS)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="documents")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at", "-pk"]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def current(self):
+        return self.versions.order_by("-number").first()
+
+
+class DocumentVersion(models.Model):
+    """Every save is a new version; old ones stay viewable and restorable (D8.8)."""
+    FILE_TYPES = [("pdf", "PDF"), ("docx", "Word"), ("xlsx", "Excel"), ("pptx", "PowerPoint"), ("image", "Picture"),
+                  ("txt", "Text"), ("written", "Written here")]
+
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="versions")
+    number = models.PositiveIntegerField()
+    file = models.FileField(upload_to=document_path, storage=document_storage, blank=True)
+    file_type = models.CharField(max_length=10, choices=FILE_TYPES)
+    filename = models.CharField(max_length=200, blank=True, help_text="The name it was uploaded with")
+    size = models.PositiveIntegerField(default=0)
+    text = models.TextField(blank=True, max_length=100_000)
+    note = models.CharField(max_length=300, blank=True)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-number"]
+        constraints = [models.UniqueConstraint(fields=["document", "number"], name="one_number_per_version")]
+
+
+class DocumentShare(models.Model):
+    """Who may read a document: one person, a meeting's people, a branch, a presbytery or the synod (R3)."""
+    PERSON, MEETING = "person", "meeting"
+    KINDS = [(PERSON, "One person"), (MEETING, "A meeting"), (BRANCH, "A branch"), (PRESBYTERY, "A presbytery"),
+             (SYNOD, "The whole synod")]
+
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="shares")
+    kind = models.CharField(max_length=12, choices=KINDS)
+    person = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True,
+                               related_name="+")
+    meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, null=True, blank=True, related_name="documents")
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True, related_name="+")
+    presbytery = models.ForeignKey(Presbytery, on_delete=models.CASCADE, null=True, blank=True, related_name="+")
+    shared_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["pk"]
+
+
+class DocumentView(models.Model):
+    """Who has opened which version (A11). Only the owner sees this."""
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="views")
+    version = models.ForeignKey(DocumentVersion, on_delete=models.CASCADE, related_name="views")
+    person = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    viewed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["version", "person"], name="one_view_per_version")]

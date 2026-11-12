@@ -159,7 +159,7 @@ class ApplyTests(DeliverableTestCase):
         data = self.as_(self.minister).get(reverse("workspace-meetings-detail", args=[self.meeting.pk])).data
         row = data["deliverables"][0]
         self.assertEqual(set(row), {"id", "title", "notes", "assignee", "due_on", "status", "overdue",
-                                    "submitted_note", "submitted_at", "review_note", "is_mine"})
+                                    "submitted_note", "submitted_at", "review_note", "is_mine", "document"})
         self.assertEqual(row["assignee"]["name"], "Elder")
 
 

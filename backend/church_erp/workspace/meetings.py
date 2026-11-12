@@ -42,6 +42,11 @@ def meeting_deliverables(meeting, user):
     return rows(meeting, user)
 
 
+def meeting_documents(meeting, user):
+    from .documents import meeting_documents as rows
+    return rows(meeting, user)
+
+
 def visible_meetings(user):
     if user.is_superuser:
         return Meeting.objects.all()
@@ -211,6 +216,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
             "can_manage": can_manage(user, meeting),
             "is_organiser": meeting.organiser_id == user.pk,
             "deliverables": meeting_deliverables(meeting, user),
+            "documents": meeting_documents(meeting, user),
         }
 
     def retrieve(self, request, *args, **kwargs):
