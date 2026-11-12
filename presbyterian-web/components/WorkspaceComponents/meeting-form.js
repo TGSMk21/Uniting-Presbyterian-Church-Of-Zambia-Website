@@ -42,7 +42,10 @@ export default function MeetingForm({ places, templates = [], meeting = null, de
             </select>
           </label>
         ) : (
-          <input type="hidden" name="place" value={place} />
+          <>
+            <input type="hidden" name="place" value={place} />
+            <p className="ws-for">For {places[0]?.label}</p>
+          </>
         )
       )}
 
