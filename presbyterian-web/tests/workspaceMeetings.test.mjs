@@ -54,6 +54,12 @@ test("a new meeting's form becomes the API's body", () => {
   });
 });
 
+test("a chosen checklist goes with a new meeting", () => {
+  assert.equal(meetingFromForm(form({ ...GOOD, template: "3" })).body.template, 3);
+  assert.equal("template" in meetingFromForm(form({ ...GOOD, template: "" })).body, false);
+  assert.equal("template" in meetingFromForm(form({ ...GOOD, template: "3" }), { editing: true }).body, false);
+});
+
 test("an edited meeting sends no place or people", () => {
   const { body } = meetingFromForm(form(GOOD), { editing: true });
   assert.equal("level" in body, false);
@@ -127,7 +133,8 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf
 
 test("workspace members find Meetings first in the Workspace menu", () => {
   const items = (staff) => (navGroups(staff).find((g) => g.label === "Workspace")?.items ?? []).map((i) => i.href);
-  assert.deepEqual(items({ role: "elder", workspace_member: true }), ["/dashboard/meetings", "/dashboard/structure"]);
+  assert.deepEqual(items({ role: "elder", workspace_member: true }),
+    ["/dashboard/meetings", "/dashboard/deliverables", "/dashboard/structure"]);
   assert.deepEqual(items({ role: "content_editor", workspace_member: false }), []);
 });
 

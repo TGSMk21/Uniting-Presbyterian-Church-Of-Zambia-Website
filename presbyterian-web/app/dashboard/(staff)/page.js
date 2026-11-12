@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { attentionItems, greeting } from "@/Utilities/overview.mjs";
+import { workspaceAttention } from "@/Utilities/deliverables.mjs";
+import { handlesContent } from "@/Utilities/dashboardNav.mjs";
 import { changeSummary } from "@/Utilities/staffAdmin.mjs";
 import { requireStaff, staffRequest } from "../session";
 
@@ -16,10 +18,17 @@ function when(value) {
 // A short list of what needs doing now, each linking to where it's done (Task 7.3).
 export default async function DashboardHome() {
   const staff = await requireStaff();
-  const { status, data } = await staffRequest("/staff-overview/");
-  if (status === 401) redirect("/dashboard/login");
+  const content = handlesContent(staff);
+  const [{ status, data }, workspace] = await Promise.all([
+    content ? staffRequest("/staff-overview/") : Promise.resolve({ status: 204, data: null }),
+    staff.workspace_member ? staffRequest("/workspace/attention/") : Promise.resolve({ status: 204, data: null }),
+  ]);
+  if (status === 401 || workspace.status === 401) redirect("/dashboard/login");
   const overview = status === 200 ? data : null;
-  const items = overview ? attentionItems(overview) : [];
+  // Workspace reminders first: they're about people waiting on each other.
+  const items = [...workspaceAttention(workspace.status === 200 ? workspace.data : null),
+    ...(overview ? attentionItems(overview) : [])];
+  const failed = (content && status !== 200) || (staff.workspace_member && workspace.status !== 200);
   const today = new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, weekday: "long", day: "numeric", month: "long" }).format(new Date());
   const own = !staff.is_superuser && overview?.branches?.length === 1 ? overview.branches[0] : null;
   const base = own ? `/dashboard/content/${encodeURIComponent(own.slug)}` : null;
@@ -33,7 +42,7 @@ export default async function DashboardHome() {
 
       <section className="dash-panel" aria-labelledby="attention">
         <h2 id="attention" className="dash-subheading">Needs your attention</h2>
-        {!overview ? (
+        {failed && items.length === 0 ? (
           <p className="dash-text">This couldn&apos;t be loaded right now. Please try again in a moment.</p>
         ) : items.length === 0 ? (
           <p className="dash-text">You&apos;re up to date. Nothing needs your attention.</p>

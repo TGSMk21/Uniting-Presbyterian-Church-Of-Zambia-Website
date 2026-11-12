@@ -4,6 +4,11 @@ import { canManageStaff } from "./staffAdmin.mjs";
 
 const CONTENT_ROLES = new Set(["branch_admin", "content_editor"]);
 
+// Website content is for ministers, content editors and superusers, not elders.
+export function handlesContent(staff) {
+  return Boolean(staff?.is_superuser || staff?.role === "super_admin" || CONTENT_ROLES.has(staff?.role));
+}
+
 export function navGroups(staff) {
   const branch = staff.branch?.slug;
   const ownBranch = !staff.is_superuser && branch && CONTENT_ROLES.has(staff.role);
@@ -41,7 +46,9 @@ export function navGroups(staff) {
   const workspace = staff.workspace_member
     ? [
         { href: "/dashboard/meetings", label: "Meetings", icon: "meetings" },
+        { href: "/dashboard/deliverables", label: "Deliverables", icon: "deliverables" },
         { href: "/dashboard/structure", label: "Church structure", icon: "structure" },
+        ...(staff.is_superuser ? [{ href: "/dashboard/checklists", label: "Checklists", icon: "checklists" }] : []),
       ]
     : [];
 

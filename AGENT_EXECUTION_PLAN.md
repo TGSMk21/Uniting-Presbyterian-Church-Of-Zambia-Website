@@ -594,7 +594,7 @@ Every task follows the same loop: **tests first and seen failing → build → m
 #### Task 8.2 — Workspace foundations: notifications and the reminder list (A6)
 - [x] `Notification` (person, kind, text, link, created, read). API: my notifications (newest first, unread count), mark read, mark all read. Only ever your own.
 - [x] Dashboard: a bell with the unread count in the sidebar header and on phones; a calm list; opening one marks it read and goes to its page.
-- [ ] Overview's "Needs your attention" gains the workspace items (meetings this week, deliverables due, documents shared with you not yet opened), computed live from the data, so no scheduled job is needed for the dashboard.
+- [x] Overview's "Needs your attention" gains the workspace items (meetings this week, deliverables due, documents shared with you not yet opened), computed live from the data, so no scheduled job is needed for the dashboard.
 
 #### Task 8.3 — Meetings and the calendar (R1, A1, A2, A3, A7, A8)
 - [x] `Meeting` (title, level and place, starts/ends, venue or online link, agenda, organiser, status: scheduled/cancelled/held, minutes document) and `MeetingAttendee` (person, response: no reply/attending/apologies, present).
@@ -606,11 +606,12 @@ Every task follows the same loop: **tests first and seen failing → build → m
 - [rev] Done (2026-11-12): 28 meeting tests; mutation checks 26/26 caught after adding five tests for the gaps the first run found; browser walk on localhost (minister plans with the "Everyone at Chilanga" group, elder answers on a phone, attendance recorded, month view on computer and phone, phone calendar feed read back, another branch's elder gets 404). Meeting deliverables and documents arrive with 8.4 and 8.5; the minutes document with 8.5. The calendar shows Coming up / Month / Past; the API's `mine=1` filter is there for a later "only mine" switch if organisers ask for it.
 
 #### Task 8.4 — Deliverables and templates (R5, A4, A9)
-- [ ] `Deliverable` (meeting, title, notes, assignee, due, status: to do/submitted/accepted/needs changes, submitted document, reviewer note).
-- [ ] `MeetingTemplate` and `TemplateItem` (title, position, days before the meeting). Applying a template to a meeting creates deliverables for whoever holds each position at that place; the organiser can edit any of them.
-- [ ] Seed templates: **Session meeting** (Minutes of the last meeting: Session Clerk; Financial report: Treasurer; Minister's report: Minister), **Presbytery meeting** and **Synod meeting** (Clerk's minutes, Treasurer's report, Moderator's report).
-- [ ] The assignee submits by attaching a document; the organiser accepts or sends back with a note. Overview shows "due soon" and "overdue". Handover moves open deliverables to a position's new holder.
-- [ ] The organiser's tracking view: who has delivered, who hasn't, overdue in red.
+- [x] `Deliverable` (meeting, title, notes, assignee, due, status: to do/submitted/accepted/needs changes, submitted document, reviewer note).
+- [x] `MeetingTemplate` and `TemplateItem` (title, position, days before the meeting). Applying a template to a meeting creates deliverables for whoever holds each position at that place; the organiser can edit any of them.
+- [x] Seed templates: **Session meeting** (Minutes of the last meeting: Session Clerk; Financial report: Treasurer; Minister's report: Minister), **Presbytery meeting** and **Synod meeting** (Clerk's minutes, Treasurer's report, Moderator's report).
+- [x] The assignee submits by attaching a document; the organiser accepts or sends back with a note. Overview shows "due soon" and "overdue". Handover moves open deliverables to a position's new holder.
+- [x] The organiser's tracking view: who has delivered, who hasn't, overdue in red.
+- [rev] Done (2026-11-12): 33 deliverable tests; mutation checks 35/36 caught (the one survivor can't change behaviour: only a branch meeting has a minister to find). The walk found two things, both fixed: people who can manage a meeting were offered "Accept" on their own work (now refused by the API, "Someone else checks your own work"), and per-row buttons crowded the list (now small icons). Elders no longer see website-content reminders or shortcuts on the Overview. Handing in currently takes a note; attaching the document itself arrives with 8.5. Documents not yet opened join the Overview with 8.5.
 
 #### Task 8.5 — The document hub (R2, R3, A5, A10, A11)
 - [ ] `Document` (title, description, owner, kind: written/uploaded, current version), `DocumentVersion` (number, file or text, note, author, created) in **private storage**, `DocumentShare` (one person, a meeting's attendees, a branch, a presbytery, or the synod), `DocumentView` (who opened which version, when).

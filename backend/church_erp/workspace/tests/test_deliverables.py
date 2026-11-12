@@ -342,3 +342,12 @@ class GapTests(DeliverableTestCase):
         self.task(status="submitted")
         self.assertEqual(self.as_(self.elder_a2).get(DELIVERABLES + "?review=1").data, [])
         self.assertEqual(self.as_(self.elder_a2).get(ATTENTION).data["to_review"], 0)
+
+    def test_nobody_accepts_their_own_work(self):
+        appoint(self.elder, self.session_clerk, branch=self.a1)
+        row = self.task(status="submitted")      # the clerk's own minutes
+        response = self.as_(self.elder).post(one(row, "review"), {"decision": "accept"}, format="json")
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(self.as_(self.elder).get(DELIVERABLES + "?review=1").data, [])
+        self.assertEqual(self.as_(self.minister).post(one(row, "review"), {"decision": "accept"}, format="json")
+                         .status_code, 200)

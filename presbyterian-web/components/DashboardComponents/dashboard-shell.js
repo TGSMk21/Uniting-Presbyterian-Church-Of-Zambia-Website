@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpen, Building2, FileText, History, Image as ImageIcon, KeyRound, Layers, LayoutDashboard,
-  CalendarDays, LogOut, Megaphone, Menu, MessageSquareText, Network, UserPlus, Users, X,
+  CalendarDays, ClipboardCheck, ListChecks, LogOut, Megaphone, Menu, MessageSquareText, Network, UserPlus, Users, X,
 } from "lucide-react";
 import ThemeToggle from "@/components/UniversalComponents/theme-toggle";
 import CrestLogo from "@/components/UniversalComponents/crest-logo";
@@ -14,6 +14,8 @@ import { activeHref } from "@/Utilities/dashboardNav.mjs";
 
 const ICONS = {
   meetings: CalendarDays,
+  deliverables: ClipboardCheck,
+  checklists: ListChecks,
   structure: Network,
   overview: LayoutDashboard, messages: MessageSquareText, announcements: Megaphone, writings: BookOpen, content: Layers, media: ImageIcon,
   pages: FileText, staff: Users, requests: UserPlus, branches: Building2, history: History,

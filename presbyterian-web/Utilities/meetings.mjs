@@ -100,7 +100,13 @@ export function meetingFromForm(formData, { editing = false } = {}) {
     agenda: text("agenda", 4000),
   };
   if (editing) return { body };
-  return { body: { title, ...where, ...body, attendees: ids(formData.get("attendees")) } };
+  const template = String(formData.get("template") ?? "");
+  return {
+    body: {
+      title, ...where, ...body, attendees: ids(formData.get("attendees")),
+      ...(/^[1-9][0-9]{0,9}$/.test(template) && { template: Number(template) }),
+    },
+  };
 }
 
 // Months, as { year, month } with month 1 to 12.

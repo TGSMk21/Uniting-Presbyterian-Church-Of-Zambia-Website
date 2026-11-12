@@ -131,7 +131,7 @@ def waiting_for_review(user):
     rows = (Deliverable.objects.filter(status=Deliverable.SUBMITTED, meeting__in=visible_meetings(user))
             .exclude(meeting__status=Meeting.CANCELLED)
             .select_related("assignee", "meeting__branch", "meeting__presbytery", "meeting__organiser"))
-    return [row for row in rows if can_manage(user, row.meeting)]
+    return [row for row in rows if row.assignee_id != user.pk and can_manage(user, row.meeting)]
 
 
 # --- The API ---------------------------------------------------------------------------
@@ -239,6 +239,8 @@ class DeliverableViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def review(self, request, *args, **kwargs):
         row = self.managed()
+        if row.assignee_id == request.user.pk:
+            raise PermissionDenied("Someone else checks your own work.")
         decision, note = request.data.get("decision"), str(request.data.get("note", "")).strip()[:1000]
         if row.status != Deliverable.SUBMITTED:
             raise serializers.ValidationError({"status": ["Only something handed in can be reviewed."]})

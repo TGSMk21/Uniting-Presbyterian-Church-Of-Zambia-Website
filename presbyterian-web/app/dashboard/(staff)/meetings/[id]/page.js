@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Clock, MapPin, Video } from "lucide-react";
 import { Attendees, ManageMeeting, MyAnswer } from "@/components/WorkspaceComponents/meeting-panel";
+import DeliverablePanel from "@/components/WorkspaceComponents/deliverable-panel";
 import { meetingWhen } from "@/Utilities/meetings.mjs";
 import { isRowId } from "@/Utilities/workspace.mjs";
 import { requireStaff, staffRequest } from "../../../session";
@@ -22,6 +23,11 @@ export default async function MeetingPage({ params, searchParams }) {
   if (status === 401) redirect("/dashboard/login");
   if (status === 404 || status === 403) notFound();
   if (status !== 200) throw new Error("The workspace API didn't answer");
+  let templates = [];
+  if (meeting.can_manage && meeting.deliverables.length === 0) {
+    const answer = await staffRequest(`/workspace/templates/?level=${meeting.level}`);
+    if (answer.status === 200) templates = answer.data;
+  }
   const query = await searchParams;
   const notice = Object.keys(NOTICES).find((key) => query[key] === "1");
   const invited = meeting.my_response !== null;
@@ -55,6 +61,7 @@ export default async function MeetingPage({ params, searchParams }) {
       {meeting.can_manage && <ManageMeeting meeting={meeting} />}
 
       <div className="ws-meeting-grid">
+        <DeliverablePanel meeting={meeting} templates={templates} />
         <section className="ws-panel" aria-labelledby="ws-agenda">
           <h2 id="ws-agenda" className="dash-subheading">Agenda</h2>
           {meeting.agenda ? <p className="dash-prewrap">{meeting.agenda}</p> :

@@ -5,6 +5,7 @@
 import { redirect } from "next/navigation";
 import { isRowId, safeDashboardLink } from "@/Utilities/workspace.mjs";
 import { meetingFromForm, parsePlace, zambiaTime } from "@/Utilities/meetings.mjs";
+import { deliverableFromForm } from "@/Utilities/deliverables.mjs";
 import { staffRequest } from "./session";
 
 function problem(status, data, fallback) {
@@ -134,4 +135,76 @@ export async function makeCalendarLink() {
   const { status, data } = await staffRequest("/workspace/calendar-feed/", { method: "POST" });
   if (status === 201) return { ok: true, token: data.token };
   return problem(status, data, "The link couldn't be made just now.");
+}
+
+// --- Deliverables and checklists (Task 8.4) --------------------------------------------
+
+export async function applyChecklist(meetingId, templateId) {
+  if (!isRowId(templateId)) return { error: "Choose a checklist." };
+  return meetingAction(meetingId, "apply-template", { template: Number(templateId) },
+    "The checklist couldn't be added. Please try again in a moment.");
+}
+
+export async function addDeliverable(meetingId, previousState, formData) {
+  const { body, error } = deliverableFromForm(formData, meetingId);
+  if (error) return { error };
+  const { status, data } = await staffRequest("/workspace/deliverables/", { method: "POST", body });
+  if (status === 201) return { ok: true, added: data.title };
+  return problem(status, data, "The deliverable couldn't be added. Please try again in a moment.");
+}
+
+export async function changeDeliverable(id, { assignee, due_on: dueOn }) {
+  if (!isRowId(id)) return { error: "This deliverable couldn't be found." };
+  const body = {};
+  if (assignee !== undefined) {
+    if (assignee !== null && !isRowId(assignee)) return { error: "Please choose the person from the list." };
+    body.assignee = assignee === null ? null : Number(assignee);
+  }
+  if (dueOn !== undefined) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dueOn))) return { error: "Please choose the date it's due." };
+    body.due_on = dueOn;
+  }
+  const { status, data } = await staffRequest(`/workspace/deliverables/${id}/`, { method: "PATCH", body });
+  if (status === 200) return { ok: true };
+  return problem(status, data, "This couldn't be changed. Please try again in a moment.");
+}
+
+export async function removeDeliverable(id) {
+  if (!isRowId(id)) return { error: "This deliverable couldn't be found." };
+  const { status, data } = await staffRequest(`/workspace/deliverables/${id}/`, { method: "DELETE" });
+  if (status === 204) return { ok: true };
+  return problem(status, data, "This couldn't be removed. Please try again in a moment.");
+}
+
+export async function handIn(id, note = "") {
+  if (!isRowId(id)) return { error: "This deliverable couldn't be found." };
+  const { status, data } = await staffRequest(`/workspace/deliverables/${id}/submit/`,
+    { method: "POST", body: { note: String(note).slice(0, 1000) } });
+  if (status === 200) return { ok: true };
+  return problem(status, data, "This couldn't be handed in. Please try again in a moment.");
+}
+
+export async function reviewDeliverable(id, decision, note = "") {
+  if (!isRowId(id)) return { error: "This deliverable couldn't be found." };
+  if (!["accept", "changes"].includes(decision)) return { error: "Accept it, or send it back." };
+  const { status, data } = await staffRequest(`/workspace/deliverables/${id}/review/`,
+    { method: "POST", body: { decision, note: String(note).slice(0, 1000) } });
+  if (status === 200) return { ok: true };
+  return problem(status, data, "This couldn't be saved. Please try again in a moment.");
+}
+
+// The superuser keeps the routine checklists up to date.
+export async function saveChecklist(id, { name, items }) {
+  const clean = (Array.isArray(items) ? items : []).slice(0, 30).map((item) => ({
+    title: String(item.title ?? "").trim().slice(0, 200),
+    position: isRowId(item.position) ? Number(item.position) : null,
+    for_minister: item.who === "minister",
+    days_before: Math.max(0, Math.min(90, Number.parseInt(item.days_before, 10) || 0)),
+  }));
+  if (clean.some((item) => !item.title)) return { error: "Every line needs a name." };
+  const body = { name: String(name ?? "").trim().slice(0, 100), items: clean };
+  if (!body.name) return { error: "Please give the checklist a name." };
+  const { status, data } = await staffRequest(`/workspace/templates/${id}/`, { method: "PATCH", body });
+  if (status === 200) return { ok: true };
+  return problem(status, data, "The checklist couldn't be saved. Please try again in a moment.");
 }
