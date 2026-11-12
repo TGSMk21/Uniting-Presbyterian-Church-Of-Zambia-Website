@@ -182,6 +182,9 @@ class AppointmentViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, view
                     .update(ended_on=timezone.localdate())
             appointment = Appointment.objects.create(person=person, position=position, branch=branch,
                                                      presbytery=presbytery, appointed_by=request.user)
+            if position.single_holder:
+                from .deliverables import hand_over
+                hand_over(position, branch, presbytery, person, request.user)
         record(request.user, "appointments", "added", branch=branch, target=appointment.title, target_id=appointment.pk)
         return Response(appointment_row(appointment), status=status.HTTP_201_CREATED)
 

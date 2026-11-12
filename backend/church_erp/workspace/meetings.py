@@ -22,7 +22,7 @@ from church_erp.core.models import Branch, Presbytery
 
 from . import scopes
 from .models import (BRANCH, LEVELS, PRESBYTERY, SYNOD, Appointment, CalendarFeed, Meeting, MeetingAttendee,
-                     Position)
+                     MeetingTemplate, Position)
 from .notify import notify
 from .structure_views import IsWorkspaceMember, members, person_name, place
 
@@ -31,6 +31,16 @@ CHANGES_TOLD = ("starts_at", "ends_at", "venue", "online_link")
 
 
 # --- Who may see and manage -------------------------------------------------------------
+
+def apply_template(meeting, template, actor):
+    from .deliverables import apply_template as apply
+    return apply(meeting, template, actor)
+
+
+def meeting_deliverables(meeting, user):
+    from .deliverables import meeting_deliverables as rows
+    return rows(meeting, user)
+
 
 def visible_meetings(user):
     if user.is_superuser:
@@ -83,19 +93,21 @@ class MeetingWriteSerializer(serializers.ModelSerializer):
     presbytery = serializers.SlugRelatedField(slug_field="slug", queryset=Presbytery.objects.all(),
                                               required=False, allow_null=True)
     attendees = PeopleIdsField(required=False, write_only=True)
+    template = serializers.PrimaryKeyRelatedField(queryset=MeetingTemplate.objects.filter(is_active=True),
+                                                  required=False, allow_null=True, write_only=True)
     online_link = serializers.URLField(required=False, allow_blank=True, validators=[https_only])
 
     class Meta:
         model = Meeting
         fields = ["title", "level", "branch", "presbytery", "starts_at", "ends_at", "venue", "online_link", "agenda",
-                  "attendees"]
+                  "attendees", "template"]
         extra_kwargs = {"title": {"allow_blank": False}}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance is not None:
             # A meeting's level and place are set once.
-            for name in ("level", "branch", "presbytery", "attendees"):
+            for name in ("level", "branch", "presbytery", "attendees", "template"):
                 self.fields.pop(name)
 
     def validate(self, attrs):
@@ -107,6 +119,9 @@ class MeetingWriteSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"presbytery": ["Choose the presbytery the meeting is for."]})
             if level == SYNOD and (branch is not None or presbytery is not None):
                 raise serializers.ValidationError({"level": ["A synod meeting isn't for one branch or presbytery."]})
+            template = attrs.get("template")
+            if template is not None and template.level != level:
+                raise serializers.ValidationError({"template": ["This checklist is for a different kind of meeting."]})
         starts = attrs.get("starts_at", getattr(self.instance, "starts_at", None))
         ends = attrs.get("ends_at", getattr(self.instance, "ends_at", None))
         if starts and ends and ends <= starts:
@@ -195,6 +210,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
             "attendees": [attendee_row(row) for row in rows],
             "can_manage": can_manage(user, meeting),
             "is_organiser": meeting.organiser_id == user.pk,
+            "deliverables": meeting_deliverables(meeting, user),
         }
 
     def retrieve(self, request, *args, **kwargs):
@@ -208,11 +224,14 @@ class MeetingViewSet(viewsets.ModelViewSet):
                                    presbytery=values.get("presbytery")):
             raise PermissionDenied("You can't plan meetings there.")
         people = values.pop("attendees", [])
+        template = values.pop("template", None)
         with transaction.atomic():
             meeting = Meeting.objects.create(organiser=request.user, **values)
             MeetingAttendee.objects.create(meeting=meeting, person=request.user, response=MeetingAttendee.ATTENDING)
             invited = add_attendees(meeting, people)
         tell_invited(meeting, invited, request.user)
+        if template is not None:
+            apply_template(meeting, template, request.user)
         return Response(self.detail_answer(meeting), status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, *args, **kwargs):
@@ -292,6 +311,14 @@ class MeetingViewSet(viewsets.ModelViewSet):
             invited = add_attendees(copy, people)
         tell_invited(copy, invited, request.user)
         return Response(self.detail_answer(copy), status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"], url_path="apply-template")
+    def apply_template(self, request, *args, **kwargs):
+        meeting = self.managed()
+        template = serializers.PrimaryKeyRelatedField(queryset=MeetingTemplate.objects.filter(is_active=True)) \
+            .run_validation(request.data.get("template"))
+        apply_template(meeting, template, request.user)
+        return Response(self.detail_answer(meeting))
 
     @action(detail=False, methods=["get"])
     def groups(self, request, *args, **kwargs):

@@ -175,3 +175,65 @@ class CalendarFeed(models.Model):
     person = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="calendar_feed")
     token_hash = models.CharField(max_length=64, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Deliverable(models.Model):
+    """Something one person must bring to a meeting by a date (R4, A4)."""
+    TO_DO, SUBMITTED, ACCEPTED, CHANGES = "todo", "submitted", "accepted", "changes"
+    STATUSES = [(TO_DO, "To do"), (SUBMITTED, "Submitted"), (ACCEPTED, "Accepted"), (CHANGES, "Needs changes")]
+    OPEN = (TO_DO, CHANGES)
+
+    meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name="deliverables")
+    title = models.CharField(max_length=200)
+    notes = models.TextField(blank=True, max_length=1000)
+    assignee = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                 related_name="deliverables")
+    # Where it came from, so a handover can pass it to the office's next holder (A9).
+    position = models.ForeignKey(Position, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    due_on = models.DateField()
+    status = models.CharField(max_length=10, choices=STATUSES, default=TO_DO)
+    submitted_note = models.TextField(blank=True, max_length=1000)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    review_note = models.TextField(blank=True, max_length=1000)
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name="+")
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["due_on", "pk"]
+        indexes = [models.Index(fields=["assignee", "status"])]
+
+    def __str__(self):
+        return self.title
+
+
+class MeetingTemplate(models.Model):
+    """A routine meeting's usual deliverables, e.g. a Session meeting's minutes and reports (R4)."""
+    name = models.CharField(max_length=100)
+    level = models.CharField(max_length=12, choices=LEVELS)
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["level", "order", "name"]
+        constraints = [models.UniqueConstraint(fields=["level", "name"], name="one_template_name_per_level")]
+
+    def __str__(self):
+        return self.name
+
+
+class TemplateItem(models.Model):
+    """One usual deliverable: what, who usually prepares it, and how many days before the meeting."""
+    template = models.ForeignKey(MeetingTemplate, on_delete=models.CASCADE, related_name="items")
+    title = models.CharField(max_length=200)
+    position = models.ForeignKey(Position, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    for_minister = models.BooleanField(default=False, help_text="The branch's minister prepares it")
+    days_before = models.PositiveSmallIntegerField(default=7)
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "pk"]
+
+    def __str__(self):
+        return self.title

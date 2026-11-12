@@ -13,6 +13,7 @@ from church_erp.core.staff_branches import StaffBranchViewSet
 from church_erp.core.changes import StaffChangeViewSet
 from church_erp.core.staff_overview import StaffOverviewView
 from church_erp.core.staff_presbyteries import StaffPresbyteryViewSet
+from church_erp.workspace.deliverables import AttentionView, DeliverableViewSet, TemplateViewSet
 from church_erp.workspace.meetings import CalendarFeedView, MeetingViewSet, calendar_feed
 from church_erp.workspace.notify import NotificationViewSet
 from church_erp.workspace.structure_views import AppointmentViewSet, BranchOfficeView, MeView as WorkspaceMeView, PeopleView, StructureView
@@ -59,6 +60,8 @@ staff_router.register(r'staff-presbyteries', StaffPresbyteryViewSet, basename='s
 # The shared workspace (AGENT_EXECUTION_PLAN.md, Phase 8).
 staff_router.register(r'workspace/appointments', AppointmentViewSet, basename='workspace-appointments')
 staff_router.register(r'workspace/meetings', MeetingViewSet, basename='workspace-meetings')
+staff_router.register(r'workspace/deliverables', DeliverableViewSet, basename='workspace-deliverables')
+staff_router.register(r'workspace/templates', TemplateViewSet, basename='workspace-templates')
 staff_router.register(r'workspace/notifications', NotificationViewSet, basename='workspace-notifications')
 
 urlpatterns = [
@@ -75,6 +78,7 @@ urlpatterns = [
     path('workspace/structure/', StructureView.as_view(), name='workspace-structure'),
     path('workspace/branches/<slug:slug>/', BranchOfficeView.as_view(), name='workspace-branch'),
     path('workspace/people/', PeopleView.as_view(), name='workspace-people'),
+    path('workspace/attention/', AttentionView.as_view(), name='workspace-attention'),
     path('workspace/calendar-feed/', CalendarFeedView.as_view(), name='workspace-calendar-feed'),
     path('workspace/calendar/<str:token>.ics', calendar_feed, name='workspace-calendar'),
     path('tasks/sync-youtube/', sync_youtube, name='sync-youtube'),
