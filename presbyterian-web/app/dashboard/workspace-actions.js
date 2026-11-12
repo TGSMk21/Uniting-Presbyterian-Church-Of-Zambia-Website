@@ -2,7 +2,8 @@
 
 // The shared workspace's actions (AGENT_EXECUTION_PLAN.md, Phase 8). Each answers
 // { ok, ... } or { error } (or { signedOut }); the API checks who may do what.
-import { isRowId } from "@/Utilities/workspace.mjs";
+import { redirect } from "next/navigation";
+import { isRowId, safeDashboardLink } from "@/Utilities/workspace.mjs";
 import { staffRequest } from "./session";
 
 function problem(status, data, fallback) {
@@ -50,4 +51,15 @@ export async function addPresbytery(previousState, formData) {
   const { status, data } = await staffRequest("/staff-presbyteries/", { method: "POST", body: { name } });
   if (status === 201) return { ok: true, added: data.name };
   return problem(status, data, "The presbytery couldn't be added. Please try again in a moment.");
+}
+
+// Opening a notification marks it read, then goes to its page (Task 8.2).
+export async function openNotification(id, link) {
+  if (isRowId(id)) await staffRequest(`/workspace/notifications/${id}/read/`, { method: "POST" });
+  redirect(safeDashboardLink(link));
+}
+
+export async function readAllNotifications() {
+  await staffRequest("/workspace/notifications/read-all/", { method: "POST" });
+  redirect("/dashboard/notifications");
 }

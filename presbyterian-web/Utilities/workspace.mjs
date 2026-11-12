@@ -33,3 +33,13 @@ export function officeRows(positions, level, officeBearers) {
 export function isRowId(value) {
   return /^[1-9][0-9]{0,9}$/.test(String(value ?? ""));
 }
+
+// Notifications only ever open a page inside the dashboard (Task 8.2).
+export function safeDashboardLink(link) {
+  const value = String(link ?? "");
+  return /^\/dashboard\/[A-Za-z0-9/_\-?=&#.]*$/.test(value) && !value.includes("//") ? value : "/dashboard/notifications";
+}
+
+export function bellLabel(unread) {
+  return unread > 0 ? `Notifications, ${unread} unread` : "Notifications";
+}

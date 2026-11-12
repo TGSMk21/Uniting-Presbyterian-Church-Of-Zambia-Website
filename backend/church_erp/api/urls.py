@@ -13,6 +13,7 @@ from church_erp.core.staff_branches import StaffBranchViewSet
 from church_erp.core.changes import StaffChangeViewSet
 from church_erp.core.staff_overview import StaffOverviewView
 from church_erp.core.staff_presbyteries import StaffPresbyteryViewSet
+from church_erp.workspace.notify import NotificationViewSet
 from church_erp.workspace.structure_views import AppointmentViewSet, BranchOfficeView, MeView as WorkspaceMeView, PeopleView, StructureView
 from church_erp.finance.views import GivingRecordViewSet
 from church_erp.api.views import backup_database, generate_daily_messages, sync_youtube
@@ -56,6 +57,7 @@ staff_router.register(r'staff-changes', StaffChangeViewSet, basename='staff-chan
 staff_router.register(r'staff-presbyteries', StaffPresbyteryViewSet, basename='staff-presbyteries')
 # The shared workspace (AGENT_EXECUTION_PLAN.md, Phase 8).
 staff_router.register(r'workspace/appointments', AppointmentViewSet, basename='workspace-appointments')
+staff_router.register(r'workspace/notifications', NotificationViewSet, basename='workspace-notifications')
 
 urlpatterns = [
     path('', include(router.urls)),

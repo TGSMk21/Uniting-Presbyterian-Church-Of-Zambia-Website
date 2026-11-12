@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import ThemeToggle from "@/components/UniversalComponents/theme-toggle";
 import CrestLogo from "@/components/UniversalComponents/crest-logo";
+import NotificationBell from "@/components/WorkspaceComponents/notification-bell";
 import { activeHref } from "@/Utilities/dashboardNav.mjs";
 
 const ICONS = {
@@ -19,7 +20,7 @@ const ICONS = {
 
 // The sidebar on computers, and a menu that slides in on phones (Task 7.3).
 // The server decides which links each person gets; this only draws them.
-export default function DashboardShell({ groups, person, signOut, children }) {
+export default function DashboardShell({ groups, person, signOut, notifications = null, children }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const active = activeHref(pathname, groups.flatMap((group) => group.items.map((item) => item.href)));
@@ -34,6 +35,7 @@ export default function DashboardShell({ groups, person, signOut, children }) {
           <CrestLogo className="dash-crest" motto={false} />
           <span>UPCZ Staff</span>
         </Link>
+        {notifications && <NotificationBell unread={notifications.unread} className="ws-bell-top" />}
         <button type="button" className="dash-menu-button" aria-expanded={open} aria-controls="dash-sidebar"
           onClick={() => setOpen((value) => !value)}>
           {open ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
@@ -42,13 +44,16 @@ export default function DashboardShell({ groups, person, signOut, children }) {
       </div>
 
       <aside id="dash-sidebar" className="dash-sidebar" data-open={open || undefined}>
-        <Link href="/dashboard" className="dash-brand dash-brand-side" prefetch={false} onClick={close}>
-          <CrestLogo className="dash-crest" motto={false} />
-          <span>
-            <strong>UPCZ Staff</strong>
-            <small>{person.place}</small>
-          </span>
-        </Link>
+        <div className="ws-sidebar-head">
+          <Link href="/dashboard" className="dash-brand dash-brand-side" prefetch={false} onClick={close}>
+            <CrestLogo className="dash-crest" motto={false} />
+            <span>
+              <strong>UPCZ Staff</strong>
+              <small>{person.place}</small>
+            </span>
+          </Link>
+          {notifications && <NotificationBell unread={notifications.unread} className="ws-bell-side" onClick={close} />}
+        </div>
         <nav aria-label="Dashboard" className="dash-sidenav">
           {groups.map((group) => (
             <div key={group.label || "main"} className="dash-sidenav-group">

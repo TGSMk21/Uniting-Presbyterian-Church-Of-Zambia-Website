@@ -1059,6 +1059,29 @@ body:has(.dash)::after { display: none; }
 .ws-picker-meta { font-size: 0.8125rem; color: var(--d-text-3); }
 .ws-picker-empty { padding: 0.75rem; color: var(--d-text-3); font-size: 0.875rem; }
 
+/* The bell and the notifications list (Task 8.2). */
+.ws-bell { position: relative; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: var(--d-radius); color: var(--d-text-2); }
+.ws-bell:hover { background: var(--d-surface-2); color: var(--d-text); }
+.ws-bell-count { position: absolute; top: 0.2rem; right: 0.15rem; min-width: 1.15rem; height: 1.15rem; padding: 0 0.3rem; border-radius: 999px; background: var(--d-danger); color: var(--d-on-danger); font-size: 0.6875rem; font-weight: 700; line-height: 1.15rem; text-align: center; font-variant-numeric: tabular-nums; }
+.ws-bell-top { margin-left: auto; margin-right: 0.25rem; }
+/* On computers the bell sits beside the brand at the top of the sidebar; on phones it's in the top bar. */
+.ws-sidebar-head { display: flex; align-items: flex-start; gap: 0.25rem; }
+.ws-sidebar-head .dash-brand-side { flex: 1; min-width: 0; }
+.ws-bell-side { display: none; flex: none; }
+@media (min-width: 1024px) { .ws-bell-side { display: grid; } }
+.ws-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.ws-toolbar .dash-text { margin: 0; }
+.ws-notes { list-style: none; margin: 1rem 0 0; padding: 0; border: 1px solid var(--d-border); border-radius: var(--d-radius-lg); background: var(--d-surface); overflow: hidden; }
+.ws-notes li + li { border-top: 1px solid var(--d-border); }
+.ws-notes form { margin: 0; }
+.ws-note { display: grid; grid-template-columns: auto 1fr auto; align-items: start; gap: 0.75rem; width: 100%; padding: 0.875rem 1rem; border: 0; background: none; text-align: left; font: inherit; color: var(--d-text-2); cursor: pointer; }
+.ws-note:hover { background: var(--d-surface-2); }
+.ws-note svg { margin-top: 0.125rem; color: var(--d-text-3); }
+.ws-note[data-unread] { color: var(--d-text); background: color-mix(in srgb, var(--d-brand-tint) 55%, transparent); }
+.ws-note[data-unread] .ws-note-text { font-weight: 600; }
+.ws-note[data-unread] svg { color: var(--d-brand); }
+.ws-note-when { font-size: 0.8125rem; color: var(--d-text-3); white-space: nowrap; }
+
 /* ===== Polish layer (owner's request, 2026-11-09) =====
    From the apple-design and motionsites-web-builder guidance, like the public site's
    polish layer in globals.css. It only refines what is above: delete it and the

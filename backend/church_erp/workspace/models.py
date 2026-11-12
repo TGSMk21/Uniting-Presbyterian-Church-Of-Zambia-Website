@@ -94,3 +94,30 @@ class Appointment(models.Model):
         problem = appointment_problem(self.person, self.position, self.branch, self.presbytery)
         if problem:
             raise ValidationError(problem)
+
+
+class Notification(models.Model):
+    """Something for one person to know (Task 8.2): shown under the bell in the dashboard,
+    and later sent to their phone (Task 8.7). Only ever read by its own person."""
+    KINDS = [
+        ("meeting_invited", "Added to a meeting"),
+        ("meeting_changed", "Meeting changed"),
+        ("meeting_cancelled", "Meeting cancelled"),
+        ("deliverable_assigned", "Something to prepare"),
+        ("deliverable_submitted", "Something was submitted"),
+        ("deliverable_reviewed", "Your submission was reviewed"),
+        ("document_shared", "A document was shared with you"),
+    ]
+    person = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications")
+    kind = models.CharField(max_length=30, choices=KINDS)
+    text = models.CharField(max_length=300)
+    link = models.CharField(max_length=300, blank=True, help_text="A page in the dashboard, starting with /dashboard/")
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+        indexes = [models.Index(fields=["person", "read_at"])]
+
+    def __str__(self):
+        return f"{self.person}: {self.text}"
