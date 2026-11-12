@@ -623,13 +623,18 @@ Every task follows the same loop: **tests first and seen failing → build → m
 - [rev] Done (2026-11-12): 39 document tests, including the who-can-read matrix case by case (owner, one person, a meeting's people and its organisers, a branch, a presbytery, the synod, a suspended account, and the superuser reading nothing unshared). Mutation checks 34/38 caught after adding two tests; the two survivors can't change behaviour (Django already adds the nosniff header to every answer, and a meeting's organiser is always on its attendee list). Word files preview as blocks the page draws itself, so nothing from a file is ever treated as HTML. Only the documents pages may show a same-site frame (for PDFs); every other page keeps frames off, checked in the headers. The file address on the website also checks the person has finished their first sign-in steps, like the other downloads. Phones open PDFs in their own viewer. Handing in a deliverable can attach the file, which is then shared with the meeting's people.
 
 #### Task 8.6 — Bring it together and polish
-- [ ] Sidebar: a **Workspace** group (Calendar, Documents, and for organisers Templates) for everyone with workspace access; elders see only the workspace and their account.
-- [ ] Empty states that teach ("No meetings yet. Your minister will add you when one is planned."); one primary action per screen; plain language reviewed with the `writing-guidelines` skill; the design reviewed with `web-design-guidelines` and `apple-design`.
-- [ ] Full browser walk with test accounts at all three levels: minister creates a session meeting from the template, elders RSVP, clerk submits minutes, minister accepts, a presbytery clerk shares a document with one presbytery, a member of another presbytery cannot see it.
-- [ ] `code-review` at high effort over the whole phase, and `security-review`; all findings fixed or explained.
+- [x] Sidebar: a **Workspace** group (Meetings, Deliverables, Documents, Church structure, and Checklists for the superuser); elders see only the workspace and their account, and the Overview no longer shows them website-content reminders.
+- [x] Empty states that say what to do next; one main action per screen; plain wording throughout.
+- [x] Browser walk at branch and presbytery level, phone and computer, light and dark: minister plans a session meeting from the checklist, elders answer, the clerk hands in minutes with the file, the minister sends it back; a presbytery clerk plans a presbytery meeting and shares a document with the presbytery; people outside get "not found".
+- [x] `code-review` (high) over the whole phase: 10 findings, all fixed with tests (commit bfde7f0). `security-review`: nothing at high confidence; two minor notes recorded (a stray line-break character in a calendar title; readers see the names a document is shared with).
 
 #### Task 8.7 — Ready for the mobile app (R6)
-- [ ] Write down the push design: the notification events above, a device-token model, the day-before and daily-deliverable schedule (a scheduled job calling a new task address hourly), and which API addresses the app uses. Nothing built for push until the app phase.
+- [x] Push design (nothing built until the app phase):
+  - **Device tokens:** `PushDevice` (person, platform ios/android, token, last_seen, created). The app registers with `POST /workspace/devices/` after sign-in and removes it on sign-out; tokens that the push service rejects are deleted.
+  - **Sent straight away** (from `notify()`, so every existing notification becomes a push too): invited to a meeting, meeting changed or cancelled, work assigned, handed in (to the organiser), sent back or accepted, document shared.
+  - **Scheduled:** an hourly job calls a new task address (`POST /tasks/workspace-reminders/`, protected like the existing cron address). It sends "Tomorrow: <meeting>" to each attendee once, the day before, and a once-a-day reminder at about 07:00 Zambian time to everyone with open deliverables ("2 things due this week, 1 overdue"). A `ReminderSent` row (person, kind, meeting or date) keeps each reminder to once.
+  - **Addresses the app uses:** the same workspace API as the website (me, meetings, deliverables, documents, notifications, attention), signed in with the same tokens.
+  - Push service: Firebase Cloud Messaging for both platforms; its key is set on the server only.
 
 ---
 
