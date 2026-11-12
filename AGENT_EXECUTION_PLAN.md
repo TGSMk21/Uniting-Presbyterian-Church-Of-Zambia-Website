@@ -534,6 +534,101 @@ Most page wording is hard-coded today: on the national site, the landing page (h
 
 ---
 
+## Phase 8 — Shared Workspace: meetings, deliverables and documents for the Synod
+
+**Goal (2026-11-12, set by the owner):** one organised place where ministers and elders of a branch, a presbytery and the whole synod plan their meetings, know what each person must bring, and share documents only with the people who should see them. Last website feature before the mobile app; the app will use the same API and rules.
+
+**Who it is for:** ministers, elders and office bearers who are not technical. Every screen must answer "what do I need to do next?" in plain words, with the important actions one tap away, nothing cluttered, and the same calm look as the rest of the dashboard (crest navy, warm paper, no gradients or decoration).
+
+### 8.0 The church's structure this builds on (researched 2026-11-11)
+- UPCZ is the **Synod of Zambia** of the Uniting Presbyterian Church in Southern Africa. Its 2026 Executive Commission papers list four Zambian presbyteries: **Copperbelt, Eastern Zambia, M'chinga, Munali** (plus **DR Congo**, which sits beside them). Branches (congregations) belong to one presbytery each.
+- Three levels therefore exist: **branch → presbytery → synod**. Every meeting, office and share happens at one of them.
+
+### 8.1 Requirements (owner's list, then the additions that make it work well)
+**Owner's requirements**
+- R1 Calendar of meetings at branch, presbytery and synod level. The organiser (a minister, or an office bearer who runs meetings at that level) adds the people who must attend; each sees the meeting on their dashboard.
+- R2 A document hub: share documents with the right people, view them in the browser, and for the author: proofread, edit and re-upload, with every version kept (version control).
+- R3 Each document is visible strictly to whom it was shared with: one person, a chosen group of people, one branch, one presbytery, or the whole synod.
+- R4 More roles for people who are not ministers: at each level a **Session Clerk** and a **Treasurer** for now, with room to add positions later without code changes.
+- R5 Each meeting has a list of **deliverables**, each tied to the person who must deliver it, with a due date; it appears as a reminder on their dashboard until done; the organiser tracks progress. **Templates** hold the routine deliverables of standard meetings, tied to the positions that usually prepare them.
+- R6 (Mobile, later) push notifications when added to a meeting, the day before it, and daily while a deliverable is due. Recorded here so the website's data supports it.
+
+**Added to make it complete (owner invited additions)**
+- A1 **RSVP and apologies:** attendees answer Attending or Sending apologies; the organiser sees who is coming.
+- A2 **Agenda and minutes** on each meeting; minutes are usually just the Session Clerk's deliverable, attached as a document.
+- A3 **Attendance register** after the meeting (who was present), so the record is complete.
+- A4 **Submit a deliverable by attaching a document** (from the hub or a new upload); the organiser can accept it or send it back with a note ("needs changes").
+- A5 **Meeting documents:** documents shared "with this meeting's attendees" appear on the meeting page; people added later see them too.
+- A6 **In-app notifications** (a bell in the dashboard): invited, meeting changed or cancelled, deliverable assigned, submitted, accepted or sent back, document shared with you. The same events become mobile push in R6.
+- A7 **Add to my phone's calendar:** each person gets a private calendar link (.ics) their phone calendar can subscribe to.
+- A8 **Copy a meeting** to schedule the next routine one in two taps (attendees and template carried over).
+- A9 **Handover:** when a position changes hands, the new holder takes over the open deliverables tied to that position.
+- A10 **Search and filters** in the hub: My documents, Shared with me, by meeting, by level; search by title.
+- A11 **Who has seen it:** the author sees which recipients opened a document (helps chase readers; nothing more is tracked).
+- A12 **Elders' accounts** come through the existing "Ask for access" flow, approved by their branch's minister, with a new role that reaches the workspace but not the website editor.
+
+**Later (not in this phase):** repeating meetings, email reminders (when the email domain is verified), comparing two versions word by word, uploads larger than 4 MB (needs direct-to-storage uploads; the website host refuses bigger requests), and the mobile push of R6.
+
+### 8.2 Decisions (defaults chosen so work can start; owner to confirm or change)
+- D8.1 **Presbyteries** are created from the list above (Copperbelt, Eastern Zambia, M'chinga, Munali); the superuser can rename, add (e.g. DR Congo) and assign each branch to one in the dashboard.
+- D8.2 **New role "Elder / office bearer"** (`elder`): reaches the workspace only, never the website's content. Ministers stay Branch Admins (Task 7.1).
+- D8.3 **Positions are data, not code:** seeded with Session Clerk and Treasurer at branch level; Clerk, Treasurer and Moderator at presbytery and synod level. The superuser can add positions (e.g. Deacon) at any level later.
+- D8.4 **Who appoints:** a branch's minister appoints that branch's office bearers; the superuser appoints presbytery and synod office bearers.
+- D8.5 **Who organises meetings:** at a branch, its minister(s) and Session Clerk; at a presbytery, its Moderator and Clerk; at the synod, the Synod Moderator and Clerk; the superuser anywhere.
+- D8.6 **Who can share with a whole group:** you can share with a branch, presbytery or the synod only if you belong to it (and the synod-wide share is limited to synod office bearers and the superuser). Sharing with people or a meeting's attendees is open to any workspace member.
+- D8.7 **Files:** PDF, Word, Excel, PowerPoint, text and images, up to 4 MB each (the website host's limit). PDFs and images open in the viewer; Word files show a readable preview; others download.
+- D8.8 **Editing:** documents written in the hub (a simple editor) are edited in the browser; uploaded files are edited on the author's computer and uploaded again as a new version. Only the author edits; every save is a new version and old versions stay viewable and restorable.
+
+### 8.3 Order of work (each step is usable on its own)
+Every task follows the same loop: **tests first and seen failing → build → mutation checks (deliberate breakages must be caught) → the access matrix extended to every new address → browser walk on localhost at 390 px and computer width, light and dark → code review (the `code-review` skill) and a security review of the access rules → commit.**
+
+#### Task 8.1 — Church structure, roles and positions (R4, A12)
+- [ ] `Presbytery` model (name, slug, order) with the four presbyteries created by a data migration; `Branch.presbytery` (optional). The synod is the whole church (no model).
+- [ ] Role `elder` on `User.role` ("Elder / office bearer"): workspace only. Access matrix: elders are refused every content and pages address.
+- [ ] `Position` (name, level: branch/presbytery/synod, `can_organise`, order) seeded per D8.3; `Appointment` (person, position, branch or presbytery, started, ended). Rules: the branch/presbytery must match the position's level; a person's appointment at a branch must be at their own branch.
+- [ ] `workspace/scopes.py`: one place that answers "which branch, presbytery and synod is this person part of", "may they organise at this level/place", "may they appoint here". Unit tests for every rule.
+- [ ] Dashboard: **Church structure** page (superuser): presbyteries, which branches are in each, and presbytery/synod office bearers. On a branch: the minister appoints the Session Clerk and Treasurer from the branch's people. Approving an access request can choose the new Elder role.
+- [ ] Tests: models, rules, API, access matrix; website tests for the new pages.
+
+#### Task 8.2 — Workspace foundations: notifications and the reminder list (A6)
+- [ ] `Notification` (person, kind, text, link, created, read). API: my notifications (newest first, unread count), mark read, mark all read. Only ever your own.
+- [ ] Dashboard: a bell with the unread count in the sidebar header and on phones; a calm list; opening one marks it read and goes to its page.
+- [ ] Overview's "Needs your attention" gains the workspace items (meetings this week, deliverables due, documents shared with you not yet opened), computed live from the data, so no scheduled job is needed for the dashboard.
+
+#### Task 8.3 — Meetings and the calendar (R1, A1, A2, A3, A7, A8)
+- [ ] `Meeting` (title, level and place, starts/ends, venue or online link, agenda, organiser, status: scheduled/cancelled/held, minutes document) and `MeetingAttendee` (person, response: no reply/attending/apologies, present).
+- [ ] Rules: only organisers per D8.5 create at a level/place; only the organiser (or superuser) changes, cancels or records attendance; attendees see the meeting; nobody else does.
+- [ ] Choosing attendees in a few taps: "everyone holding a position here" (e.g. all Session Clerks of Munali's branches), "this branch's elders", or people by name, with a search box.
+- [ ] Calendar screen: **Agenda list first** (simplest on phones: Today, This week, Later), plus a month view on computers; filters: My meetings / all I can see, level.
+- [ ] Meeting page: when and where, agenda, who's coming (RSVP buttons for me), deliverables (8.4), documents (8.5), attendance after it's held, "Copy to a new date", cancel.
+- [ ] Notifications: invited, changed, cancelled. Private `.ics` calendar link per person (revocable).
+
+#### Task 8.4 — Deliverables and templates (R5, A4, A9)
+- [ ] `Deliverable` (meeting, title, notes, assignee, due, status: to do/submitted/accepted/needs changes, submitted document, reviewer note).
+- [ ] `MeetingTemplate` and `TemplateItem` (title, position, days before the meeting). Applying a template to a meeting creates deliverables for whoever holds each position at that place; the organiser can edit any of them.
+- [ ] Seed templates: **Session meeting** (Minutes of the last meeting: Session Clerk; Financial report: Treasurer; Minister's report: Minister), **Presbytery meeting** and **Synod meeting** (Clerk's minutes, Treasurer's report, Moderator's report).
+- [ ] The assignee submits by attaching a document; the organiser accepts or sends back with a note. Overview shows "due soon" and "overdue". Handover moves open deliverables to a position's new holder.
+- [ ] The organiser's tracking view: who has delivered, who hasn't, overdue in red.
+
+#### Task 8.5 — The document hub (R2, R3, A5, A10, A11)
+- [ ] `Document` (title, description, owner, kind: written/uploaded, current version), `DocumentVersion` (number, file or text, note, author, created) in **private storage**, `DocumentShare` (one person, a meeting's attendees, a branch, a presbytery, or the synod), `DocumentView` (who opened which version, when).
+- [ ] The access rule in one function, used by every address: the owner, or anyone in a share's audience; the superuser does **not** get to read others' documents by default (pastoral confidentiality); tested exhaustively.
+- [ ] Files are only ever served through the API after that check (streamed through the website's server, same origin), never as public or long-lived links.
+- [ ] Viewer: PDF and images inline, Word as a readable preview (converted on the server and cleaned), written documents as formatted text; Download always available.
+- [ ] Author tools: write or upload, rename, upload a new version with a note, restore an old version, share and unshare, see who has opened it.
+- [ ] Hub screen: My documents, Shared with me, search; clear labels showing who each document is shared with.
+
+#### Task 8.6 — Bring it together and polish
+- [ ] Sidebar: a **Workspace** group (Calendar, Documents, and for organisers Templates) for everyone with workspace access; elders see only the workspace and their account.
+- [ ] Empty states that teach ("No meetings yet. Your minister will add you when one is planned."); one primary action per screen; plain language reviewed with the `writing-guidelines` skill; the design reviewed with `web-design-guidelines` and `apple-design`.
+- [ ] Full browser walk with test accounts at all three levels: minister creates a session meeting from the template, elders RSVP, clerk submits minutes, minister accepts, a presbytery clerk shares a document with one presbytery, a member of another presbytery cannot see it.
+- [ ] `code-review` at high effort over the whole phase, and `security-review`; all findings fixed or explained.
+
+#### Task 8.7 — Ready for the mobile app (R6)
+- [ ] Write down the push design: the notification events above, a device-token model, the day-before and daily-deliverable schedule (a scheduled job calling a new task address hourly), and which API addresses the app uses. Nothing built for push until the app phase.
+
+---
+
 ## Appendix A — Environment Variables Reference
 
 **Backend (`backend/.env`):**
