@@ -16,7 +16,7 @@ function Field({ label, help, error, optional, children }) {
 }
 
 // `slug` is null when adding a branch.
-export default function BranchAdminForm({ slug, values }) {
+export default function BranchAdminForm({ slug, values, presbyteries = [] }) {
   const isNew = slug === null;
   const [state, action, pending] = useActionState(isNew ? addBranch : saveBranch.bind(null, slug), {
     error: null,
@@ -50,6 +50,13 @@ export default function BranchAdminForm({ slug, values }) {
         <Field label="YouTube channel ID" optional error={state.fields.youtube_channel_id}
           help="UC followed by 22 letters and numbers. Sermons are brought in from this channel by themselves.">
           {box("youtube_channel_id", { type: "text", maxLength: 24, autoComplete: "off", spellCheck: false })}
+        </Field>
+        <Field label="Presbytery" optional error={state.fields.presbytery}
+          help="Which presbytery it belongs to, for the shared workspace's meetings and documents.">
+          <select key={shown.presbytery ?? ""} name="presbytery" defaultValue={shown.presbytery ?? ""} aria-invalid={invalid("presbytery")}>
+            <option value="">Not in a presbytery yet</option>
+            {presbyteries.map(({ slug: value, name }) => <option key={value} value={value}>{name}</option>)}
+          </select>
         </Field>
         {!isNew && (
           <>

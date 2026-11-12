@@ -77,7 +77,14 @@ export function ApproveRequestForm({ id, kind, fullName, superuser, branch, bran
             </Field>
           </>
         )}
-        {!superuser && <p className="dash-text">They&apos;ll be a content editor for {branchName}.</p>}
+        {!superuser && (
+          <Field label="Role" error={state.fields.role}>
+            <select key={shown.role ?? ""} name="role" defaultValue={shown.role || "content_editor"} aria-invalid={invalid("role")}>
+              <option value="content_editor">Content Editor (helps with {branchName}&apos;s website)</option>
+              <option value="elder">Elder / office bearer (shared workspace only)</option>
+            </select>
+          </Field>
+        )}
       </fieldset>
       <div className="dash-savebar">
         <button type="submit" className="btn-primary" disabled={pending}>{pending ? "Approving…" : "Approve and make the link"}</button>

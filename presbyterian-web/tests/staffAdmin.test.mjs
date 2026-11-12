@@ -27,7 +27,7 @@ test("who manages staff matches the API", () => {
   assert.equal(canManageStaff({ is_superuser: false, role: "branch_admin", branch: null }), false);
   assert.equal(canManageStaff({ is_superuser: false, role: "content_editor", branch: { slug: "alpha" } }), false);
   assert.equal(canManageStaff({ is_superuser: false, role: "finance_admin", branch: { slug: "alpha" } }), false);
-  assert.deepEqual(STAFF_ROLES.map((r) => r.value), ["content_editor", "branch_admin"]);
+  assert.deepEqual(STAFF_ROLES.map((r) => r.value), ["content_editor", "elder", "branch_admin"]);
 });
 
 test("a branch admin's form sends no role or branch; a superuser's does", () => {

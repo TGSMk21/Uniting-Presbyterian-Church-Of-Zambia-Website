@@ -23,6 +23,7 @@ from church_erp.core.client_address import has_internal_secret
 
 from . import two_factor
 from .models import User
+from church_erp.workspace.scopes import is_member
 
 
 class FromWebsiteServer(permissions.BasePermission):
@@ -133,6 +134,8 @@ class MeView(APIView):
             "must_change_password": user.must_change_password,
             "two_factor_enabled": two_factor.has_two_factor(user),
             "must_set_up_two_factor": two_factor.must_set_up_two_factor(user),
+            # Whether to offer the shared workspace (Task 8.1).
+            "workspace_member": is_member(user),
         })
 
 

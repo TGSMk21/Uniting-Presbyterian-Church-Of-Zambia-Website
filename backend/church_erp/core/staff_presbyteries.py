@@ -33,6 +33,10 @@ class PresbyterySerializer(serializers.ModelSerializer):
         slug, n = base, 2
         while Presbytery.objects.filter(slug=slug).exists():
             slug, n = f"{base}-{n}", n + 1
+        if "order" not in validated_data:
+            # A new presbytery goes at the end of the list.
+            last = Presbytery.objects.order_by("-order").values_list("order", flat=True).first() or 0
+            validated_data["order"] = last + 1
         return Presbytery.objects.create(slug=slug, **validated_data)
 
 

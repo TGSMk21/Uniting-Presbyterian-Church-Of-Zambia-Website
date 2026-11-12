@@ -37,8 +37,14 @@ export function navGroups(staff) {
       ]
     : [];
 
+  // The shared workspace (Phase 8), for ministers, elders and office bearers.
+  const workspace = staff.workspace_member
+    ? [{ href: "/dashboard/structure", label: "Church structure", icon: "structure" }]
+    : [];
+
   return [
     { label: "", items: [{ href: "/dashboard", label: "Overview", icon: "overview" }] },
+    { label: "Workspace", items: workspace },
     { label: "Content", items: content },
     { label: "People", items: people },
     { label: "Site", items: site },

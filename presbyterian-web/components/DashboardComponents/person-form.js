@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { addPerson, savePerson } from "@/app/dashboard/staff-actions";
-import { STAFF_ROLES, ministerGroups } from "@/Utilities/staffAdmin.mjs";
+import { BRANCH_ROLES, STAFF_ROLES, ministerGroups } from "@/Utilities/staffAdmin.mjs";
 import { LinkMessage } from "./link-message";
 
 function Field({ label, help, error, optional, children }) {
@@ -99,7 +99,12 @@ export default function PersonForm({ id, values, superuser, branches = [], minis
             </Field>
           </>
         ) : (
-          isNew && <p className="dash-text">They&apos;ll be a content editor for {branchName}.</p>
+          <Field label="Role" error={state.fields.role}
+            help="Content editors help with the website. Elders and office bearers use the shared workspace only.">
+            <select key={shown.role ?? ""} name="role" defaultValue={shown.role || "content_editor"} aria-invalid={invalid("role")}>
+              {BRANCH_ROLES.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+            </select>
+          </Field>
         )}
       </div>
       <div className="dash-savebar">

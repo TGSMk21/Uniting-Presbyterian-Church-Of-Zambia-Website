@@ -75,7 +75,11 @@ export function suggestedUsername(fullName) {
 
 export function approvalFromForm(formData, { superuser, kind }) {
   const values = { username: text(formData, "username") };
-  if (!superuser) return values;
+  if (!superuser) {
+    // A minister approves their branch's people as content editors or elders (Task 8.1).
+    if (["content_editor", "elder"].includes(text(formData, "role"))) values.role = text(formData, "role");
+    return values;
+  }
   if (kind === "minister") values.minister = text(formData, "minister");
   else {
     values.role = text(formData, "role");

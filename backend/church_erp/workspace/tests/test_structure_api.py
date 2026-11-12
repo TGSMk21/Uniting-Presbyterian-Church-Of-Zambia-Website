@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
-from church_erp.core.models import Branch, StaffChange
+from church_erp.core.models import Branch, Presbytery, StaffChange
 from church_erp.workspace.models import Appointment
 
 from .helpers import appoint, build_synod
@@ -33,6 +33,10 @@ class MeTests(StructureTestCase):
     def test_website_staff_are_told_they_are_not_members(self):
         data = self.as_(self.editor).get(reverse("workspace-me")).data
         self.assertFalse(data["member"])
+
+    def test_the_signed_in_persons_details_say_whether_to_offer_the_workspace(self):
+        self.assertTrue(self.as_(self.elder).get(reverse("auth-me")).data["workspace_member"])
+        self.assertFalse(self.as_(self.editor).get(reverse("auth-me")).data["workspace_member"])
 
     def test_signed_out_people_are_refused(self):
         self.client.force_authenticate(None)
@@ -130,6 +134,8 @@ class PresbyteryAdminTests(StructureTestCase):
         response = self.as_(self.root).post(reverse("staff-presbyteries-list"), {"name": "DR Congo"}, format="json")
         self.assertEqual(response.status_code, 201, response.data)
         self.assertEqual(response.data["slug"], "dr-congo")
+        # It goes at the end of the list.
+        self.assertEqual(list(Presbytery.objects.values_list("slug", flat=True))[-1], "dr-congo")
         moved = self.as_(self.root).patch(reverse("staff-branches-detail", args=["a2"]), {"presbytery": "south"}, format="json")
         self.assertEqual(moved.status_code, 200, moved.data)
         self.assertEqual(Branch.objects.get(slug="a2").presbytery, self.south)

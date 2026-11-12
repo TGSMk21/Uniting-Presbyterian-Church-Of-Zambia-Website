@@ -5,8 +5,14 @@ import { isBranchSlug } from "./branchContent.mjs";
 // The roles given out in the dashboard. Superusers and finance roles stay in the Django admin.
 export const STAFF_ROLES = [
   { value: "content_editor", label: "Content Editor" },
+  { value: "elder", label: "Elder / office bearer" },
   { value: "branch_admin", label: "Branch Admin" },
 ];
+
+// What a minister (Branch Admin) gives their own branch's people (Task 8.1): website
+// helpers, or elders, who reach the shared workspace and not the website.
+export const BRANCH_ROLES = STAFF_ROLES.filter((role) => role.value !== "branch_admin");
+const BRANCH_ROLE_VALUES = new Set(BRANCH_ROLES.map((role) => role.value));
 
 export const HISTORY_SECTIONS = [
   { value: "pages", label: "Pages", noun: "the page" },
@@ -38,6 +44,8 @@ export function personFromForm(formData, { superuser, isNew }) {
     // The minister this login belongs to (Task 7.1), or none.
     const minister = text(formData, "minister");
     values.minister = /^[1-9][0-9]{0,9}$/.test(minister) ? Number(minister) : null;
+  } else if (BRANCH_ROLE_VALUES.has(text(formData, "role"))) {
+    values.role = text(formData, "role");
   }
   return values;
 }
@@ -99,6 +107,8 @@ export function branchFromForm(formData, { isNew }) {
   if (isNew) values.slug = text(formData, "slug");
   values.contact_email = text(formData, "contact_email");
   values.youtube_channel_id = text(formData, "youtube_channel_id");
+  // Which presbytery it belongs to (Task 8.1); empty for none.
+  if (formData.has("presbytery")) values.presbytery = text(formData, "presbytery") || null;
   if (!isNew) values.is_active = formData.get("is_active") === "on";
   return values;
 }
@@ -107,7 +117,7 @@ export function branchFailure(status, data) {
   return failure(status, data, {
     notFound: "This branch couldn't be found.",
     refused: "Only superusers can change branches.",
-    boxes: ["name", "slug", "contact_email", "youtube_channel_id", "is_active"],
+    boxes: ["name", "slug", "contact_email", "youtube_channel_id", "presbytery", "is_active"],
   });
 }
 

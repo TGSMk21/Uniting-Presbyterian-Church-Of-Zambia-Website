@@ -14,7 +14,11 @@ export default async function Branch({ params, searchParams }) {
   const query = await searchParams;
   const saved = Object.hasOwn(SAVED, query.saved ?? "") ? SAVED[query.saved] : null;
 
-  const { status, data: branch } = await staffRequest(`/staff-branches/${encodeURIComponent(slug)}/`);
+  const [{ status, data: branch }, presbyteryList] = await Promise.all([
+    staffRequest(`/staff-branches/${encodeURIComponent(slug)}/`),
+    staffRequest("/staff-presbyteries/"),
+  ]);
+  const presbyteries = presbyteryList.status === 200 ? presbyteryList.data.results ?? presbyteryList.data : [];
   if (status === 401) redirect("/dashboard/login");
   if (status === 403 || status === 404) notFound();
   if (status !== 200) throw new Error(`The staff API answered ${status}`);
@@ -36,7 +40,9 @@ export default async function Branch({ params, searchParams }) {
           contact_email: branch.contact_email,
           youtube_channel_id: branch.youtube_channel_id,
           is_active: branch.is_active,
+          presbytery: branch.presbytery ?? "",
         }}
+        presbyteries={presbyteries}
       />
     </main>
   );
