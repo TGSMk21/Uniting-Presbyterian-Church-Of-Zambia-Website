@@ -134,7 +134,7 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf
 test("workspace members find Meetings first in the Workspace menu", () => {
   const items = (staff) => (navGroups(staff).find((g) => g.label === "Workspace")?.items ?? []).map((i) => i.href);
   assert.deepEqual(items({ role: "elder", workspace_member: true }),
-    ["/dashboard/meetings", "/dashboard/deliverables", "/dashboard/structure"]);
+    ["/dashboard/meetings", "/dashboard/deliverables", "/dashboard/documents", "/dashboard/structure"]);
   assert.deepEqual(items({ role: "content_editor", workspace_member: false }), []);
 });
 

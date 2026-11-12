@@ -84,3 +84,28 @@ test("Find a Branch can still ask for location; camera and microphone are off", 
   assert.match(headers["Permissions-Policy"], /camera=\(\)/);
   assert.match(headers["Permissions-Policy"], /microphone=\(\)/);
 });
+
+import { documentHeaders } from "../Utilities/securityHeaders.mjs";
+import { readFileSync } from "node:fs";
+
+test("shared documents may show a PDF from this same site, and nothing else changes", () => {
+  const headers = Object.fromEntries(documentHeaders({ dev: false }).map((h) => [h.key, h.value]));
+  const policy = directives(headers["Content-Security-Policy"]);
+  assert.deepEqual(policy["frame-src"], ["https://www.youtube.com", "'self'"]);
+  assert.deepEqual(policy["frame-ancestors"], ["'self'"]);
+  assert.equal(headers["X-Frame-Options"], "SAMEORIGIN");
+  // Everything else stays exactly as strict as every other page.
+  for (const name of ["default-src", "script-src", "object-src", "connect-src", "img-src", "form-action"]) {
+    assert.deepEqual(policy[name], production[name], name);
+  }
+  // The general rule stays: no frames anywhere else.
+  assert.deepEqual(production["frame-ancestors"], ["'none'"]);
+});
+
+test("only the documents pages get the same-site frame rule, after the general one", () => {
+  const config = readFileSync(new URL("../next.config.mjs", import.meta.url), "utf8");
+  const general = config.indexOf('source: "/:path*"');
+  const documents = config.indexOf('source: "/dashboard/documents/:path*"');
+  assert.ok(general >= 0 && documents > general);
+  assert.match(config, /documentHeaders\(/);
+});

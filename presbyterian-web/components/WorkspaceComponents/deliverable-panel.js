@@ -4,7 +4,8 @@ import { useActionState, useEffect, useId, useState, useTransition } from "react
 import { useRouter } from "next/navigation";
 import { Pencil, X } from "lucide-react";
 import { useConfirm } from "@/components/DashboardComponents/confirm-dialog";
-import { addDeliverable, applyChecklist, changeDeliverable, handIn, removeDeliverable, reviewDeliverable }
+import Link from "next/link";
+import { addDeliverable, applyChecklist, changeDeliverable, handInWithFile, removeDeliverable, reviewDeliverable }
   from "@/app/dashboard/workspace-actions";
 import { deliverableState, dueText } from "@/Utilities/deliverables.mjs";
 
@@ -44,6 +45,31 @@ function NoteStep({ label, required = false, placeholder, confirmLabel, pending,
   );
 }
 
+// Handing it in: attach the file (it's shared with the meeting's people) and add a note.
+function HandInStep({ pending, onSubmit, onCancel }) {
+  const submit = (event) => {
+    event.preventDefault();
+    onSubmit(new FormData(event.currentTarget));
+  };
+  return (
+    <form className="ws-note-step" onSubmit={submit}>
+      <label className="dash-field">
+        <span>The file <span className="dash-optional">optional</span></span>
+        <input name="file" type="file" accept=".pdf,.docx,.xlsx,.pptx,.txt,.jpg,.jpeg,.png,.webp,application/pdf,image/*" />
+        <span className="dash-help">It&apos;s shared with the people at this meeting.</span>
+      </label>
+      <label className="dash-field">
+        <span>A note for the organiser <span className="dash-optional">optional</span></span>
+        <textarea name="note" rows={2} maxLength={1000} placeholder="e.g. Printed copies will be at the meeting" />
+      </label>
+      <div className="ws-actions">
+        <button type="submit" className="btn-primary" disabled={pending}>{pending ? "Handing in…" : "Hand it in"}</button>
+        <button type="button" className="btn-ghost" onClick={onCancel}>Back</button>
+      </div>
+    </form>
+  );
+}
+
 function Row({ row, meeting }) {
   const { pending, error, run } = useRun();
   const [confirm, dialog] = useConfirm();
@@ -66,6 +92,11 @@ function Row({ row, meeting }) {
           {row.assignee ? (row.is_mine ? "You" : row.assignee.name) : "Nobody chosen yet"} · due {dueText(row.due_on)}
         </span>
         {row.notes && <span className="ws-deliverable-note">{row.notes}</span>}
+        {row.document && (
+          <Link href={`/dashboard/documents/${row.document.id}`} className="dash-link ws-deliverable-doc">
+            {row.document.title}
+          </Link>
+        )}
         {row.submitted_note && row.status !== "todo" && (
           <span className="ws-deliverable-note">Note when handed in: {row.submitted_note}</span>
         )}
@@ -104,9 +135,9 @@ function Row({ row, meeting }) {
         </div>
       )}
       {step === "hand-in" && (
-        <NoteStep label="A note for the organiser" placeholder="e.g. Printed copies will be at the meeting"
-          confirmLabel="Hand it in" pending={pending} onCancel={() => setStep(null)}
-          onConfirm={(note) => run(() => handIn(row.id, note), () => setStep(null))} />
+        <HandInStep row={row} meeting={meeting} pending={pending} onCancel={() => setStep(null)}
+          onSubmit={(formData) => run(() => handInWithFile(row.id, `${row.title}, ${meeting.title}`, formData),
+            () => setStep(null))} />
       )}
       {step === "send-back" && (
         <NoteStep label="What needs changing?" required placeholder="e.g. Please add October's figures"

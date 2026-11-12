@@ -1,6 +1,6 @@
 // Headers sent with every page; next.config.mjs applies them.
 
-export function contentSecurityPolicy({ dev }) {
+export function contentSecurityPolicy({ dev, sameSiteFrames = false }) {
   const directives = {
     "default-src": ["'self'"],
     // Next.js puts inline scripts in every page. Allowing only those by nonce
@@ -17,8 +17,8 @@ export function contentSecurityPolicy({ dev }) {
     "img-src": ["'self'", "data:", "blob:", "https:", ...(dev ? ["http://localhost:*"] : [])],
     "font-src": ["'self'"],
     "connect-src": ["'self'", ...(dev ? ["ws://localhost:*"] : [])],
-    "frame-src": ["https://www.youtube.com"],
-    "frame-ancestors": ["'none'"],
+    "frame-src": ["https://www.youtube.com", ...(sameSiteFrames ? ["'self'"] : [])],
+    "frame-ancestors": [sameSiteFrames ? "'self'" : "'none'"],
     "object-src": ["'none'"],
     "base-uri": ["'self'"],
     "form-action": ["'self'"],
@@ -46,5 +46,14 @@ export function securityHeaders({ dev }) {
     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
     // Find a Branch asks for the visitor's location.
     { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
+  ];
+}
+
+// Shared documents (Task 8.5): a document's page shows its PDF in a frame, and the
+// file comes from this same site after the access check. Nothing else is loosened.
+export function documentHeaders({ dev }) {
+  return [
+    { key: "Content-Security-Policy", value: contentSecurityPolicy({ dev, sameSiteFrames: true }) },
+    { key: "X-Frame-Options", value: "SAMEORIGIN" },
   ];
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Clock, MapPin, Video } from "lucide-react";
+import { Clock, FileText, MapPin, Video } from "lucide-react";
 import { Attendees, ManageMeeting, MyAnswer } from "@/components/WorkspaceComponents/meeting-panel";
 import DeliverablePanel from "@/components/WorkspaceComponents/deliverable-panel";
 import { meetingWhen } from "@/Utilities/meetings.mjs";
@@ -13,7 +13,11 @@ function placeValue(meeting) {
   return meeting.branch ? `branch:${meeting.branch.slug}` : "";
 }
 
-const NOTICES = { planned: "Meeting planned. Everyone invited has been told.", saved: "Changes saved." };
+const NOTICES = {
+  planned: "Meeting planned. Everyone invited has been told.",
+  saved: "Changes saved.",
+  shared: "The document is shared with everyone at this meeting.",
+};
 
 export default async function MeetingPage({ params, searchParams }) {
   const staff = await requireStaff();
@@ -68,6 +72,27 @@ export default async function MeetingPage({ params, searchParams }) {
             <p className="dash-help">No agenda yet.{meeting.can_manage && meeting.status === "scheduled" ? " Add one under Change details." : ""}</p>}
         </section>
         <Attendees meeting={meeting} place={placeValue(meeting)} />
+        <section className="ws-panel ws-meeting-docs" aria-labelledby="ws-docs">
+          <h2 id="ws-docs" className="dash-subheading">Documents</h2>
+          {meeting.documents.length ? (
+            <ul className="ws-people">
+              {meeting.documents.map((d) => (
+                <li key={d.id}>
+                  <FileText size={16} aria-hidden="true" className="ws-muted" />
+                  <Link href={`/dashboard/documents/${d.id}`} className="ws-person">
+                    <span className="ws-person-name">{d.title}</span>
+                    <span className="ws-person-meta">{d.owner}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="dash-help">No documents shared with this meeting yet.</p>}
+          {meeting.status !== "cancelled" && (
+            <div className="ws-actions">
+              <Link href={`/dashboard/documents/new?meeting=${meeting.id}`} className="btn-ghost">Share a document</Link>
+            </div>
+          )}
+        </section>
       </div>
     </main>
   );

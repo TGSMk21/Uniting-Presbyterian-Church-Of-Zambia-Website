@@ -43,3 +43,15 @@ export function safeDashboardLink(link) {
 export function bellLabel(unread) {
   return unread > 0 ? `Notifications, ${unread} unread` : "Notifications";
 }
+
+// Every message in an API refusal, however deeply it's nested, once each.
+export function apiMessages(data) {
+  const found = [];
+  const walk = (value) => {
+    if (typeof value === "string") found.push(value);
+    else if (Array.isArray(value)) value.forEach(walk);
+    else if (value && typeof value === "object") Object.values(value).forEach(walk);
+  };
+  walk(data);
+  return [...new Set(found)].join(" ");
+}

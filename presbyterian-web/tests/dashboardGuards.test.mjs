@@ -60,7 +60,7 @@ test("downloads check who is signed in too", () => {
   const routes = files(STAFF, "route.js");
   assert.ok(routes.length >= 2);
   for (const route of routes) {
-    assert.match(readFileSync(route, "utf8"), /exportResponse\(/, where(route));
+    assert.match(readFileSync(route, "utf8"), /exportResponse\(|downloadGate\(/, where(route));
   }
 });
 

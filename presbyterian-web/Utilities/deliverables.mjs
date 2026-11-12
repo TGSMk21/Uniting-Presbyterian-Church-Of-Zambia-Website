@@ -50,6 +50,8 @@ export function workspaceAttention(attention) {
       href: "/dashboard/deliverables?view=review", tone: "warning" }] : []),
     ...(attention.answer_needed ? [{ text: `${plural(attention.answer_needed, "meeting invitation", "meeting invitations")} to answer`,
       href: "/dashboard/meetings", tone: "warning" }] : []),
+    ...(attention.unread_documents ? [{ text: `${plural(attention.unread_documents, "new document", "new documents")} shared with you`,
+      href: "/dashboard/documents?view=shared", tone: "info" }] : []),
     ...due.map((d) => ({ text: `${d.title} for ${d.meeting.title} is due ${dueText(d.due_on)}`, href: link(d), tone: "neutral" })),
     ...(attention.meetings || []).map((m) => ({ text: `${m.title}, ${meetingWhen(m)}`, href: `/dashboard/meetings/${m.id}`, tone: "info" })),
   ];

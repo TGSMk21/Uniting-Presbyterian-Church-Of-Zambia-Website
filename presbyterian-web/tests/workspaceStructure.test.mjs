@@ -66,3 +66,12 @@ test("the structure page and the appoint controls are wired to the workspace add
   assert.match(page, /\/workspace\/me\//);
   assert.match(page, /notFound\(\)/);
 });
+
+import { apiMessages } from "../Utilities/workspace.mjs";
+
+test("refusals read as plain sentences, however the API nests them", () => {
+  assert.equal(apiMessages({ add: [{ non_field_errors: ["You can share with your own branch."] }, {}] }),
+    "You can share with your own branch.");
+  assert.equal(apiMessages({ title: ["Required."], file: ["Too big.", "Required."] }), "Required. Too big.");
+  assert.equal(apiMessages({}), "");
+});

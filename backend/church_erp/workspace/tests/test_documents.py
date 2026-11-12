@@ -319,6 +319,11 @@ class ViewerTests(DocumentTestCase):
                                      "runs": [{"text": "Minutes", "b": False, "i": False, "u": False}]})
         self.assertEqual(blocks[1]["runs"][0], {"text": "Present: all", "b": True, "i": False, "u": False})
 
+    def test_a_text_file_previews_as_its_words(self):
+        response = self.upload(self.elder, content="Agenda: prayer – finance".encode(), name="agenda.txt")
+        document = Document.objects.get(pk=response.data["id"])
+        self.assertEqual(self.as_(self.elder).get(url(document, "preview")).data["text"], "Agenda: prayer – finance")
+
     def test_a_written_document_previews_as_its_text(self):
         document = self.doc(text="Dear all")
         self.assertEqual(self.as_(self.elder).get(url(document, "preview")).data["text"], "Dear all")

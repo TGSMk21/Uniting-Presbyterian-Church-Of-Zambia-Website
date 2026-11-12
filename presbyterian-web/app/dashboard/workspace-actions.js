@@ -6,14 +6,14 @@ import { redirect } from "next/navigation";
 import { isRowId, safeDashboardLink } from "@/Utilities/workspace.mjs";
 import { meetingFromForm, parsePlace, zambiaTime } from "@/Utilities/meetings.mjs";
 import { deliverableFromForm } from "@/Utilities/deliverables.mjs";
+import { MAX_TEXT, MAX_UPLOAD, documentFromForm } from "@/Utilities/documents.mjs";
 import { staffRequest } from "./session";
+import { apiMessages } from "@/Utilities/workspace.mjs";
 
 function problem(status, data, fallback) {
   if (status === 401) return { signedOut: true };
   if (status === 403 || status === 404) return { error: data?.detail || "You can't do that here." };
-  if (status === 400 && data && typeof data === "object") {
-    return { error: Object.values(data).flat().join(" ") || fallback };
-  }
+  if (status === 400 && data && typeof data === "object") return { error: apiMessages(data) || fallback };
   return { error: fallback };
 }
 
@@ -207,4 +207,132 @@ export async function saveChecklist(id, { name, items }) {
   const { status, data } = await staffRequest(`/workspace/templates/${id}/`, { method: "PATCH", body });
   if (status === 200) return { ok: true };
   return problem(status, data, "The checklist couldn't be saved. Please try again in a moment.");
+}
+
+// --- Documents (Task 8.5) -------------------------------------------------------------
+
+const SHARE_KINDS = new Set(["person", "meeting", "branch", "presbytery", "synod"]);
+
+function cleanTarget(target) {
+  if (!target || !SHARE_KINDS.has(target.kind)) return null;
+  const out = { kind: target.kind };
+  if (target.kind === "person" || target.kind === "meeting") {
+    if (!isRowId(target[target.kind])) return null;
+    out[target.kind] = Number(target[target.kind]);
+  }
+  if (target.kind === "branch" || target.kind === "presbytery") {
+    if (!SLUG.test(String(target[target.kind] ?? ""))) return null;
+    out[target.kind] = target[target.kind];
+  }
+  return out;
+}
+
+async function addDocument(formData) {
+  const checked = documentFromForm(formData);
+  if (checked.error) return { error: checked.error };
+  const { status, data } = await staffRequest("/workspace/documents/", checked.formData
+    ? { method: "POST", formData: checked.formData } : { method: "POST", body: checked.body });
+  if (status === 201) return { ok: true, document: data };
+  return problem(status, data, "The document couldn't be saved. Please try again in a moment.");
+}
+
+// A new document. With a meeting chosen, it's shared with that meeting's people straight away.
+export async function createDocument(previousState, formData) {
+  const result = await addDocument(formData);
+  if (!result.ok) return result;
+  const meeting = String(formData.get("meeting") ?? "");
+  if (isRowId(meeting)) {
+    await staffRequest(`/workspace/documents/${result.document.id}/shares/`,
+      { method: "POST", body: { add: [{ kind: "meeting", meeting: Number(meeting) }] } });
+    redirect(`/dashboard/meetings/${meeting}?shared=1`);
+  }
+  redirect(`/dashboard/documents/${result.document.id}?added=1`);
+}
+
+export async function shareDocument(id, { add = [], remove = [] }) {
+  if (!isRowId(id)) return { error: "This document couldn't be found." };
+  const body = {
+    add: (Array.isArray(add) ? add : []).map(cleanTarget).filter(Boolean).slice(0, 20),
+    remove: (Array.isArray(remove) ? remove : []).filter(isRowId).map(Number),
+  };
+  const { status, data } = await staffRequest(`/workspace/documents/${id}/shares/`, { method: "POST", body });
+  if (status === 200) return { ok: true };
+  return problem(status, data, "Sharing couldn't be changed. Please try again in a moment.");
+}
+
+export async function shareOptions() {
+  const { status, data } = await staffRequest("/workspace/documents/share-options/");
+  if (status === 200) return { ok: true, options: data };
+  return problem(status, data, "Sharing choices couldn't be loaded just now.");
+}
+
+export async function newVersion(id, previousState, formData) {
+  if (!isRowId(id)) return { error: "This document couldn't be found." };
+  const note = String(formData.get("note") ?? "").trim().slice(0, 300);
+  let request;
+  if (formData.get("mode") === "text") {
+    const text = String(formData.get("text") ?? "");
+    if (!text.trim()) return { error: "Please write the words of the document." };
+    if (text.length > MAX_TEXT) return { error: "This is too long for one document. Please split it into parts." };
+    request = { method: "POST", body: { text, note } };
+  } else {
+    const file = formData.get("file");
+    if (!file || typeof file === "string" || file.size === 0) return { error: "Please choose the new file." };
+    if (file.size > MAX_UPLOAD) return { error: "This file is too large. Files can be up to 4 MB." };
+    const data = new FormData();
+    data.append("file", file, file.name);
+    data.append("note", note);
+    request = { method: "POST", formData: data };
+  }
+  const { status, data } = await staffRequest(`/workspace/documents/${id}/versions/`, request);
+  if (status === 200) redirect(`/dashboard/documents/${id}?saved=1`);
+  return problem(status, data, "The new version couldn't be saved. Please try again in a moment.");
+}
+
+export async function restoreVersion(id, number) {
+  if (!isRowId(id) || !isRowId(number)) return { error: "This version couldn't be found." };
+  const { status, data } = await staffRequest(`/workspace/documents/${id}/restore/`,
+    { method: "POST", body: { version: Number(number) } });
+  if (status === 200) return { ok: true };
+  return problem(status, data, "That version couldn't be brought back. Please try again in a moment.");
+}
+
+export async function renameDocument(id, previousState, formData) {
+  if (!isRowId(id)) return { error: "This document couldn't be found." };
+  const title = String(formData.get("title") ?? "").trim().slice(0, 200);
+  if (!title) return { error: "Please give the document a name." };
+  const description = String(formData.get("description") ?? "").trim().slice(0, 1000);
+  const { status, data } = await staffRequest(`/workspace/documents/${id}/`,
+    { method: "PATCH", body: { title, description } });
+  if (status === 200) return { ok: true };
+  return problem(status, data, "The changes couldn't be saved. Please try again in a moment.");
+}
+
+export async function deleteDocument(id) {
+  if (!isRowId(id)) return { error: "This document couldn't be found." };
+  const { status, data } = await staffRequest(`/workspace/documents/${id}/`, { method: "DELETE" });
+  if (status === 204) redirect("/dashboard/documents?view=mine&deleted=1");
+  return problem(status, data, "The document couldn't be deleted. Please try again in a moment.");
+}
+
+// Handing in a deliverable with its file: the file becomes the person's document,
+// shared with the meeting's people by the API.
+export async function handInWithFile(deliverableId, title, formData) {
+  if (!isRowId(deliverableId)) return { error: "This deliverable couldn't be found." };
+  const note = String(formData.get("note") ?? "").slice(0, 1000);
+  const file = formData.get("file");
+  let document = null;
+  if (file && typeof file !== "string" && file.size > 0) {
+    const upload = new FormData();
+    upload.append("mode", "file");
+    upload.append("title", String(title ?? "").slice(0, 200) || "Deliverable");
+    upload.append("file", file, file.name);
+    const added = await addDocument(upload);
+    if (!added.ok) return added;
+    document = added.document.id;
+  }
+  const { status, data } = await staffRequest(`/workspace/deliverables/${deliverableId}/submit/`,
+    { method: "POST", body: { note, ...(document && { document }) } });
+  if (status === 200) return { ok: true };
+  return problem(status, data, "This couldn't be handed in. Please try again in a moment.");
 }

@@ -430,6 +430,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
         version = self.chosen_version(document)
         if version.file_type == "written":
             return Response({"number": version.number, "text": version.text})
+        if version.file_type == "txt":
+            with version.file.open("rb") as handle:
+                return Response({"number": version.number, "text": handle.read(MAX_TEXT * 4).decode("utf-8", "replace")})
         if version.file_type != "docx":
             return Response({"number": version.number, "blocks": None})
         try:

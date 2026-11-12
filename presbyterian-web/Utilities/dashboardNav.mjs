@@ -47,6 +47,7 @@ export function navGroups(staff) {
     ? [
         { href: "/dashboard/meetings", label: "Meetings", icon: "meetings" },
         { href: "/dashboard/deliverables", label: "Deliverables", icon: "deliverables" },
+        { href: "/dashboard/documents", label: "Documents", icon: "documents" },
         { href: "/dashboard/structure", label: "Church structure", icon: "structure" },
         ...(staff.is_superuser ? [{ href: "/dashboard/checklists", label: "Checklists", icon: "checklists" }] : []),
       ]
