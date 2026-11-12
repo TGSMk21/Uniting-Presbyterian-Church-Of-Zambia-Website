@@ -12,6 +12,8 @@ from church_erp.accounts.access_requests import RequestAccessView, StaffRequestV
 from church_erp.core.staff_branches import StaffBranchViewSet
 from church_erp.core.changes import StaffChangeViewSet
 from church_erp.core.staff_overview import StaffOverviewView
+from church_erp.core.staff_presbyteries import StaffPresbyteryViewSet
+from church_erp.workspace.structure_views import AppointmentViewSet, BranchOfficeView, MeView as WorkspaceMeView, PeopleView, StructureView
 from church_erp.finance.views import GivingRecordViewSet
 from church_erp.api.views import backup_database, generate_daily_messages, sync_youtube
 from church_erp.content.page_content_views import PageContentPageView, PageContentView, PageImageView
@@ -51,6 +53,9 @@ staff_router.register(r'staff-people', StaffPeopleViewSet, basename='staff-peopl
 staff_router.register(r'staff-requests', StaffRequestViewSet, basename='staff-requests')
 staff_router.register(r'staff-branches', StaffBranchViewSet, basename='staff-branches')
 staff_router.register(r'staff-changes', StaffChangeViewSet, basename='staff-changes')
+staff_router.register(r'staff-presbyteries', StaffPresbyteryViewSet, basename='staff-presbyteries')
+# The shared workspace (AGENT_EXECUTION_PLAN.md, Phase 8).
+staff_router.register(r'workspace/appointments', AppointmentViewSet, basename='workspace-appointments')
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -62,6 +67,10 @@ urlpatterns = [
     path('page-content/<slug:scope>/<slug:page>/images/<slug:key>/', PageImageView.as_view(), name='page-image'),
     path('staff/<slug:scope>/details/', BranchDetailsView.as_view(), name='staff-branch-details'),
     path('staff-overview/', StaffOverviewView.as_view(), name='staff-overview'),
+    path('workspace/me/', WorkspaceMeView.as_view(), name='workspace-me'),
+    path('workspace/structure/', StructureView.as_view(), name='workspace-structure'),
+    path('workspace/branches/<slug:slug>/', BranchOfficeView.as_view(), name='workspace-branch'),
+    path('workspace/people/', PeopleView.as_view(), name='workspace-people'),
     path('tasks/sync-youtube/', sync_youtube, name='sync-youtube'),
     path('tasks/daily-messages/', generate_daily_messages, name='generate-daily-messages'),
     path('tasks/backup/', backup_database, name='backup-database'),

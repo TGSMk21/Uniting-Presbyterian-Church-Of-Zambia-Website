@@ -31,7 +31,7 @@ from church_erp.core.models import Branch, Minister
 from .auth_views import FromWebsiteServer, IsStaff
 from .models import AccessRequest, User
 from .password_links import make_link, usable_link, use_link
-from .staff_people import MANAGED_ROLES, is_branch_admin, link_minister
+from .staff_people import BRANCH_GIVEN_ROLES, MANAGED_ROLES, is_branch_admin, link_minister
 
 PHONE = re.compile(r"[0-9+()\- ]{6,20}")
 NOTE_LENGTH = 1000
@@ -137,8 +137,9 @@ class ApproveSerializer(serializers.Serializer):
     def validate(self, attrs):
         request, viewer = self.context["access_request"], self.context["viewer"]
         if not viewer.is_superuser:
-            # A minister's account adds their own branch's content editors only.
-            return {"username": attrs["username"], "role": "content_editor", "branch": viewer.branch, "minister": None}
+            # A minister's account adds their own branch's content editors or elders (Task 8.1).
+            role = attrs.get("role") if attrs.get("role") in BRANCH_GIVEN_ROLES else "content_editor"
+            return {"username": attrs["username"], "role": role, "branch": viewer.branch, "minister": None}
         branch = attrs.get("branch") or request.branch
         if request.kind == "minister":
             choice = (attrs.get("minister") or "").strip()

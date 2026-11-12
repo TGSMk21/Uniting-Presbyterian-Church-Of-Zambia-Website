@@ -5,6 +5,21 @@ from django.db import models
 from .validators import validate_not_reserved
 
 
+class Presbytery(models.Model):
+    """A group of branches (AGENT_EXECUTION_PLAN.md, Task 8.1). The synod is the whole church."""
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True)
+    order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "presbyteries"
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return f"{self.name} Presbytery"
+
+
 class Branch(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, validators=[validate_not_reserved])
@@ -27,6 +42,8 @@ class Branch(models.Model):
     hero_image = models.ImageField(upload_to='branch_hero/', blank=True)
     hero_image_secondary = models.ImageField(upload_to='branch_hero/', blank=True)
     is_active = models.BooleanField(default=True)
+    # Which presbytery it belongs to (Task 8.1); set by superusers in the dashboard.
+    presbytery = models.ForeignKey(Presbytery, on_delete=models.SET_NULL, null=True, blank=True, related_name='branches')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

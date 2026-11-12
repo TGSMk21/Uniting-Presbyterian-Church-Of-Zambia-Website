@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "church_erp.media_library",
     "church_erp.ai_messages",
     "church_erp.finance",
+    "church_erp.workspace",
     "church_erp.api",
 ]
 

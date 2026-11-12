@@ -14,6 +14,8 @@ class User(AbstractUser):
         ('branch_admin', 'Branch Admin'),
         ('finance_admin', 'Finance Admin'),
         ('content_editor', 'Content Editor'),
+        # Ministers' fellow office bearers: the shared workspace only, never the website (Task 8.1).
+        ('elder', 'Elder / office bearer'),
     ], default='content_editor')
     must_change_password = models.BooleanField(
         default=False,

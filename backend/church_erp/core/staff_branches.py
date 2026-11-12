@@ -11,7 +11,7 @@ from rest_framework import serializers, viewsets
 from church_erp.accounts.auth_views import IsStaff
 
 from .changes import IsSuperuser, changed, editable_names, record
-from .models import Branch
+from .models import Branch, Presbytery
 from .validators import RESERVED_BRANCH_SLUGS
 
 CHANNEL = re.compile(r"UC[A-Za-z0-9_-]{22}")
@@ -24,10 +24,14 @@ class StaffBranchSerializer(serializers.ModelSerializer):
     contact_email = serializers.EmailField(allow_blank=True, required=False)
     youtube_channel_id = serializers.CharField(max_length=24, allow_blank=True, required=False)
     staff_count = serializers.IntegerField(read_only=True, default=0)
+    # Which presbytery it belongs to (Task 8.1).
+    presbytery = serializers.SlugRelatedField(slug_field="slug", queryset=Presbytery.objects.all(),
+                                              allow_null=True, required=False)
 
     class Meta:
         model = Branch
-        fields = ["id", "name", "slug", "contact_email", "youtube_channel_id", "is_active", "staff_count", "created_at"]
+        fields = ["id", "name", "slug", "contact_email", "youtube_channel_id", "is_active", "presbytery", "staff_count",
+                  "created_at"]
         read_only_fields = ["created_at"]
 
     def __init__(self, *args, **kwargs):

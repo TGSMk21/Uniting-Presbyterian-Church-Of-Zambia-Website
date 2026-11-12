@@ -25,7 +25,9 @@ from .models import User
 from .password_links import make_link
 
 # The roles given out here.
-MANAGED_ROLES = ("branch_admin", "content_editor")
+MANAGED_ROLES = ("branch_admin", "content_editor", "elder")
+# What a minister (Branch Admin) gives their own branch's people: website helpers or elders (Task 8.1).
+BRANCH_GIVEN_ROLES = ("content_editor", "elder")
 def linked_minister(person):
     try:
         return person.minister_profile
@@ -61,7 +63,7 @@ def can_manage(viewer, person):
         return False
     if viewer.is_superuser:
         return True
-    return is_branch_admin(viewer) and person.branch_id == viewer.branch_id and person.role == "content_editor"
+    return is_branch_admin(viewer) and person.branch_id == viewer.branch_id and person.role in BRANCH_GIVEN_ROLES
 
 
 class PersonSerializer(serializers.ModelSerializer):
@@ -97,8 +99,8 @@ class PersonSerializer(serializers.ModelSerializer):
             # Usernames are how people sign in, so they stay as they were made.
             self.fields["username"].read_only = True
         if not viewer.is_superuser:
-            # A branch admin's people are always their branch's content editors.
-            self.fields["role"].read_only = True
+            # A branch admin's people are their branch's content editors or elders; any other
+            # role sent is ignored, as before (see validate).
             self.fields["branch"].read_only = True
             self.fields.pop("minister")
 
@@ -129,6 +131,8 @@ class PersonSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if not self.context["request"].user.is_superuser:
+            if attrs.get("role") not in BRANCH_GIVEN_ROLES:
+                attrs.pop("role", None)
             return attrs
         creating = self.instance is None
         role = attrs.get("role", None if creating else self.instance.role)
@@ -199,7 +203,7 @@ class StaffPeopleViewSet(viewsets.ModelViewSet):
         values = dict(serializer.validated_data)
         minister = values.pop("minister", None)
         if not viewer.is_superuser:
-            values.update(role="content_editor", branch=viewer.branch)
+            values.update(role=values.get("role") or "content_editor", branch=viewer.branch)
         person = User(**values, is_staff=True, is_active=True, is_superuser=False)
         person.set_unusable_password()
         with transaction.atomic():

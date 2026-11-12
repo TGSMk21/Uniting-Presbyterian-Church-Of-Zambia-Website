@@ -32,7 +32,7 @@ PEOPLE_ACTIONS = ["suspend", "restore", "reset-password", "reset-two-factor"]
 # Access requests (Task 7.2): superusers, and Branch Admins for their own branch's staff.
 REQUEST_ACTIONS = ["approve", "turn-down"]
 # Branch admins manage staff; only superusers manage branches and read the history.
-SUPERUSER_ONLY = ["staff-branches", "staff-changes"]
+SUPERUSER_ONLY = ["staff-branches", "staff-changes", "staff-presbyteries"]
 
 
 def staff_url_names():
