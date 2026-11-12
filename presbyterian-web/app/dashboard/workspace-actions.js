@@ -242,8 +242,10 @@ export async function createDocument(previousState, formData) {
   if (!result.ok) return result;
   const meeting = String(formData.get("meeting") ?? "");
   if (isRowId(meeting)) {
-    await staffRequest(`/workspace/documents/${result.document.id}/shares/`,
+    const shared = await staffRequest(`/workspace/documents/${result.document.id}/shares/`,
       { method: "POST", body: { add: [{ kind: "meeting", meeting: Number(meeting) }] } });
+    // If sharing failed, say so on the document's page, where it can be shared again.
+    if (shared.status !== 200) redirect(`/dashboard/documents/${result.document.id}?share_failed=1`);
     redirect(`/dashboard/meetings/${meeting}?shared=1`);
   }
   redirect(`/dashboard/documents/${result.document.id}?added=1`);

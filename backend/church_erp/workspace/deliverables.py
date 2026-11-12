@@ -15,7 +15,7 @@ from rest_framework.views import APIView
 from church_erp.accounts.models import User
 
 from . import scopes
-from .meetings import add_attendees, can_manage, link_to, meeting_summary, place_title, visible_meetings
+from .meetings import add_attendees, can_manage, link_to, managed_meetings, meeting_summary, place_title, visible_meetings
 from .models import (BRANCH, LEVELS, PRESBYTERY, SYNOD, Appointment, Deliverable, Meeting, MeetingAttendee,
                      MeetingTemplate, Position, TemplateItem)
 from .notify import notify
@@ -130,10 +130,10 @@ def my_open_work(user):
 
 
 def waiting_for_review(user):
-    rows = (Deliverable.objects.filter(status=Deliverable.SUBMITTED, meeting__in=visible_meetings(user))
-            .exclude(meeting__status=Meeting.CANCELLED)
-            .select_related("assignee", "meeting__branch", "meeting__presbytery", "meeting__organiser"))
-    return [row for row in rows if row.assignee_id != user.pk and can_manage(user, row.meeting)]
+    """Work handed in for meetings `user` manages, except their own."""
+    return list(Deliverable.objects.filter(status=Deliverable.SUBMITTED, meeting__in=managed_meetings(user))
+                .exclude(meeting__status=Meeting.CANCELLED).exclude(assignee=user)
+                .select_related("assignee", "meeting__branch", "meeting__presbytery", "meeting__organiser"))
 
 
 # --- The API ---------------------------------------------------------------------------
@@ -213,6 +213,9 @@ class DeliverableViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             row = serializer.save()
             if row.assignee_id != before:
+                # Given to someone by hand: no longer follows the office at a handover.
+                row.position = None
+                row.save(update_fields=["position"])
                 take_part(row.meeting, [row.assignee])
         if row.assignee_id != before:
             tell_assigned([row], request.user)
@@ -283,6 +286,11 @@ class TemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MeetingTemplate
         fields = ["name", "level", "is_active", "items"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance is not None:
+            self.fields["level"].read_only = True      # its lines were checked for this level
 
     def validate(self, attrs):
         level = attrs.get("level", getattr(self.instance, "level", None))

@@ -51,6 +51,9 @@ class NotificationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     def list(self, request, *args, **kwargs):
         rows = self.get_queryset()
+        if request.query_params.get("count") == "1":
+            # Every dashboard page shows the bell's number; only this page needs the list.
+            return Response({"unread": rows.filter(read_at__isnull=True).count()})
         return Response({
             "unread": rows.filter(read_at__isnull=True).count(),
             "results": self.get_serializer(rows[:SHOWN], many=True).data,

@@ -49,6 +49,10 @@ class NotificationApiTests(APITestCase):
         self.assertEqual([n["text"] for n in data["results"]], ["Budget shared with you", "Added to Session meeting"])
         self.assertEqual(set(data["results"][0]), {"id", "kind", "text", "link", "created_at", "read"})
 
+    def test_every_page_asks_only_for_the_count(self):
+        data = self.client.get(reverse("workspace-notifications-list") + "?count=1").data
+        self.assertEqual(data, {"unread": 2})
+
     def test_opening_one_marks_it_read_and_all_can_be_marked_at_once(self):
         first = Notification.objects.filter(person=self.elder).last()
         self.assertEqual(self.client.post(reverse("workspace-notifications-read", args=[first.pk])).status_code, 200)

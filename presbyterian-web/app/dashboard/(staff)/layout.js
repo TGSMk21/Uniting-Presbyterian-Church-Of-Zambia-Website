@@ -8,7 +8,7 @@ export default async function StaffLayout({ children }) {
   // The bell's unread count, for workspace members (Task 8.2). A failure just hides the count.
   let notifications = null;
   if (staff.workspace_member) {
-    const { status, data } = await staffRequest("/workspace/notifications/");
+    const { status, data } = await staffRequest("/workspace/notifications/?count=1");
     notifications = { unread: status === 200 ? data.unread : 0 };
   }
   const person = {

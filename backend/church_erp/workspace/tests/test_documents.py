@@ -390,3 +390,46 @@ class MeetingDocumentTests(DocumentTestCase):
         self.share(theirs, "person", person=self.elder)
         submit = reverse("workspace-deliverables-submit", args=[row.pk])
         self.assertEqual(self.as_(self.elder).post(submit, {"document": theirs.pk}, format="json").status_code, 400)
+
+
+class ReviewFixTests(DocumentTestCase):
+    """Findings from the code review (Task 8.6)."""
+
+    def test_a_picture_keeps_its_name(self):
+        from PIL import Image
+        data = io.BytesIO()
+        Image.new("RGB", (20, 20), "red").save(data, "PNG")
+        response = self.upload(self.elder, content=data.getvalue(), name="church-photo.png")
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertEqual(Document.objects.get().current.filename, "church-photo.webp")
+
+    def test_names_with_accents_download_as_they_are(self):
+        document = self.doc()
+        DocumentVersion.objects.filter(document=document).update(filename="Budget—Ŵ 2026.pdf")
+        disposition = self.as_(self.elder).get(url(document, "file"))["Content-Disposition"]
+        self.assertIn("filename*=utf-8''Budget%E2%80%94%C5%B4%202026.pdf", disposition)
+        self.assertTrue(disposition.startswith("inline"))
+
+    def test_the_document_list_stays_cheap(self):
+        """The number of queries doesn't grow with the number of documents."""
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        def queries(count):
+            for index in range(count):
+                self.share(self.doc(owner=self.minister, title=f"Doc {index}"), "branch", branch=self.a1)
+            self.as_(self.elder).get(DOCS)
+            with CaptureQueriesContext(connection) as seen:
+                self.as_(self.elder).get(DOCS)
+            return len(seen)
+
+        self.assertEqual(queries(2), queries(4))
+
+    def test_a_newer_version_shows_as_new_again(self):
+        theirs = self.doc(owner=self.minister)
+        self.share(theirs, "branch", branch=self.a1)
+        self.as_(self.elder).get(url(theirs, "file"))
+        self.assertTrue(self.as_(self.elder).get(DOCS).data["results"][0]["seen"])
+        body = {"file": SimpleUploadedFile("v2.pdf", PDF + b"% v2")}
+        self.as_(self.minister).post(url(theirs, "versions"), body, format="multipart")
+        self.assertFalse(self.as_(self.elder).get(DOCS).data["results"][0]["seen"])

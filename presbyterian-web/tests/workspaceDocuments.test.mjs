@@ -76,3 +76,11 @@ test("a document's file only ever comes through the checked address", () => {
   assert.match(route, /private, no-store/);
   assert.match(route, /isRowId\(id\)/);
 });
+
+test("a failed share with a meeting is reported, never announced as done", () => {
+  const actions = read("app/dashboard/workspace-actions.js");
+  const create = actions.slice(actions.indexOf("export async function createDocument"), actions.indexOf("export async function shareDocument"));
+  assert.ok(create.indexOf("share_failed=1") < create.indexOf("shared=1\`") || create.includes("shared.status !== 200"));
+  assert.match(create, /if \(shared\.status !== 200\) redirect\(`\/dashboard\/documents\/\$\{result\.document\.id\}\?share_failed=1`\)/);
+  assert.match(read("app/dashboard/(staff)/documents/[id]/page.js"), /share_failed/);
+});

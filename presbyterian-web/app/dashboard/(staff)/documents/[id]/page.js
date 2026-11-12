@@ -9,6 +9,7 @@ import { requireStaff, staffRequest } from "../../../session";
 const NOTICES = {
   added: "Saved. Only you can see it: read it through, then choose who to share it with.",
   saved: "New version saved.",
+  share_failed: "Saved, but it couldn't be shared with the meeting just now. Only you can see it: share it below.",
 };
 
 export default async function DocumentPage({ params, searchParams }) {
@@ -59,7 +60,7 @@ export default async function DocumentPage({ params, searchParams }) {
             file={`/dashboard/documents/${id}/file${suffix}`} />
         </div>
         <aside className="ws-doc-side">
-          {owner && <SharePanel document={document} startOpen={notice === "added"} />}
+          {owner && <SharePanel document={document} startOpen={notice === "added" || notice === "share_failed"} />}
           {owner && <div className="ws-actions ws-doc-tools"><NewVersion document={document} /></div>}
           {document.versions.length > 1 && <Versions document={document} showing={version.number} owner={owner} />}
           {owner && <Viewers viewers={document.viewers} newest={newest} />}

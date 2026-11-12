@@ -351,3 +351,52 @@ class GapTests(DeliverableTestCase):
         self.assertEqual(self.as_(self.elder).get(DELIVERABLES + "?review=1").data, [])
         self.assertEqual(self.as_(self.minister).post(one(row, "review"), {"decision": "accept"}, format="json")
                          .status_code, 200)
+
+
+class ReviewFixTests(DeliverableTestCase):
+    """Findings from the code review (Task 8.6)."""
+
+    def test_work_given_to_someone_by_hand_stays_with_them_at_a_handover(self):
+        appoint(self.elder, self.session_clerk, branch=self.a1)
+        row = self.task(position=self.session_clerk)
+        self.as_(self.minister).patch(one(row), {"assignee": self.elder_a2.pk}, format="json")
+        self.as_(self.minister).post(reverse("workspace-appointments-list"),
+                                     {"person": self.minister.pk, "position": self.session_clerk.pk, "branch": "a1"},
+                                     format="json")
+        row.refresh_from_db()
+        self.assertEqual(row.assignee, self.elder_a2)
+
+    def test_a_checklists_level_is_set_once(self):
+        session = MeetingTemplate.objects.get(name="Session meeting")
+        url = reverse("workspace-templates-detail", args=[session.pk])
+        self.as_(self.root).patch(url, {"level": "synod"}, format="json")
+        session.refresh_from_db()
+        self.assertEqual(session.level, "branch")
+
+    def test_the_review_count_stays_cheap(self):
+        """The number of queries doesn't grow with the number of meetings."""
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        from church_erp.workspace.deliverables import waiting_for_review
+        appoint(self.elder, self.session_clerk, branch=self.a1)
+
+        def queries(count):
+            for _ in range(count):
+                self.task(meeting=self.meet(), status="submitted", assignee=self.elder_a2)
+            with CaptureQueriesContext(connection) as seen:
+                rows = waiting_for_review(self.elder)
+            return len(rows), len(seen)
+
+        few, few_queries = queries(2)
+        many, many_queries = queries(6)
+        self.assertEqual((few, many), (2, 8))
+        self.assertEqual(few_queries, many_queries)
+
+    def test_an_organiser_who_left_office_still_checks_work_for_their_meeting(self):
+        office = appoint(self.elder, self.session_clerk, branch=self.a1)
+        meeting = self.meet(organiser=self.elder)
+        row = self.task(meeting=meeting, status="submitted", assignee=self.elder_a2)
+        office.ended_on = timezone.localdate()
+        office.save()
+        from church_erp.workspace.deliverables import waiting_for_review
+        self.assertEqual([r.pk for r in waiting_for_review(self.elder)], [row.pk])

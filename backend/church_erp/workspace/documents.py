@@ -6,13 +6,12 @@ anyone in one of the document's shares. The superuser has no special reading rig
 Only the owner renames, adds versions, restores, shares and deletes. Files are only
 ever sent through the API after the rule is checked, never as public links."""
 import logging
-import mimetypes
 from datetime import timedelta
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.http import FileResponse, Http404
 from django.utils import timezone
 from rest_framework import serializers, status, viewsets
@@ -94,6 +93,7 @@ def checked_document(uploaded):
             raise DjangoValidationError(NOT_ALLOWED) from problem
         return uploaded, "txt", "txt"
     if kind == "image":
+        content.name = uploaded.name        # the converted picture has no name of its own
         return content, "image", "webp"
     if kind != "document":
         raise DjangoValidationError(NOT_ALLOWED)
@@ -148,6 +148,9 @@ def share_label(share):
 
 
 def shares_of(document):
+    cached = getattr(document, "_prefetched_objects_cache", {}).get("shares")
+    if cached is not None:
+        return list(cached)
     return list(document.shares.select_related("person", "meeting", "branch", "presbytery"))
 
 
@@ -157,14 +160,25 @@ def version_row(version):
             "author": person_name(version.author) if version.author else ""}
 
 
+def latest(document):
+    """The newest version, using prefetched versions when the list loaded them."""
+    versions = getattr(document, "_prefetched_objects_cache", {}).get("versions")
+    if versions is not None:
+        return max(versions, key=lambda v: v.number, default=None)
+    return document.current
+
+
 def seen_by(user, document, current):
     if document.owner_id == user.pk or current is None:
         return True
+    seen = getattr(document, "seen_versions", None)
+    if seen is not None:
+        return current.pk in seen
     return DocumentView.objects.filter(version=current, person=user).exists()
 
 
 def list_row(document, user):
-    current = document.current
+    current = latest(document)
     return {
         "id": document.pk, "title": document.title, "kind": document.kind, "owner": person_name(document.owner),
         "updated_at": document.updated_at, "version": current.number if current else 0,
@@ -310,7 +324,16 @@ class DocumentViewSet(viewsets.ModelViewSet):
         q = str(params.get("q", "")).strip()[:80]
         if q:
             rows = rows.filter(Q(title__icontains=q) | Q(description__icontains=q))
-        page = self.paginate_queryset(rows.order_by("-updated_at", "-pk"))
+        rows = rows.order_by("-updated_at", "-pk").prefetch_related(
+            "versions", Prefetch("shares", queryset=DocumentShare.objects.select_related(
+                "person", "meeting", "branch", "presbytery")))
+        page = self.paginate_queryset(rows)
+        seen = {}
+        for document_id, version_id in DocumentView.objects.filter(
+                person=request.user, document__in=[d.pk for d in page]).values_list("document_id", "version_id"):
+            seen.setdefault(document_id, set()).add(version_id)
+        for document in page:
+            document.seen_versions = seen.get(document.pk, set())
         return self.get_paginated_response([list_row(d, request.user) for d in page])
 
     def retrieve(self, request, *args, **kwargs):
@@ -415,11 +438,10 @@ class DocumentViewSet(viewsets.ModelViewSet):
         version = self.chosen_version(document)
         if not version.file:
             raise Http404
-        response = FileResponse(version.file.open("rb"), content_type=CONTENT_TYPES.get(version.file_type,
-                                                                                         "application/octet-stream"))
-        inline = version.file_type in ("pdf", "image", "txt")
-        filename = version.filename or f"document.{mimetypes.guess_extension(response['Content-Type']) or 'bin'}"
-        response["Content-Disposition"] = f'{"inline" if inline else "attachment"}; filename="{filename}"'
+        # FileResponse writes the name so any language's letters survive (filename*=utf-8'').
+        response = FileResponse(version.file.open("rb"), as_attachment=version.file_type not in ("pdf", "image", "txt"),
+                                filename=version.filename or f"document-{version.number}",
+                                content_type=CONTENT_TYPES.get(version.file_type, "application/octet-stream"))
         response["Cache-Control"] = "private, no-store"
         response["X-Content-Type-Options"] = "nosniff"
         return response

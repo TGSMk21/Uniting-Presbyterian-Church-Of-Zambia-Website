@@ -47,14 +47,26 @@ def meeting_documents(meeting, user):
     return rows(meeting, user)
 
 
+def managing(user):
+    """The meetings `user` manages, as a query: the same answer as can_manage, in one go."""
+    places = scopes.organising_places(user)
+    rule = Q(organiser=user) | Q(level=BRANCH, branch__in=places["branches"]) \
+        | Q(level=PRESBYTERY, presbytery__in=places["presbyteries"])
+    if places["synod"]:
+        rule |= Q(level=SYNOD)
+    return rule
+
+
+def managed_meetings(user):
+    if user.is_superuser:
+        return Meeting.objects.all()
+    return Meeting.objects.filter(managing(user))
+
+
 def visible_meetings(user):
     if user.is_superuser:
         return Meeting.objects.all()
-    places = scopes.organising_places(user)
-    seen = Q(attendees__person=user) | Q(organiser=user)
-    seen |= Q(level=BRANCH, branch__in=places["branches"]) | Q(level=PRESBYTERY, presbytery__in=places["presbyteries"])
-    if places["synod"]:
-        seen |= Q(level=SYNOD)
+    seen = Q(attendees__person=user) | managing(user)
     return Meeting.objects.filter(pk__in=Meeting.objects.filter(seen).values("pk"))
 
 
@@ -186,7 +198,8 @@ class MeetingViewSet(viewsets.ModelViewSet):
             # Upcoming includes today's earlier meetings, so a meeting doesn't vanish while it's on.
             rows = rows.filter(starts_at__gte=timezone.localtime(now).replace(hour=0, minute=0, second=0, microsecond=0))
         if params.get("mine") == "1":
-            rows = rows.filter(attendees__person=self.request.user)
+            # A subquery, so the attendee count below still counts everyone.
+            rows = rows.filter(pk__in=MeetingAttendee.objects.filter(person=self.request.user).values("meeting_id"))
         return rows.annotate(attendee_count=Count("attendees", distinct=True))
 
     def get_serializer_class(self):
@@ -270,7 +283,11 @@ class MeetingViewSet(viewsets.ModelViewSet):
         remove_ids = {int(i) for i in request.data.get("remove", []) if str(i).isdigit()}
         with transaction.atomic():
             invited = add_attendees(meeting, add)
-            meeting.attendees.filter(person_id__in=remove_ids).exclude(person_id=meeting.organiser_id).delete()
+            removed = list(meeting.attendees.filter(person_id__in=remove_ids).exclude(person_id=meeting.organiser_id)
+                           .values_list("person_id", flat=True))
+            meeting.attendees.filter(person_id__in=removed).delete()
+            # Their unfinished work waits for someone else; what they handed in stays theirs.
+            meeting.deliverables.filter(assignee_id__in=removed, status__in=("todo", "changes")).update(assignee=None)
         tell_invited(meeting, invited, request.user)
         return Response(self.detail_answer(meeting))
 
@@ -305,6 +322,9 @@ class MeetingViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def copy(self, request, *args, **kwargs):
         meeting = self.managed()
+        # A new meeting needs the right to plan there now, not just to manage this one.
+        if not scopes.can_organise(request.user, meeting.level, branch=meeting.branch, presbytery=meeting.presbytery):
+            raise PermissionDenied("You can't plan meetings there any more.")
         starts = serializers.DateTimeField().run_validation(request.data.get("starts_at"))
         length = (meeting.ends_at - meeting.starts_at) if meeting.ends_at else None
         with transaction.atomic():
@@ -371,11 +391,13 @@ def brief(person):
 def invite_groups(level, branch, presbytery, leave_out=None):
     """Ready-made groups for the attendee picker: e.g. "Session Clerks in Munali"."""
     people = members()
+    usable = set(people.values_list("pk", flat=True))
     held = Appointment.objects.current().select_related("person__branch", "position")
     groups = []
 
     def group(key, label, rows):
-        rows = sorted({p.pk: p for p in rows if p != leave_out}.values(), key=person_name)
+        # Only people who can use the workspace: a suspended office holder would block the invitation.
+        rows = sorted({p.pk: p for p in rows if p != leave_out and p.pk in usable}.values(), key=person_name)
         if rows:
             groups.append({"key": key, "label": label, "people": [brief(p) for p in rows]})
 

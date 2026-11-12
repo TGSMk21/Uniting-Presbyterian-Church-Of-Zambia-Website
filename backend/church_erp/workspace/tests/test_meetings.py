@@ -317,3 +317,40 @@ class GapTests(MeetingTestCase):
         self.make(attendees=[self.elder])
         rows = self.as_(self.elder).get(LIST + "?when=all").data["results"]
         self.assertEqual([row["has_started"] for row in rows], [True, False])
+
+
+class ReviewFixTests(MeetingTestCase):
+    """Findings from the code review (Task 8.6)."""
+
+    def test_removing_someone_frees_their_open_work_for_someone_else(self):
+        from church_erp.workspace.models import Deliverable
+        meeting = self.make(attendees=[self.elder])
+        due = timezone.localdate()
+        open_row = Deliverable.objects.create(meeting=meeting, title="Report", assignee=self.elder, due_on=due)
+        done = Deliverable.objects.create(meeting=meeting, title="Old", assignee=self.elder, due_on=due, status="accepted")
+        self.as_(self.minister).post(detail(meeting, "attendees"), {"remove": [self.elder.pk]}, format="json")
+        open_row.refresh_from_db()
+        done.refresh_from_db()
+        self.assertIsNone(open_row.assignee)
+        self.assertEqual(done.assignee, self.elder)
+
+    def test_invite_groups_leave_out_suspended_people(self):
+        appoint(self.elder, self.session_clerk, branch=self.a1)
+        self.elder.is_active = False
+        self.elder.save()
+        groups = self.as_(self.minister).get(reverse("workspace-meetings-groups") + "?level=branch&branch=a1").data
+        self.assertFalse(any(p["id"] == self.elder.pk for g in groups for p in g["people"]))
+
+    def test_planning_the_next_one_needs_the_right_to_plan_there_now(self):
+        office = appoint(self.elder, self.session_clerk, branch=self.a1)
+        meeting = self.make(organiser=self.elder)
+        office.ended_on = timezone.localdate()
+        office.save()
+        body = {"starts_at": (self.soon + timedelta(days=30)).isoformat()}
+        self.assertEqual(self.as_(self.elder).post(detail(meeting, "copy"), body, format="json").status_code, 403)
+        self.assertEqual(self.as_(self.minister).post(detail(meeting, "copy"), body, format="json").status_code, 201)
+
+    def test_my_meetings_count_everyone_on_them(self):
+        self.make(attendees=[self.elder, self.elder_a2])
+        rows = self.as_(self.elder).get(LIST + "?mine=1").data["results"]
+        self.assertEqual(rows[0]["attendee_count"], 3)
