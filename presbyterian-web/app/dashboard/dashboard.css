@@ -1082,6 +1082,94 @@ body:has(.dash)::after { display: none; }
 .ws-note[data-unread] svg { color: var(--d-brand); }
 .ws-note-when { font-size: 0.8125rem; color: var(--d-text-3); white-space: nowrap; }
 
+
+/* ----- Meetings and the calendar (Task 8.3) ----- */
+.ws-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 1rem; }
+.ws-page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.ws-page-head .dash-text { margin-bottom: 0; }
+.ws-narrow { max-width: 44rem; }
+.ws-muted { color: var(--d-text-3); }
+.ws-cancelled .dash-row-title, .ws-chip.ws-cancelled { text-decoration: line-through; color: var(--d-text-3); }
+
+.ws-day { margin-top: 1.25rem; }
+.ws-day-label { margin: 0 0 0.5rem; font-size: 0.8125rem; font-weight: 600; color: var(--d-text-2); }
+
+.ws-month-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
+.ws-month-head .dash-subheading { margin: 0; }
+.ws-month-head .btn-ghost { width: 2.75rem; padding: 0; font-size: 1.25rem; }
+.ws-month { width: 100%; table-layout: fixed; border-collapse: collapse; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius-lg); overflow: hidden; }
+.ws-month th { padding: 0.5rem; font-size: 0.75rem; font-weight: 600; color: var(--d-text-3); text-align: left; border-bottom: 1px solid var(--d-border); }
+.ws-month td { height: 6.5rem; padding: 0.375rem; vertical-align: top; border: 1px solid var(--d-border); }
+.ws-month td.ws-out { background: var(--d-surface-2); }
+.ws-month td.ws-out .ws-date { color: var(--d-text-3); }
+.ws-date { display: inline-grid; place-items: center; min-width: 1.75rem; height: 1.75rem; margin-bottom: 0.25rem; border-radius: 999px; font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.ws-today .ws-date { background: var(--d-brand); color: var(--d-on-brand); font-weight: 600; }
+.ws-chip { display: block; margin-top: 0.125rem; padding: 0.125rem 0.375rem; border-radius: 4px; background: var(--d-brand-tint); color: var(--d-brand); font-size: 0.75rem; font-weight: 500; line-height: 1.4; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ws-chip:hover { background: var(--d-brand); color: var(--d-on-brand); }
+.ws-month-list { display: none; }
+@media (max-width: 47.99rem) {
+  .ws-month td { height: 3.25rem; padding: 0.25rem; text-align: center; }
+  .ws-month th { text-align: center; padding: 0.375rem 0; }
+  .ws-month .ws-date { display: grid; margin: 0 auto 0.125rem; }
+  .ws-chip { display: inline-block; width: 0.4375rem; height: 0.4375rem; margin: 0 1px; padding: 0; border-radius: 999px; background: var(--d-brand); font-size: 0; }
+  .ws-month-list { display: block; }
+}
+
+.ws-phone { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--d-border); }
+.ws-phone .ws-actions { margin-top: 0.75rem; }
+
+.ws-meeting-form .dash-field { margin-bottom: 1rem; }
+.ws-when { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 0.75rem; }
+@media (max-width: 30rem) { .ws-when { grid-template-columns: 1fr 1fr; } .ws-when > :first-child { grid-column: 1 / -1; } }
+.ws-fieldset { margin: 0.5rem 0 1rem; padding: 1rem; border: 1px solid var(--d-border); border-radius: var(--d-radius-lg); background: var(--d-surface); }
+.ws-fieldset legend { padding: 0 0.375rem; font-weight: 600; }
+.ws-form-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.25rem; }
+
+.ws-invite { display: grid; gap: 0.875rem; margin-top: 0.75rem; }
+.ws-fieldset > .dash-help { margin: 0; }
+.ws-groups { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.ws-group { display: inline-flex; align-items: center; gap: 0.375rem; min-height: 2.5rem; padding: 0 0.75rem; border: 1px dashed var(--d-border-strong); border-radius: 999px; background: var(--d-surface); color: var(--d-text); font: inherit; font-size: 0.8125rem; cursor: pointer; }
+.ws-group:hover:not(:disabled) { border-style: solid; border-color: var(--d-brand); color: var(--d-brand); }
+.ws-group:disabled { opacity: 0.5; cursor: default; }
+.ws-group-count { padding: 0 0.375rem; border-radius: 999px; background: var(--d-neutral-bg); color: var(--d-text-2); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.ws-chosen { display: flex; flex-wrap: wrap; gap: 0.375rem; list-style: none; margin: 0; padding: 0; }
+.ws-chosen li { display: inline-flex; align-items: center; gap: 0.125rem; padding: 0.25rem 0.25rem 0.25rem 0.75rem; border-radius: 999px; background: var(--d-brand-tint); color: var(--d-brand); font-size: 0.875rem; font-weight: 500; }
+.ws-chip-remove { display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border: 0; border-radius: 999px; background: none; color: inherit; cursor: pointer; }
+.ws-chip-remove:hover { background: var(--d-surface); }
+
+.ws-meeting-head { margin: 0.5rem 0 1.25rem; }
+.ws-meeting-head .dash-heading { margin-bottom: 0.5rem; }
+.ws-facts { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; list-style: none; margin: 0 0 0.5rem; padding: 0; color: var(--d-text-2); }
+.ws-facts li { display: inline-flex; align-items: center; gap: 0.375rem; }
+.ws-facts svg { color: var(--d-text-3); flex: none; }
+
+.ws-answer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; margin-bottom: 1.25rem; padding: 1rem 1.25rem; border: 1px solid var(--d-border); border-left: 3px solid var(--d-brand); border-radius: var(--d-radius-lg); background: var(--d-surface); }
+.ws-answer-q { margin: 0; font-weight: 600; }
+.ws-answer-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.ws-answer-buttons button { display: inline-flex; align-items: center; gap: 0.375rem; min-height: 2.75rem; padding: 0 1rem; border: 1px solid var(--d-border-strong); border-radius: var(--d-radius); background: var(--d-surface); color: var(--d-text); font: inherit; font-size: 0.875rem; font-weight: 500; cursor: pointer; }
+.ws-answer-buttons button:hover { background: var(--d-surface-2); }
+.ws-answer-buttons button[aria-pressed="true"] { border-color: var(--d-brand); background: var(--d-brand); color: var(--d-on-brand); }
+.ws-answer .dash-error { flex-basis: 100%; margin: 0; }
+
+.ws-manage { margin-bottom: 1.25rem; }
+.ws-manage > .ws-actions { margin-top: 0; }
+.ws-copy { margin-top: 0.75rem; padding: 1rem; border: 1px solid var(--d-border); border-radius: var(--d-radius-lg); background: var(--d-surface); max-width: 32rem; }
+.ws-copy .ws-when { grid-template-columns: 1fr 1fr; margin-bottom: 0.75rem; }
+
+.ws-meeting-grid { display: grid; gap: 1rem; align-items: start; }
+@media (min-width: 64rem) { .ws-meeting-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.ws-panel { padding: 1.25rem; border: 1px solid var(--d-border); border-radius: var(--d-radius-lg); background: var(--d-surface); min-width: 0; }
+@media (min-width: 640px) { .ws-panel { padding: 1.5rem; } }
+.ws-panel .dash-subheading { margin: 0 0 0.25rem; }
+.ws-panel .dash-prewrap { margin: 0.5rem 0 0; line-height: 1.65; }
+.ws-counts { margin: 0; font-size: 0.8125rem; color: var(--d-text-3); }
+.ws-people { list-style: none; margin: 0.75rem 0 0; padding: 0; border-top: 1px solid var(--d-border); }
+.ws-people li { display: flex; align-items: center; gap: 0.75rem; min-height: 3rem; padding: 0.375rem 0; border-bottom: 1px solid var(--d-border); }
+.ws-person { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.ws-person-name { font-weight: 500; overflow-wrap: anywhere; }
+.ws-person-meta { font-size: 0.8125rem; color: var(--d-text-3); }
+.ws-invite-more { margin-top: 1rem; }
+
 /* ===== Polish layer (owner's request, 2026-11-09) =====
    From the apple-design and motionsites-web-builder guidance, like the public site's
    polish layer in globals.css. It only refines what is above: delete it and the

@@ -4,6 +4,7 @@
 // { ok, ... } or { error } (or { signedOut }); the API checks who may do what.
 import { redirect } from "next/navigation";
 import { isRowId, safeDashboardLink } from "@/Utilities/workspace.mjs";
+import { meetingFromForm, parsePlace, zambiaTime } from "@/Utilities/meetings.mjs";
 import { staffRequest } from "./session";
 
 function problem(status, data, fallback) {
@@ -62,4 +63,75 @@ export async function openNotification(id, link) {
 export async function readAllNotifications() {
   await staffRequest("/workspace/notifications/read-all/", { method: "POST" });
   redirect("/dashboard/notifications");
+}
+
+// --- Meetings (Task 8.3) ---------------------------------------------------------------
+
+export async function createMeeting(previousState, formData) {
+  const { body, error } = meetingFromForm(formData);
+  if (error) return { error };
+  const { status, data } = await staffRequest("/workspace/meetings/", { method: "POST", body });
+  if (status === 201) redirect(`/dashboard/meetings/${data.id}?planned=1`);
+  return problem(status, data, "The meeting couldn't be saved. Please try again in a moment.");
+}
+
+export async function updateMeeting(id, previousState, formData) {
+  if (!isRowId(id)) return { error: "This meeting couldn't be found." };
+  const { body, error } = meetingFromForm(formData, { editing: true });
+  if (error) return { error };
+  const { status, data } = await staffRequest(`/workspace/meetings/${id}/`, { method: "PATCH", body });
+  if (status === 200) redirect(`/dashboard/meetings/${id}?saved=1`);
+  return problem(status, data, "The changes couldn't be saved. Please try again in a moment.");
+}
+
+async function meetingAction(id, name, body, fallback) {
+  if (!isRowId(id)) return { error: "This meeting couldn't be found." };
+  const { status, data } = await staffRequest(`/workspace/meetings/${id}/${name}/`, { method: "POST", body });
+  if (status === 200 || status === 201) return { ok: true, meeting: data };
+  return problem(status, data, fallback);
+}
+
+export async function cancelMeeting(id) {
+  return meetingAction(id, "cancel", {}, "The meeting couldn't be cancelled. Please try again in a moment.");
+}
+
+export async function respondToMeeting(id, response) {
+  if (!["attending", "apologies"].includes(response)) return { error: "Choose Attending or Sending apologies." };
+  return meetingAction(id, "respond", { response }, "Your answer couldn't be saved. Please try again in a moment.");
+}
+
+export async function changeAttendees(id, { add = [], remove = [] }) {
+  const clean = (list) => (Array.isArray(list) ? list.filter(isRowId).map(Number).slice(0, 200) : []);
+  return meetingAction(id, "attendees", { add: clean(add), remove: clean(remove) },
+    "The list couldn't be changed. Please try again in a moment.");
+}
+
+export async function recordAttendance(id, present) {
+  const clean = Array.isArray(present) ? present.filter(isRowId).map(Number) : [];
+  return meetingAction(id, "attendance", { present: clean }, "Attendance couldn't be saved. Please try again in a moment.");
+}
+
+export async function copyMeeting(id, previousState, formData) {
+  const startsAt = zambiaTime(String(formData.get("date") ?? ""), String(formData.get("start") ?? ""));
+  if (!startsAt) return { error: "Please choose the new date and starting time." };
+  const result = await meetingAction(id, "copy", { starts_at: startsAt }, "The meeting couldn't be copied just now.");
+  if (result.ok) redirect(`/dashboard/meetings/${result.meeting.id}?planned=1`);
+  return result;
+}
+
+// Ready-made groups to invite for one place, e.g. every Session Clerk in a presbytery.
+export async function inviteGroups(placeValue) {
+  const where = parsePlace(placeValue);
+  if (!where) return { ok: true, groups: [] };
+  const params = new URLSearchParams(where);
+  const { status, data } = await staffRequest(`/workspace/meetings/groups/?${params}`);
+  if (status === 200) return { ok: true, groups: data };
+  return problem(status, data, "Groups couldn't be loaded just now.");
+}
+
+// A private address a phone's calendar can follow. Making a new one stops the old one.
+export async function makeCalendarLink() {
+  const { status, data } = await staffRequest("/workspace/calendar-feed/", { method: "POST" });
+  if (status === 201) return { ok: true, token: data.token };
+  return problem(status, data, "The link couldn't be made just now.");
 }

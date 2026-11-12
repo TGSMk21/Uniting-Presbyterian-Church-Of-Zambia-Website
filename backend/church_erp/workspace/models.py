@@ -121,3 +121,57 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.person}: {self.text}"
+
+
+class Meeting(models.Model):
+    """A meeting at a branch, a presbytery or the synod (Task 8.3)."""
+    SCHEDULED, CANCELLED, HELD = "scheduled", "cancelled", "held"
+    STATUSES = [(SCHEDULED, "Scheduled"), (CANCELLED, "Cancelled"), (HELD, "Held")]
+
+    title = models.CharField(max_length=200)
+    level = models.CharField(max_length=12, choices=LEVELS)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True, related_name="meetings")
+    presbytery = models.ForeignKey(Presbytery, on_delete=models.CASCADE, null=True, blank=True, related_name="meetings")
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField(null=True, blank=True)
+    venue = models.CharField(max_length=200, blank=True)
+    online_link = models.URLField(blank=True, help_text="A video call's https address, if any")
+    agenda = models.TextField(blank=True, max_length=4000)
+    organiser = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+")
+    status = models.CharField(max_length=10, choices=STATUSES, default=SCHEDULED)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["starts_at", "pk"]
+        indexes = [models.Index(fields=["starts_at"])]
+
+    def __str__(self):
+        return f"{self.title} ({self.starts_at:%d %b %Y})"
+
+    @property
+    def place(self):
+        return self.branch or self.presbytery
+
+
+class MeetingAttendee(models.Model):
+    NO_REPLY, ATTENDING, APOLOGIES = "pending", "attending", "apologies"
+    RESPONSES = [(NO_REPLY, "No reply yet"), (ATTENDING, "Attending"), (APOLOGIES, "Sending apologies")]
+
+    meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name="attendees")
+    person = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="meeting_places")
+    response = models.CharField(max_length=10, choices=RESPONSES, default=NO_REPLY)
+    present = models.BooleanField(null=True, blank=True, help_text="Recorded after the meeting")
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["person__first_name", "person__last_name", "person__username"]
+        constraints = [models.UniqueConstraint(fields=["meeting", "person"], name="one_place_per_person")]
+
+
+class CalendarFeed(models.Model):
+    """A private address a phone's calendar can subscribe to (Task 8.3, A7). Only a hash
+    of its secret is kept; making a new one replaces the old."""
+    person = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="calendar_feed")
+    token_hash = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)

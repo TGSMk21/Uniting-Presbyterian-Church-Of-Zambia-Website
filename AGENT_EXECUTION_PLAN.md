@@ -592,17 +592,18 @@ Every task follows the same loop: **tests first and seen failing → build → m
 - **[rev] Done (2026-11-12):** migrations `core/0012–0013`, `workspace/0001–0002`; addresses `workspace/me`, `workspace/structure`, `workspace/branches/<slug>`, `workspace/people`, `workspace/appointments` and `staff-presbyteries`; `/auth/me` says `workspace_member`. Appointing a single-holder position ends the previous holder's appointment (handover). Ministers keep seeing fellow ministers in Staff and any role they send other than Content Editor or Elder is ignored, as before. 32 workspace tests and 6 website tests; 11 deliberate breakages of the rules all caught; the full suites stay green (757 backend, 295 website). Browser-walked: the minister appoints a Session Clerk from a search of their branch's people, the superuser appoints Munali's Clerk and adds a presbytery (it goes last), an elder's menu holds only Overview and Church structure (phone, dark).
 
 #### Task 8.2 — Workspace foundations: notifications and the reminder list (A6)
-- [ ] `Notification` (person, kind, text, link, created, read). API: my notifications (newest first, unread count), mark read, mark all read. Only ever your own.
-- [ ] Dashboard: a bell with the unread count in the sidebar header and on phones; a calm list; opening one marks it read and goes to its page.
+- [x] `Notification` (person, kind, text, link, created, read). API: my notifications (newest first, unread count), mark read, mark all read. Only ever your own.
+- [x] Dashboard: a bell with the unread count in the sidebar header and on phones; a calm list; opening one marks it read and goes to its page.
 - [ ] Overview's "Needs your attention" gains the workspace items (meetings this week, deliverables due, documents shared with you not yet opened), computed live from the data, so no scheduled job is needed for the dashboard.
 
 #### Task 8.3 — Meetings and the calendar (R1, A1, A2, A3, A7, A8)
-- [ ] `Meeting` (title, level and place, starts/ends, venue or online link, agenda, organiser, status: scheduled/cancelled/held, minutes document) and `MeetingAttendee` (person, response: no reply/attending/apologies, present).
-- [ ] Rules: only organisers per D8.5 create at a level/place; only the organiser (or superuser) changes, cancels or records attendance; attendees see the meeting; nobody else does.
-- [ ] Choosing attendees in a few taps: "everyone holding a position here" (e.g. all Session Clerks of Munali's branches), "this branch's elders", or people by name, with a search box.
-- [ ] Calendar screen: **Agenda list first** (simplest on phones: Today, This week, Later), plus a month view on computers; filters: My meetings / all I can see, level.
-- [ ] Meeting page: when and where, agenda, who's coming (RSVP buttons for me), deliverables (8.4), documents (8.5), attendance after it's held, "Copy to a new date", cancel.
-- [ ] Notifications: invited, changed, cancelled. Private `.ics` calendar link per person (revocable).
+- [x] `Meeting` (title, level and place, starts/ends, venue or online link, agenda, organiser, status: scheduled/cancelled/held, minutes document) and `MeetingAttendee` (person, response: no reply/attending/apologies, present).
+- [x] Rules: only organisers per D8.5 create at a level/place; only the organiser (or superuser) changes, cancels or records attendance; attendees see the meeting; nobody else does.
+- [x] Choosing attendees in a few taps: "everyone holding a position here" (e.g. all Session Clerks of Munali's branches), "this branch's elders", or people by name, with a search box.
+- [x] Calendar screen: **Agenda list first** (simplest on phones: Today, This week, Later), plus a month view on computers; filters: My meetings / all I can see, level.
+- [x] Meeting page: when and where, agenda, who's coming (RSVP buttons for me), deliverables (8.4), documents (8.5), attendance after it's held, "Copy to a new date", cancel.
+- [x] Notifications: invited, changed, cancelled. Private `.ics` calendar link per person (revocable).
+- [rev] Done (2026-11-12): 28 meeting tests; mutation checks 26/26 caught after adding five tests for the gaps the first run found; browser walk on localhost (minister plans with the "Everyone at Chilanga" group, elder answers on a phone, attendance recorded, month view on computer and phone, phone calendar feed read back, another branch's elder gets 404). Meeting deliverables and documents arrive with 8.4 and 8.5; the minutes document with 8.5. The calendar shows Coming up / Month / Past; the API's `mine=1` filter is there for a later "only mine" switch if organisers ask for it.
 
 #### Task 8.4 — Deliverables and templates (R5, A4, A9)
 - [ ] `Deliverable` (meeting, title, notes, assignee, due, status: to do/submitted/accepted/needs changes, submitted document, reviewer note).
