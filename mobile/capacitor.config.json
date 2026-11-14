@@ -1,0 +1,20 @@
+{
+  "appId": "org.upcz.app",
+  "appName": "UPCZ",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#f6f3ec"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover",
+      "style": "DEFAULT"
+    },
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "backgroundColor": "#f6f3ec",
+      "showSpinner": false
+    }
+  }
+}

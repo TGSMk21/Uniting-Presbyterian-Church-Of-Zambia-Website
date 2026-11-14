@@ -1,0 +1,120 @@
+/* The app's design tokens (MOBILE_APP_PLAN.md, Phase 0). Every colour, size, curve and
+   duration used anywhere comes from here, so the whole app moves and reads as one thing.
+
+   Direction: "morning light on paper". Warm paper, deep crest navy for meaning and action,
+   the crest's red only for live and urgent moments. A serif with optical sizing carries
+   scripture and greetings; the phone's own sans-serif carries everything you tap. */
+
+:root {
+  /* Colour: light. Navy and red are the crest's own; paper and ink are warmed to match. */
+  --paper: #f6f3ec;
+  --paper-deep: #eee9de;
+  --surface: #fffdf8;
+  --surface-sunk: #f1ece2;
+  --raised: #ffffff;           /* a chosen option sitting above its group */
+  --ink: #17191f;
+  --ink-2: #474c57;
+  --ink-3: #7b7f88;
+  --hairline: rgba(23, 25, 31, 0.08);
+  --hairline-strong: rgba(23, 25, 31, 0.14);
+  --brand: #1b2a6b;
+  --brand-pressed: #121d4f;
+  --on-brand: #ffffff;
+  --brand-tint: #e7eaf4;
+  --brand-wash: rgba(27, 42, 107, 0.06);
+  --accent: #c0322a;
+  --accent-tint: #f7e5e2;
+  --scrim: rgba(13, 16, 23, 0.36);
+  --bar: rgba(250, 247, 241, 0.86);
+  --bar-solid: #faf7f1;
+  --sheet: #fffdf8;
+  --shadow-1: 0 1px 2px rgba(23, 25, 31, 0.05), 0 1px 1px rgba(23, 25, 31, 0.03);
+  --shadow-2: 0 10px 28px -14px rgba(23, 25, 31, 0.22), 0 2px 6px rgba(23, 25, 31, 0.05);
+  --shadow-3: 0 -12px 40px -16px rgba(13, 16, 23, 0.28);
+
+  /* Type. Sizes are in rem so they grow with the phone's font size setting. */
+  --font-serif: "Newsreader Variable", "Newsreader", Georgia, serif;
+  --font-sans: system-ui, Roboto, "Segoe UI", sans-serif;
+  --t-display: 2.125rem;    /* greeting, big page titles */
+  --t-title: 1.5rem;
+  --t-headline: 1.1875rem;
+  --t-body: 1rem;
+  --t-callout: 0.9375rem;
+  --t-caption: 0.8125rem;
+  --t-micro: 0.6875rem;     /* tab labels */
+
+  /* Space, on a 4px rhythm. */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.25rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --s-10: 2.5rem;
+  --gutter: 1.25rem;
+
+  /* Shape. */
+  --r-s: 10px;
+  --r-m: 16px;
+  --r-l: 22px;
+  --r-xl: 28px;
+  --r-round: 999px;
+
+  /* Motion. Springs live in src/lib/motion.js; these are for CSS-only moments. */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-press: 110ms;
+  --dur-quick: 180ms;
+  --dur-base: 260ms;
+  --dur-slow: 420ms;
+
+  /* Chrome sizes. */
+  --top-bar-h: 3.5rem;
+  --tab-bar-h: 4.25rem;
+  --touch: 48px;
+
+  /* Safe areas: Capacitor writes --safe-area-inset-*; browsers use env(). */
+  --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+
+  color-scheme: light;
+}
+
+/* Colour: dark. Not inverted light: a deep ink-navy night with warm text, so scripture
+   reads like lamplight rather than a terminal. */
+:root[data-theme="dark"] {
+  --paper: #0d1017;
+  --paper-deep: #090b10;
+  --surface: #151a24;
+  --surface-sunk: #10141c;
+  --raised: #2a3242;
+  --ink: #ece8df;
+  --ink-2: #bdb9b0;
+  --ink-3: #8a8d95;
+  --hairline: rgba(236, 232, 223, 0.08);
+  --hairline-strong: rgba(236, 232, 223, 0.14);
+  --brand: #b3c3f2;
+  --brand-pressed: #d0dbf8;
+  --on-brand: #0d1017;
+  --brand-tint: #1d2640;
+  --brand-wash: rgba(179, 195, 242, 0.07);
+  --accent: #ea6b61;
+  --accent-tint: #3b1e1c;
+  --scrim: rgba(0, 0, 0, 0.55);
+  --bar: rgba(16, 20, 28, 0.84);
+  --bar-solid: #10141c;
+  --sheet: #171c27;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 12px 30px -14px rgba(0, 0, 0, 0.7), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-3: 0 -12px 40px -16px rgba(0, 0, 0, 0.8);
+  color-scheme: dark;
+}
+
+/* People who ask for more contrast get solid bars and stronger lines. */
+@media (prefers-contrast: more) {
+  :root { --hairline: rgba(23, 25, 31, 0.3); --bar: var(--bar-solid); --ink-3: var(--ink-2); }
+  :root[data-theme="dark"] { --hairline: rgba(236, 232, 223, 0.35); }
+}

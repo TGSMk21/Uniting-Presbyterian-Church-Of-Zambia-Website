@@ -1,0 +1,130 @@
+/* The app's base layer and shared pieces (MOBILE_APP_PLAN.md, Phase 0). */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 100%;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+/* Themes change with an ease, never a flash (apple-design §14). */
+body { transition: background-color var(--dur-slow) var(--ease-in-out), color var(--dur-slow) var(--ease-in-out); }
+
+#root { height: 100%; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 6px; }
+img, svg { display: block; }
+
+/* App chrome isn't text to select; content is. */
+.app { user-select: none; -webkit-user-select: none; }
+.selectable { user-select: text; -webkit-user-select: text; }
+
+/* ----- Type ----- */
+.t-display {
+  font-family: var(--font-serif);
+  font-size: var(--t-display);
+  font-weight: 450;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-optical-sizing: auto;
+  margin: 0;
+}
+.t-title { font-family: var(--font-serif); font-size: var(--t-title); font-weight: 500; line-height: 1.15; letter-spacing: -0.012em; margin: 0; }
+.t-headline { font-size: var(--t-headline); font-weight: 600; line-height: 1.3; letter-spacing: -0.005em; margin: 0; }
+.t-body { font-size: var(--t-body); line-height: 1.55; margin: 0; }
+.t-callout { font-size: var(--t-callout); line-height: 1.45; color: var(--ink-2); margin: 0; }
+.t-caption { font-size: var(--t-caption); line-height: 1.35; letter-spacing: 0.01em; color: var(--ink-3); margin: 0; }
+.t-overline { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); margin: 0; }
+
+/* ----- The app frame: content scrolls under the floating bars ----- */
+.app { position: fixed; inset: 0; overflow: hidden; background: var(--paper); }
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: calc(var(--safe-top) + var(--top-bar-h) + var(--s-2)) calc(var(--gutter) + var(--safe-right))
+    calc(var(--safe-bottom) + var(--tab-bar-h) + var(--s-8)) calc(var(--gutter) + var(--safe-left));
+  scrollbar-width: none;
+}
+.screen::-webkit-scrollbar { display: none; }
+.screen[hidden] { display: none; }
+
+/* ----- Buttons and rows ----- */
+.press { transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-quick) var(--ease-out); }
+.press:active { transform: scale(0.97); }
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  border-radius: var(--r-round);
+  color: var(--ink);
+  transition: background-color var(--dur-quick) var(--ease-out), transform var(--dur-press) var(--ease-out);
+}
+.icon-button:active { background: var(--brand-wash); transform: scale(0.94); }
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: var(--touch);
+  padding: 0 var(--s-5);
+  border-radius: var(--r-round);
+  font-size: var(--t-callout);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+}
+.button-primary { background: var(--brand); color: var(--on-brand); }
+.button-primary:active { background: var(--brand-pressed); }
+.button-quiet { background: var(--brand-wash); color: var(--brand); }
+
+.card {
+  background: var(--surface);
+  border-radius: var(--r-l);
+  box-shadow: var(--shadow-1);
+  border: 1px solid var(--hairline);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border-radius: var(--r-l);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  width: 100%;
+  min-height: 3.5rem;
+  padding: var(--s-3) var(--s-4);
+  text-align: left;
+}
+.list-row + .list-row, .list > li + li { border-top: 1px solid var(--hairline); }
+.list-row:active { background: var(--brand-wash); }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .chev { color: var(--ink-3); }
+
+.section-label { margin: var(--s-8) var(--s-1) var(--s-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; }
+  .press:active, .icon-button:active { transform: none; }
+}

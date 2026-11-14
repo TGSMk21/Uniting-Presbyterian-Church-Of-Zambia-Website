@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f6f3ec" />
+    <title>UPCZ</title>
+    <script>
+      // The theme is set before the first paint, so there is never a flash of the wrong one.
+      // Keep in step with src/lib/theme.js (THEME_KEY, THEME_COLORS).
+      (function () {
+        var pref = "system";
+        try { pref = localStorage.getItem("upcz.theme") || "system"; } catch (e) {}
+        var dark = pref === "dark" || (pref !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        var root = document.documentElement;
+        root.dataset.theme = dark ? "dark" : "light";
+        document.querySelector('meta[name="theme-color"]').content = dark ? "#0d1017" : "#f6f3ec";
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

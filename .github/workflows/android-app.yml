@@ -1,0 +1,65 @@
+# Builds the Android app (mobile/) into an installable APK (MOBILE_APP_PLAN.md, Phase 0).
+# The APK appears under this run's "Artifacts" on GitHub, to download and install on a phone.
+name: Android app
+
+on:
+  push:
+    paths: ["mobile/**", ".github/workflows/android-app.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-app-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Install
+        run: npm ci
+
+      - name: Check (tests and lint) before building
+        run: |
+          npm test
+          npm run lint
+
+      - name: Build the app's screens and copy them into the Android project
+        run: |
+          npm run build
+          npx cap sync android
+
+      - name: Build the APK
+        working-directory: mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Name the APK after this build
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk "upcz-app-${GITHUB_SHA::7}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: upcz-app-${{ github.run_number }}
+          path: mobile/upcz-app-*.apk
+          retention-days: 30

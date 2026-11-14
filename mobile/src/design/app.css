@@ -1,0 +1,228 @@
+/* The app's chrome and Phase 0 screens (MOBILE_APP_PLAN.md). Values come from tokens.css. */
+
+/* ----- Layers ----- */
+.tabs-layer { position: absolute; inset: 0; will-change: transform; }
+
+/* ----- Top bar: floats over content; a hairline and the title appear only once scrolled ----- */
+.top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: calc(var(--safe-top) + var(--top-bar-h));
+  padding: var(--safe-top) calc(var(--s-2) + var(--safe-right)) 0 calc(var(--s-2) + var(--safe-left));
+  background: transparent;
+  transition: background-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+.top-bar[data-scrolled] {
+  background: var(--bar);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: 0 1px 0 var(--hairline);
+}
+.top-bar-title {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: var(--t-callout);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity var(--dur-quick) var(--ease-out), transform var(--dur-base) var(--ease-out);
+}
+.top-bar[data-scrolled] .top-bar-title { opacity: 1; transform: none; }
+.top-bar-actions { display: flex; }
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: var(--r-round);
+  background: var(--brand);
+  color: var(--on-brand);
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  font-weight: 500;
+}
+
+/* ----- Tab bar: docked, translucent, labels always visible ----- */
+.tab-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: grid;
+  /* Each tab is as wide as its label needs (at least a thumb's width), and the space left
+     is shared out evenly, so "Announcements" fits even on a 360px phone. */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(3.5rem, max-content);
+  justify-content: space-evenly;
+  height: calc(var(--safe-bottom) + var(--tab-bar-h));
+  padding: var(--s-2) calc(var(--s-1) + var(--safe-right)) var(--safe-bottom) calc(var(--s-1) + var(--safe-left));
+  background: var(--bar);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  box-shadow: 0 -1px 0 var(--hairline);
+}
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  color: var(--ink-3);
+  transition: color var(--dur-quick) var(--ease-out);
+}
+.tab[aria-current="page"] { color: var(--brand); }
+.tab-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 2rem;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+.tab:active .tab-icon { transform: scale(0.92); }
+.tab-icon svg { position: relative; }
+.tab-pill { position: absolute; inset: 0; border-radius: var(--r-round); background: var(--brand-tint); }
+.tab-label {
+  white-space: nowrap;
+  font-size: var(--t-micro);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.tab[aria-current="page"] .tab-label { font-weight: 650; }
+
+/* Lighter phones: solid bars instead of blur (blur is costly on older web views). */
+:root[data-fx="low"] .tab-bar,
+:root[data-fx="low"] .top-bar[data-scrolled] { background: var(--bar-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+@media (prefers-reduced-transparency: reduce) {
+  .tab-bar, .top-bar[data-scrolled] { background: var(--bar-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* ----- Screen intros and the Phase 0 placeholders ----- */
+.screen-intro { padding: var(--s-6) var(--s-1) var(--s-2); }
+.screen-intro .t-overline { margin-bottom: var(--s-2); }
+.screen-lede { margin-top: var(--s-3); max-width: 30ch; }
+.coming { list-style: none; margin: var(--s-6) 0 0; padding: 0; display: grid; gap: var(--s-2); }
+.coming-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 3.5rem;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-m);
+  background: var(--surface);
+  border: 1px dashed var(--hairline-strong);
+}
+.coming-dot { flex: none; width: 0.5rem; height: 0.5rem; border-radius: var(--r-round); background: var(--brand); opacity: 0.55; }
+
+/* ----- Pages over the tabs ----- */
+.page {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  box-shadow: -18px 0 40px -24px rgba(0, 0, 0, 0.35);
+}
+.page-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: calc(var(--safe-top) + var(--top-bar-h));
+  padding: var(--safe-top) calc(var(--gutter) + var(--safe-right)) 0 calc(var(--s-2) + var(--safe-left));
+}
+.page-bar-title { margin: 0; font-size: var(--t-headline); font-weight: 600; letter-spacing: -0.005em; }
+.page-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: var(--s-2) calc(var(--gutter) + var(--safe-right)) calc(var(--safe-bottom) + var(--s-10)) calc(var(--gutter) + var(--safe-left));
+}
+.page-body > .section-label:first-child { margin-top: var(--s-4); }
+.empty-card { padding: var(--s-4); }
+.block { display: block; }
+.setting-note { margin: var(--s-2) var(--s-1) 0; }
+.about-line { margin: 0 var(--s-1); }
+
+/* ----- Segmented control (theme) ----- */
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-1);
+  padding: var(--s-1);
+  border-radius: var(--r-l);
+  background: var(--surface-sunk);
+  border: 1px solid var(--hairline);
+}
+.segment {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 4rem;
+  justify-content: center;
+  border-radius: calc(var(--r-l) - 4px);
+  color: var(--ink-2);
+  font-size: var(--t-caption);
+  font-weight: 500;
+}
+.segment[aria-checked="true"] { color: var(--ink); font-weight: 650; }
+.segment > svg, .segment > span:not(.segment-pill) { position: relative; }
+.segment-pill { position: absolute; inset: 0; border-radius: inherit; background: var(--raised); box-shadow: var(--shadow-2); }
+
+/* ----- Bottom sheet ----- */
+.sheet-layer { position: fixed; inset: 0; z-index: 50; }
+.sheet-scrim { position: absolute; inset: 0; background: var(--scrim); }
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 88%;
+  overflow: hidden;
+  padding: var(--s-2) calc(var(--gutter) + var(--safe-right)) calc(var(--safe-bottom) + var(--s-6)) calc(var(--gutter) + var(--safe-left));
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  background: var(--sheet);
+  box-shadow: var(--shadow-3);
+  touch-action: none;
+  outline: none;
+}
+/* A little sheet below the bottom edge, so a quick upward pull never shows a gap. */
+.sheet::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 120px; background: var(--sheet); }
+.sheet-grip { width: 2.5rem; height: 0.3125rem; margin: 0 auto var(--s-4); border-radius: var(--r-round); background: var(--hairline-strong); }
+.sheet-title { margin-bottom: var(--s-1); }
+.sheet-body { display: grid; gap: var(--s-4); }
+.sheet-para { color: var(--ink-2); }
+
+/* ----- Smoothness test ----- */
+.lab-card { display: grid; justify-items: center; gap: var(--s-4); padding: var(--s-6) var(--s-4); text-align: center; }
+.lab-crest { display: grid; place-items: center; min-height: 172px; }
+.lab-result { text-align: center; }
+.lab-result strong { color: var(--ink); text-transform: capitalize; }
+.lab-result[data-verdict="not smooth"] strong { color: var(--accent); }
+.tilt-stage { display: grid; justify-items: center; gap: var(--s-4); perspective: 700px; padding: var(--s-4); touch-action: none; }
+.tilt-card {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 12rem;
+  height: 14rem;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+  border: 1px solid var(--hairline);
+  transform-style: preserve-3d;
+  overflow: hidden;
+}
+.tilt-glare { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light; }
+.tilt-note { max-width: 24ch; }
