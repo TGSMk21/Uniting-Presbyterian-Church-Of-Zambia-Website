@@ -17,18 +17,26 @@ export default function Sheet({ open, onClose, title, children }) {
 
   useEffect(() => {
     if (!open) return undefined;
+    // Focus moves into the sheet, and back to whatever opened it when it closes.
+    const opener = document.activeElement;
     const key = (event) => event.key === "Escape" && onClose();
     window.addEventListener("keydown", key);
     panel.current?.focus({ preventScroll: true });
-    return () => window.removeEventListener("keydown", key);
+    return () => {
+      window.removeEventListener("keydown", key);
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus({ preventScroll: true });
+    };
   }, [open, onClose]);
 
   return (
     <AnimatePresence>
       {open && (
         <div className="sheet-layer" key="sheet">
-          <motion.div className="sheet-scrim" style={{ opacity: scrim }} onClick={onClose}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={FADE} />
+          {/* The outer layer fades the dimming in and out; the inner one lightens as the sheet is dragged down. */}
+          <motion.div className="sheet-scrim-fade" onClick={onClose}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={FADE}>
+            <motion.div className="sheet-scrim" style={{ opacity: scrim }} />
+          </motion.div>
           <motion.section
             ref={panel}
             className="sheet"

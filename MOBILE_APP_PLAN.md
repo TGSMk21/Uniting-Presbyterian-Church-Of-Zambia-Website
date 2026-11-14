@@ -82,16 +82,16 @@ Standing rules carry over from the website: no real passwords or keys entered in
 
 **Goal:** prove the approach works on a real phone and set up everything the later phases rely on. *Delivers: an installable app that opens, shows the five-tab bar and switches theme.*
 
-- [ ] Owner confirms Decisions 1 to 6 (or accepts the recommendations).
-- [ ] Create `mobile/` with Vite and React, linting and tests set up like the website's.
-- [ ] Add Capacitor and the Android project. App name, package id (for example `org.upcz.app`) and icon placeholders chosen.
-- [ ] **Build pipeline:** an installable APK can be produced. If this container can't build it (it may need access to Google's download sites), set up GitHub Actions to build the APK, and the owner downloads it to install.
-- [ ] **Design foundations:** colour tokens for light and dark taken from the website's crest palette, type scale, spacing, shadows and corner sizes, motion durations and easing curves. A short design direction (a one-page look) approved by the owner.
-- [ ] **Navigation shell:** the five-tab bottom bar (Home, Events, Sermons, Hymns, Announcements) with the three top-bar icons (profile, favourites, settings) and placeholder screens, with the tab-switch transition.
-- [ ] **Theme system:** light, dark and follow-the-phone, remembered, applied before the first paint so there is no flash.
-- [ ] **Device adaptation basics:** safe areas and edge-to-edge drawing, the phone's back gesture works on every screen, the app keeps its place when the phone rotates or the app is put away.
-- [ ] **Proof on a low-end phone:** a test animation page (the logo draw-in, a bottom sheet, the crest tilt) runs at a steady smooth speed on the owner's lowest-end Android phone, with the speeds recorded. **If it fails, stop and agree on another approach before continuing.**
-- [ ] Phase review and owner sign-off.
+- [x] Owner confirms Decisions 1 to 6 (or accepts the recommendations). **Accepted the recommendations, 2026-11-14.**
+- [x] Create `mobile/` with Vite and React, linting and tests set up like the website's.
+- [x] Add Capacitor and the Android project. App name, package id (for example `org.upcz.app`) and icon placeholders chosen. **App name "UPCZ", id `org.upcz.app`, Capacitor 8. The launcher icons (including Android's adaptive and themed icons) and Android's splash are drawn from the crest, not placeholders.**
+- [x] **Build pipeline:** an installable APK can be produced. If this container can't build it (it may need access to Google's download sites), set up GitHub Actions to build the APK, and the owner downloads it to install. **This container is refused `dl.google.com`, and the request to allow it couldn't be shown in the owner's Claude app (it needs a newer version or claude.ai on a computer). So GitHub Actions builds it (`.github/workflows/android-app.yml`): tests and lint first, then the APK, kept for 30 days under the run's "Artifacts". First build passed (run 1, 4.1 MB).**
+- [ ] **Design foundations:** colour tokens for light and dark taken from the website's crest palette, type scale, spacing, shadows and corner sizes, motion durations and easing curves. A short design direction (a one-page look) approved by the owner. **Built (`src/design/tokens.css`, `src/lib/motion.js`); the direction is in `mobile/DESIGN.md`, waiting for the owner's approval.**
+- [x] **Navigation shell:** the five-tab bottom bar (Home, Events, Sermons, Hymns, Announcements) with the three top-bar icons (profile, favourites, settings) and placeholder screens, with the tab-switch transition. **Labels always show; checked to fit on a 360 px phone.**
+- [x] **Theme system:** light, dark and follow-the-phone, remembered, applied before the first paint so there is no flash. **Also applied to Android's status and navigation bars and its splash.**
+- [x] **Device adaptation basics:** safe areas and edge-to-edge drawing, the phone's back gesture works on every screen, the app keeps its place when the phone rotates or the app is put away. **Back: closes a sheet, then a page, then returns Home, then puts the app away (tested). Each tab keeps its scroll position. To be confirmed on the owner's phone during the proof below.**
+- [ ] **Proof on a low-end phone:** a test animation page (the logo draw-in, a bottom sheet, the crest tilt) runs at a steady smooth speed on the owner's lowest-end Android phone, with the speeds recorded. **If it fails, stop and agree on another approach before continuing.** **The test page is built (Settings → Smoothness test). In a browser slowed to one-sixth speed at 360 px: crest drawing 98 to 99% of frames on time, sheet 100%, tab switching 92 to 96% (a short hitch the first time each tab opens). Waiting for the owner's real-phone results.**
+- [ ] Phase review and owner sign-off. **Code review done: two sheet fixes (the dimming now fades as the sheet is dragged; focus returns to the button that opened it). Drag, flick, Escape and focus checked in a browser.**
 
 ## Phase 1: Opening screen, first-run, profile and settings
 
