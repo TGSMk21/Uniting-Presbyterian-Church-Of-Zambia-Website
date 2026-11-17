@@ -1,6 +1,6 @@
 # UPCZ App: Design Direction
 
-For the owner's approval (MOBILE_APP_PLAN.md, Phase 0). Every screen in later phases follows this page. The values themselves live in `src/design/tokens.css` and `src/lib/motion.js`.
+Approved by the owner on 2026-11-17 (MOBILE_APP_PLAN.md, Phase 0). Every screen in later phases follows this page. The values themselves live in `src/design/tokens.css` and `src/lib/motion.js`.
 
 ## The feeling: "morning light on paper"
 
