@@ -227,3 +227,124 @@
 }
 .tilt-glare { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light; }
 .tilt-note { max-width: 24ch; }
+
+/* ----- Phase 1: opening, first-run, profile and settings ----- */
+.opening {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--s-6);
+  background: var(--paper);
+}
+.opening-word { color: var(--ink-3); }
+
+.first-run {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow-y: auto;
+  background: var(--paper);
+  padding: calc(var(--safe-top) + var(--s-8)) calc(var(--gutter) + var(--safe-right)) calc(var(--safe-bottom) + var(--s-8)) calc(var(--gutter) + var(--safe-left));
+}
+.first-run .screen-intro { padding: 0 0 var(--s-4); }
+
+.form { display: grid; gap: var(--s-5); margin-top: var(--s-4); }
+.field { display: grid; gap: var(--s-2); }
+.field-label { font-size: var(--t-caption); font-weight: 600; color: var(--ink-2); }
+.field-optional { color: var(--ink-3); font-weight: 500; }
+.field-hint { font-size: var(--t-caption); color: var(--ink-3); }
+.field-error { font-size: var(--t-caption); color: var(--accent); }
+.input {
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0 var(--s-4);
+  border-radius: var(--r-m);
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--t-body);
+}
+.input:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: transparent; }
+.input::placeholder { color: var(--ink-3); }
+
+.branch-picker { display: grid; gap: var(--s-2); }
+.branch-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-l);
+  overflow: hidden;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+.branch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 3.25rem;
+  padding: var(--s-2) var(--s-4);
+  text-align: left;
+}
+.branch-row + .branch-row, .branch-list li + li { border-top: 1px solid var(--hairline); }
+.branch-row:active { background: var(--brand-wash); }
+.branch-row .grow { flex: 1; min-width: 0; }
+.branch-row .chev { color: var(--brand); flex: none; }
+.branch-row.skeleton { height: 3.25rem; background: linear-gradient(90deg, var(--surface-sunk) 25%, var(--surface) 50%, var(--surface-sunk) 75%); background-size: 200% 100%; }
+.picker-empty { padding: var(--s-2) var(--s-1); }
+
+.form-actions { display: grid; gap: var(--s-3); margin-top: var(--s-6); justify-items: stretch; }
+.form-continue { width: 100%; }
+.form-skip-note { text-align: center; }
+
+.notice {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--r-m);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  margin-top: var(--s-4);
+}
+.notice p { color: var(--ink-2); }
+.notice-error { border-color: var(--accent-tint); background: var(--accent-tint); }
+.notice-error p { color: var(--ink); }
+.notice-offline { background: var(--brand-wash); }
+.notice-action { justify-self: start; }
+
+.profile-head { display: flex; align-items: center; gap: var(--s-4); margin-top: var(--s-4); }
+.avatar-big { width: 3.5rem; height: 3.5rem; font-size: 1.5rem; flex: none; }
+
+.list-row.static { cursor: default; }
+.list-row.static:active { background: none; }
+.row-icon { color: var(--ink-3); flex: none; }
+.list-row.danger .t-body { color: var(--accent); }
+.list-row.danger-armed { background: var(--accent-tint); }
+
+.switch {
+  flex: none;
+  width: 3.25rem;
+  height: 2rem;
+  border-radius: var(--r-round);
+  background: var(--hairline-strong);
+  display: grid;
+  align-items: center;
+  padding: 0 0.25rem;
+  transition: background-color var(--dur-quick) var(--ease-out);
+}
+.switch-knob {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--r-round);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.switch-on { background: var(--brand); }
+.switch-on .switch-knob { transform: translateX(1.25rem); }
