@@ -11,6 +11,8 @@ import Opening from "./screens/Opening.jsx";
 import FirstRun from "./screens/FirstRun.jsx";
 import MessagePage from "./screens/MessagePage.jsx";
 import SermonPage from "./screens/SermonPage.jsx";
+import Sheet from "./components/Sheet.jsx";
+import { EventBody } from "./screens/Events.jsx";
 import { useHome } from "./lib/useHome.js";
 import { TABS, back, initialNav, openPage, selectTab } from "./lib/navigation.js";
 import { useTheme } from "./lib/useTheme.js";
@@ -25,7 +27,7 @@ const TAB_SCREENS = {
   home: HomeTab, events: EventsTab, sermons: SermonsTab, hymns: HymnsTab, announcements: AnnouncementsTab,
 };
 
-function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfile, home, onOpenMessage, onOpenSermon, onSelectTab, onPullRefresh, refreshing }) {
+function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfile, home, onOpenMessage, onOpenSermon, onOpenEvent, onSelectTab, onPullRefresh, refreshing }) {
   const ref = useRef(null);
   const Screen = TAB_SCREENS[id];
   const reduced = useReducedMotion();
@@ -75,7 +77,7 @@ function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfi
         </div>
       )}
       <Screen profile={profile} onOpenProfile={onOpenProfile} home={home}
-        onOpenMessage={onOpenMessage} onOpenSermon={onOpenSermon} onSelectTab={onSelectTab} />
+        onOpenMessage={onOpenMessage} onOpenSermon={onOpenSermon} onOpenEvent={onOpenEvent} onSelectTab={onSelectTab} />
     </motion.main>
   );
 }
@@ -99,15 +101,18 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
   const [scrolled, setScrolled] = useState(false);
   const [message, setMessage] = useState(null);
   const [sermon, setSermon] = useState(null);
+  const [event, setEvent] = useState(null);
   const home = useHome(profile.branchSlug);
   const navRef = useRef(nav);
   const stageRef = useRef(stage);
   const messageRef = useRef(message);
   const sermonRef = useRef(sermon);
+  const eventRef = useRef(event);
   useEffect(() => { navRef.current = nav; }, [nav]);
   useEffect(() => { stageRef.current = stage; }, [stage]);
   useEffect(() => { messageRef.current = message; }, [message]);
   useEffect(() => { sermonRef.current = sermon; }, [sermon]);
+  useEffect(() => { eventRef.current = event; }, [event]);
   const reduced = useReducedMotion();
 
   useEffect(() => {
@@ -144,6 +149,10 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
       }
       if (sermonRef.current) {
         setSermon(null);
+        return;
+      }
+      if (eventRef.current) {
+        setEvent(null);
         return;
       }
       const step = back(navRef.current);
@@ -218,7 +227,7 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
           <TabScreen key={`${id}-${profileVersion}`} id={id} active={id === nav.tab}
             scrollTopTick={id === nav.tab ? nav.scrollTopTick : 0}
             onScrolled={setScrolled} profile={profile} onOpenProfile={() => open("profile")}
-            home={home} onOpenMessage={setMessage} onOpenSermon={setSermon} onSelectTab={choose}
+            home={home} onOpenMessage={setMessage} onOpenSermon={setSermon} onOpenEvent={setEvent} onSelectTab={choose}
             onPullRefresh={id === "home" ? home.pullRefresh : undefined}
             refreshing={id === "home" && home.status === "refreshing"} />
         ))}
@@ -245,6 +254,10 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
         {message && <MessagePage key="message" message={message} onBack={() => setMessage(null)} />}
         {sermon && <SermonPage key="sermon" sermon={sermon} onBack={() => setSermon(null)} />}
       </AnimatePresence>
+
+      <Sheet open={Boolean(event)} onClose={() => setEvent(null)} title={event?.title ?? "Event"}>
+        {event && <EventBody event={event} />}
+      </Sheet>
     </div>
   );
 }

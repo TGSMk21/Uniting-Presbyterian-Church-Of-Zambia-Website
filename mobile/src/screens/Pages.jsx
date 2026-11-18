@@ -14,6 +14,9 @@ import { initialOf, profileErrors, profileFromForm } from "../lib/profile.js";
 import { SPRING_SNAPPY } from "../lib/motion.js";
 import { getPrefs } from "../lib/storage.js";
 import { openExternally } from "../lib/links.js";
+import { isNative } from "../lib/device.js";
+import { notificationPermission } from "../lib/reminders.js";
+import { BATTERY_GUIDE, needsBatteryGuide } from "../lib/phoneMake.js";
 import pkg from "../../package.json";
 
 export const PRIVACY_POLICY_URL = import.meta.env?.VITE_PRIVACY_URL || "";
@@ -127,6 +130,7 @@ const NOTIFICATION_WORDS = {
 
 export function SettingsPage({ onBack, theme, reduceMotion, onToggleReduceMotion, onOpen, onDeleteMyInfo }) {
   const [confirming, setConfirming] = useState(false);
+  const [notif, setNotif] = useState(() => notificationStatus());
 
   return (
     <Page title="Settings" onBack={onBack}>
@@ -164,14 +168,21 @@ export function SettingsPage({ onBack, theme, reduceMotion, onToggleReduceMotion
 
       <h2 className="t-overline section-label">Notifications</h2>
       <ul className="list">
-        <li className="list-row static">
-          <Bell size={20} className="row-icon" aria-hidden="true" />
-          <span className="grow">
-            <span className="t-body">Event reminders</span>
-            <span className="t-caption block">{NOTIFICATION_WORDS[notificationStatus()] ?? notificationStatus()}. You'll be asked before anything is sent.</span>
-          </span>
+        <li>
+          <button type="button" className="list-row" disabled={!isNative() || notif === "granted"}
+            onClick={async () => setNotif(await notificationPermission())}>
+            <Bell size={20} className="row-icon" aria-hidden="true" />
+            <span className="grow">
+              <span className="t-body">Event reminders</span>
+              <span className="t-caption block">
+                {NOTIFICATION_WORDS[notif] ?? notif}
+                {isNative() && notif !== "granted" ? ". Tap to allow — you'll get a reminder the evening before and the morning of an event." : ""}
+              </span>
+            </span>
+          </button>
         </li>
       </ul>
+      {needsBatteryGuide() && <p className="t-caption setting-note battery-guide">{BATTERY_GUIDE}</p>}
 
       <h2 className="t-overline section-label">Testing</h2>
       <ul className="list">

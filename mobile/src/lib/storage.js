@@ -49,8 +49,8 @@ export function getPrefs() {
   };
 }
 
-export function memoryPrefs() {
-  const store = {};
+export function memoryPrefs(initial = {}) {
+  const store = { ...initial };
   return {
     store,
     get: (key) => Promise.resolve(Object.hasOwn(store, key) ? store[key] : null),

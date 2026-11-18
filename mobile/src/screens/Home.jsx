@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
 import { ShareNetwork } from "@phosphor-icons/react/dist/csr/ShareNetwork";
@@ -6,6 +6,8 @@ import Notice from "../components/Notice.jsx";
 import { fillName, partOfDay, GREETINGS } from "../lib/greeting.js";
 import { homeSlots, timeAgo } from "../lib/home.js";
 import { shareText } from "../lib/share.js";
+import { eventsOnDate, formatTime, loadEvents, pastEvents, todayIso } from "../lib/events.js";
+import { useContentData } from "../lib/useContent.js";
 
 const dayLabel = (iso) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
@@ -60,6 +62,20 @@ function VerseCard({ verse }) {
   );
 }
 
+function TodayCard({ events, today, onOpen }) {
+  const todays = eventsOnDate(events, today);
+  if (!todays.length) return null;
+  const first = todays[0];
+  const more = todays.length - 1;
+  return (
+    <button type="button" className="card home-card today-card" onClick={() => onOpen(first)}>
+      <p className="t-overline">Today</p>
+      <span className="t-headline block">{first.title}{more > 0 ? ` (+${more} more)` : ""}</span>
+      <span className="t-callout read-more">{formatTime(first.start_time)} · {first.location} <ArrowRight size={14} className="chev" /></span>
+    </button>
+  );
+}
+
 function LiveCard({ live, onOpen }) {
   return (
     <button type="button" className="card home-card live-card" onClick={() => onOpen(live)}>
@@ -108,11 +124,13 @@ function Skeletons() {
   );
 }
 
-export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, onOpenSermon, onSelectTab }) {
+export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, onOpenSermon, onOpenEvent, onSelectTab }) {
   const [now] = useState(() => new Date());
   const first = profile?.name?.trim().split(/\s+/)[0] ?? "";
   const part = partOfDay(now);
-  const todayIso = now.toISOString().slice(0, 10);
+  const todayIsoLocal = todayIso(now);
+  const loadEventsCb = useCallback((opts) => loadEvents(opts), []);
+  const eventsCache = useContentData(loadEventsCb, profile?.branchSlug ?? "");
   const { status, data, source, fetchedAt, greeting, chooseGreeting, pullRefresh } = home;
 
   useEffect(() => {
@@ -127,7 +145,7 @@ export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, o
     return (
       <>
         <header className="screen-intro">
-          <p className="t-overline">{dayLabel(todayIso)}</p>
+          <p className="t-overline">{dayLabel(todayIsoLocal)}</p>
           <h1 className="t-display">{greetingText}</h1>
         </header>
         <Notice kind="info" action={
@@ -141,13 +159,17 @@ export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, o
     );
   }
 
-  const slots = homeSlots(data);
+  const upcomingEvents = data?.events ?? [];
+  const recentPast = upcomingEvents.length ? [] : pastEvents(eventsCache.data?.events ?? [], data?.date ?? todayIsoLocal).slice(0, 3);
+  const previewEvents = upcomingEvents.length ? upcomingEvents : recentPast;
+  const previewRecent = !upcomingEvents.length && recentPast.length > 0;
+  const slots = homeSlots(data ? { ...data, events: previewEvents } : data);
   const loading = status === "loading" && !data;
 
   return (
     <>
       <header className="screen-intro">
-        <p className="t-overline">{dayLabel(data?.date ?? todayIso)}</p>
+        <p className="t-overline">{dayLabel(data?.date ?? todayIsoLocal)}</p>
         <h1 className="t-display">{greetingText}</h1>
       </header>
       <UpdatedRow fetchedAt={fetchedAt} source={source} onRefresh={pullRefresh} refreshing={status === "refreshing"} />
@@ -167,7 +189,7 @@ export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, o
 
       {!loading && slots.map((slot) => {
         if (slot === "greeting") return null;
-        if (slot === "today-event") return null;
+        if (slot === "today-event") return <TodayCard key={slot} events={data.events} today={data.date} onOpen={onOpenEvent} />;
         if (slot === "live") return <LiveCard key={slot} live={data.live} onOpen={onOpenSermon} />;
         if (slot === "verse") return <VerseCard key={slot} verse={data.verse} />;
         if (slot === "message") return <MessageCard key={slot} message={data.daily_message} onOpen={onOpenMessage} />;
@@ -188,16 +210,16 @@ export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, o
         }
         if (slot === "events") {
           return (
-            <PreviewCard key={slot} overline="Coming up" allLabel="See all" onAll={() => onSelectTab("events")}
-              rows={data.events.slice(0, 3).map((e) => ({ key: String(e.id), e }))}
+            <PreviewCard key={slot} overline={previewRecent ? "Recently at your branch" : "Coming up"} allLabel="See all" onAll={() => onSelectTab("events")}
+              rows={previewEvents.slice(0, 3).map((e) => ({ key: String(e.id), e }))}
               renderRow={({ e }) => (
-                <>
+                <button type="button" className="preview-row preview-button" onClick={() => onOpenEvent(e)}>
                   <span className="grow">
                     <span className="t-body block">{e.title}</span>
                     <span className="t-caption block">{dayLabel(e.date)} · {e.start_time?.slice(0, 5)} · {e.location}</span>
                   </span>
                   <ArrowRight size={16} className="chev" />
-                </>
+                </button>
               )} />
           );
         }

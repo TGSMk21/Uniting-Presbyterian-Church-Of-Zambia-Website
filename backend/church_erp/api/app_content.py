@@ -8,13 +8,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from church_erp.ai_messages.models import DailyMessage
-from church_erp.content.models import Sermon
+from church_erp.content.models import Activity, Sermon
 from church_erp.core.models import Branch
 
 SERMONS_DEFAULT_LIMIT = 20
 SERMONS_MAX_LIMIT = 50
 MESSAGES_DEFAULT_LIMIT = 100
 MESSAGES_MAX_LIMIT = 200
+EVENTS_DEFAULT_LIMIT = 100
+EVENTS_MAX_LIMIT = 200
 
 
 def app_branch(request):
@@ -63,6 +65,39 @@ class AppSermonsView(APIView):
         return Response({
             "branch": {"slug": branch.slug, "name": branch.name},
             "sermons": [sermon_row(s) for s in sermons],
+        })
+
+
+def event_row(activity):
+    return {
+        "id": activity.pk,
+        "title": activity.title,
+        "date": activity.date,
+        "start_time": activity.start_time,
+        "end_time": activity.end_time,
+        "location": activity.location,
+        "details": activity.details,
+        "photos": [{"id": p.pk, "url": p.image.url} for p in activity.photos.all()],
+    }
+
+
+class AppEventsView(APIView):
+    """Upcoming and past events, most recent first, with photos (Phase 4)."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        branch, error = app_branch(request)
+        if error:
+            return error
+        limit = clamp_limit(request, EVENTS_DEFAULT_LIMIT, EVENTS_MAX_LIMIT)
+        events = (
+            Activity.objects.filter(branch=branch)
+            .prefetch_related("photos")
+            .order_by("-date", "-start_time", "-pk")[:limit]
+        )
+        return Response({
+            "branch": {"slug": branch.slug, "name": branch.name},
+            "events": [event_row(e) for e in events],
         })
 
 

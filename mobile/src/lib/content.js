@@ -13,7 +13,7 @@ export function filterMessages(messages, q) {
   );
 }
 
-async function loadCached({ prefs, kind, branchSlug, path, fetchImpl, timeoutMs, now = () => Date.now(), validate }) {
+export async function loadCached({ prefs, kind, branchSlug, path, fetchImpl, timeoutMs, now = () => Date.now(), validate }) {
   if (!branchSlug) return { data: null, source: "none", fetchedAt: null };
   const key = contentKey(kind, branchSlug);
   try {

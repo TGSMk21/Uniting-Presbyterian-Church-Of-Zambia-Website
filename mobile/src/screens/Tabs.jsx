@@ -1,8 +1,9 @@
 import Notice from "../components/Notice.jsx";
 import HomeTab from "./Home.jsx";
 import SermonsTab from "./Sermons.jsx";
+import EventsTab from "./Events.jsx";
 
-export { HomeTab, SermonsTab };
+export { HomeTab, SermonsTab, EventsTab };
 
 function Intro({ overline, title, children }) {
   return (
@@ -34,17 +35,6 @@ function NoBranch({ what, onChoose }) {
     }>
       Choose your branch and the app will show {what}.
     </Notice>
-  );
-}
-
-export function EventsTab({ profile, onOpenProfile }) {
-  return (
-    <>
-      <Intro title="Events">What's happening at your branch, newest first.</Intro>
-      {!profile?.branchSlug
-        ? <NoBranch what="your branch's events and reminders" onChoose={onOpenProfile} />
-        : <Coming lines={["Upcoming and past events", "Details and photos in one tap", "Add to your calendar, with reminders"]} />}
-    </>
   );
 }
 

@@ -21,7 +21,7 @@ from church_erp.workspace.structure_views import AppointmentViewSet, BranchOffic
 from church_erp.finance.views import GivingRecordViewSet
 from church_erp.api.views import backup_database, generate_daily_messages, sync_youtube
 from church_erp.api.app_home import AppHomeView
-from church_erp.api.app_content import AppMessageDetailView, AppMessagesView, AppSermonsView
+from church_erp.api.app_content import AppEventsView, AppMessageDetailView, AppMessagesView, AppSermonsView
 from church_erp.content.page_content_views import PageContentPageView, PageContentView, PageImageView
 from church_erp.content.staff_content import (
     BranchDetailsView,
@@ -80,6 +80,7 @@ urlpatterns = [
     path('staff-overview/', StaffOverviewView.as_view(), name='staff-overview'),
     path('app/home/', AppHomeView.as_view(), name='app-home'),
     path('app/sermons/', AppSermonsView.as_view(), name='app-sermons'),
+    path('app/events/', AppEventsView.as_view(), name='app-events'),
     path('app/messages/', AppMessagesView.as_view(), name='app-messages'),
     path('app/messages/<int:pk>/', AppMessageDetailView.as_view(), name='app-message-detail'),
     path('workspace/me/', WorkspaceMeView.as_view(), name='workspace-me'),
