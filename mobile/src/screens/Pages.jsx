@@ -13,17 +13,10 @@ import { loadBranches } from "../lib/api.js";
 import { initialOf, profileErrors, profileFromForm } from "../lib/profile.js";
 import { SPRING_SNAPPY } from "../lib/motion.js";
 import { getPrefs } from "../lib/storage.js";
+import { openExternally } from "../lib/links.js";
 import pkg from "../../package.json";
 
 export const PRIVACY_POLICY_URL = import.meta.env?.VITE_PRIVACY_URL || "";
-
-export function openExternally(url) {
-  if (globalThis.Capacitor?.isNativePlatform?.()) {
-    window.open(url, "_system");
-  } else {
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
-}
 
 export function ProfilePage({ onBack, profile, onSave }) {
   const prefs = useRef(getPrefs()).current;

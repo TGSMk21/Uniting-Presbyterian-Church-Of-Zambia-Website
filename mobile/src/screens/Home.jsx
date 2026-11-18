@@ -60,6 +60,16 @@ function VerseCard({ verse }) {
   );
 }
 
+function LiveCard({ live, onOpen }) {
+  return (
+    <button type="button" className="card home-card live-card" onClick={() => onOpen(live)}>
+      <p className="t-overline live-overline">Live now</p>
+      <span className="t-headline block">{live.title}</span>
+      <span className="t-callout read-more">Watch the service <ArrowRight size={14} className="chev" /></span>
+    </button>
+  );
+}
+
 function MessageCard({ message, onOpen }) {
   return (
     <button type="button" className="card home-card message-card" onClick={() => onOpen(message)}>
@@ -98,7 +108,7 @@ function Skeletons() {
   );
 }
 
-export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, onSelectTab }) {
+export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, onOpenSermon, onSelectTab }) {
   const [now] = useState(() => new Date());
   const first = profile?.name?.trim().split(/\s+/)[0] ?? "";
   const part = partOfDay(now);
@@ -157,7 +167,8 @@ export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, o
 
       {!loading && slots.map((slot) => {
         if (slot === "greeting") return null;
-        if (slot === "live" || slot === "today-event") return null;
+        if (slot === "today-event") return null;
+        if (slot === "live") return <LiveCard key={slot} live={data.live} onOpen={onOpenSermon} />;
         if (slot === "verse") return <VerseCard key={slot} verse={data.verse} />;
         if (slot === "message") return <MessageCard key={slot} message={data.daily_message} onOpen={onOpenMessage} />;
         if (slot === "sermons") {
@@ -165,13 +176,13 @@ export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, o
             <PreviewCard key={slot} overline="Latest sermons" allLabel="See all" onAll={() => onSelectTab("sermons")}
               rows={data.sermons.slice(0, 3).map((s) => ({ key: s.video_id || s.title, s }))}
               renderRow={({ s }) => (
-                <>
+                <button type="button" className="preview-row preview-button" onClick={() => onOpenSermon(s)}>
                   <span className="grow">
                     <span className="t-body block">{s.title}</span>
                     <span className="t-caption block">{dayLabel(s.preached_at?.slice(0, 10))}{s.reference_verse ? ` · ${s.reference_verse}` : ""}</span>
                   </span>
                   <ArrowRight size={16} className="chev" />
-                </>
+                </button>
               )} />
           );
         }

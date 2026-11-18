@@ -101,6 +101,7 @@ On Render's free plan there is no shell, so run it from your own machine against
    - Method: **POST**
    - Header: `X-Sync-Token` set to the `SYNC_TOKEN` value from the Render dashboard (Environment tab)
    - Schedule: every **10 minutes**
+   - A second job with the same URL and header, cron `*/5 6-11 * * 0` (Sundays 06:00–11:55, Africa/Lusaka): while services are likely, "live now" is picked up within 5 minutes instead of 10 (MOBILE_APP_PLAN.md, Decision 4).
 
    This runs the sync and keeps the service awake. For the AI daily message drafts, add a second job the same way with the URL `https://<service>.onrender.com/api/tasks/daily-messages/`, every **hour** (it writes tomorrow's drafts at its first run of the day and does nothing on the others). One always-awake service uses about 744 of Render's 750 free hours a month, so don't add a second free service to the same workspace.
 6. **Point the backend at the frontend.** After the Vercel deploy, set `FRONTEND_URL` to the real site URL(s), comma-separated, and redeploy.

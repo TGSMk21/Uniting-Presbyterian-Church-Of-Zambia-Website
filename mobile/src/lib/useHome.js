@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { App as NativeApp } from "@capacitor/app";
 import { KEYS, getPrefs, readJSON, writeJSON } from "./storage.js";
-import { isNative } from "./device.js";
 import { loadHome } from "./home.js";
 import { pickGreeting } from "./greeting.js";
+import { useForegroundRefresh } from "./useContent.js";
 
 export function useHome(branchSlug) {
   const [prefs] = useState(() => getPrefs());
@@ -37,28 +36,10 @@ export function useHome(branchSlug) {
     };
   }, [branchSlug, prefs]);
 
-  useEffect(() => {
-    const onActive = () => {
-      setState((current) => (current.data ? { ...current, status: "refreshing" } : current));
-      refresh();
-    };
-    if (isNative()) {
-      let handle;
-      NativeApp.addListener("appStateChange", ({ isActive }) => {
-        if (isActive) onActive();
-      }).then((h) => {
-        handle = h;
-      });
-      return () => {
-        handle?.remove();
-      };
-    }
-    const onVis = () => {
-      if (document.visibilityState === "visible") onActive();
-    };
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, [refresh]);
+  useForegroundRefresh(useCallback(() => {
+    setState((current) => (current.data ? { ...current, status: "refreshing" } : current));
+    refresh();
+  }, [refresh]));
 
   const chooseGreeting = useCallback(
     (part) => {

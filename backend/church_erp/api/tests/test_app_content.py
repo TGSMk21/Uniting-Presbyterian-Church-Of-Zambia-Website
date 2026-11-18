@@ -1,0 +1,164 @@
+"""Lean public addresses for the app's sermons and daily-message library (MOBILE_APP_PLAN.md, Phase 3):
+
+GET /api/app/sermons/?branch=<slug>&limit=   newest first, hidden excluded
+GET /api/app/messages/?branch=<slug>&q=&limit=  published, not yet due, newest first, optional title search
+GET /api/app/messages/<id>/?branch=<slug>    one full message, only if it belongs to the branch and is public
+"""
+from datetime import timedelta
+
+from django.urls import reverse
+from django.utils import timezone
+from rest_framework.test import APITestCase
+
+from church_erp.ai_messages.models import DailyMessage
+from church_erp.content.models import Sermon
+from church_erp.core.models import Minister
+from church_erp.core.tests.helpers import make_branch
+
+SERMONS_URL = reverse("app-sermons")
+MESSAGES_URL = reverse("app-messages")
+
+
+def detail_url(pk):
+    return reverse("app-message-detail", args=[pk])
+
+
+def make_minister(branch, name="Rev Test"):
+    return Minister.objects.create(branch=branch, name=name)
+
+
+def make_sermon(branch, title, when, **kwargs):
+    minister = kwargs.pop("minister", None) or make_minister(branch)
+    return Sermon.objects.create(
+        branch=branch, minister=minister, title=title, video_id=f"vid-{title}",
+        preached_at=when, **kwargs,
+    )
+
+
+def make_message(minister, day, title="Today's word", status="published", reference_verse="John 3:16"):
+    return DailyMessage.objects.create(
+        minister=minister, title=title, message=f"Body of {title}.", reference_verse=reference_verse,
+        verse_text="For God so loved the world", date=day, status=status,
+        published_at=timezone.now() if status == "published" else None,
+    )
+
+
+class AppSermonsTests(APITestCase):
+    def setUp(self):
+        self.branch = make_branch("chilanga")
+        self.other = make_branch("kanyama")
+        self.today = timezone.localdate()
+
+    def test_requires_a_branch_and_a_known_active_one(self):
+        self.assertEqual(self.client.get(SERMONS_URL).status_code, 400)
+        self.assertEqual(self.client.get(SERMONS_URL, {"branch": "nowhere"}).status_code, 404)
+        self.branch.is_active = False
+        self.branch.save()
+        self.assertEqual(self.client.get(SERMONS_URL, {"branch": "chilanga"}).status_code, 404)
+
+    def test_newest_first_lean_fields_hidden_and_other_branches_excluded(self):
+        now = timezone.now()
+        make_sermon(self.branch, "Old", now - timedelta(days=3))
+        make_sermon(self.branch, "New", now - timedelta(hours=1), reference_verse="Psalm 23", duration="PT31M", is_live=True)
+        make_sermon(self.branch, "Hidden", now, is_hidden=True)
+        make_sermon(self.other, "Elsewhere", now)
+        data = self.client.get(SERMONS_URL, {"branch": "chilanga"}).data
+        self.assertEqual(data["branch"], {"slug": "chilanga", "name": "Chilanga"})
+        rows = data["sermons"]
+        self.assertEqual([r["title"] for r in rows], ["New", "Old"])
+        self.assertEqual(set(rows[0]), {
+            "video_id", "title", "reference_verse", "preached_at", "duration", "is_live", "minister_name",
+        })
+        self.assertTrue(rows[0]["is_live"])
+        self.assertEqual(rows[0]["minister_name"], "Rev Test")
+        self.assertNotIn("transcript", rows[0])
+        self.assertNotIn("description", rows[0])
+
+    def test_limit_is_capped(self):
+        now = timezone.now()
+        for i in range(60):
+            make_sermon(self.branch, f"S{i:02d}", now - timedelta(minutes=i))
+        default = self.client.get(SERMONS_URL, {"branch": "chilanga"}).data["sermons"]
+        self.assertEqual(len(default), 20)
+        asked = self.client.get(SERMONS_URL, {"branch": "chilanga", "limit": "500"}).data["sermons"]
+        self.assertEqual(len(asked), 50)
+        bad = self.client.get(SERMONS_URL, {"branch": "chilanga", "limit": "lots"}).data["sermons"]
+        self.assertEqual(len(bad), 20)
+
+
+class AppMessagesTests(APITestCase):
+    def setUp(self):
+        self.branch = make_branch("chilanga")
+        self.other = make_branch("kanyama")
+        self.minister = make_minister(self.branch)
+        self.today = timezone.localdate()
+
+    def test_requires_a_branch_and_a_known_active_one(self):
+        self.assertEqual(self.client.get(MESSAGES_URL).status_code, 400)
+        self.assertEqual(self.client.get(MESSAGES_URL, {"branch": "nowhere"}).status_code, 404)
+
+    def test_only_public_messages_newest_first_lean_fields(self):
+        make_message(self.minister, self.today - timedelta(days=2), title="Older")
+        make_message(self.minister, self.today, title="Today")
+        make_message(self.minister, self.today, status="pending_review", title="Draft")
+        make_message(self.minister, self.today + timedelta(days=1), title="Future")
+        make_message(make_minister(self.other), self.today, title="Kanyama")
+        rows = self.client.get(MESSAGES_URL, {"branch": "chilanga"}).data["messages"]
+        self.assertEqual([r["title"] for r in rows], ["Today", "Older"])
+        self.assertEqual(set(rows[0]), {"id", "title", "reference_verse", "date"})
+        self.assertNotIn("message", rows[0])
+
+    def test_search_matches_title_and_reference_case_insensitively(self):
+        make_message(self.minister, self.today, title="The Good Shepherd", reference_verse="Psalm 23:1")
+        make_message(self.minister, self.today - timedelta(days=1), title="Grace", reference_verse="Ephesians 2:8")
+        rows = self.client.get(MESSAGES_URL, {"branch": "chilanga", "q": "shepherd"}).data["messages"]
+        self.assertEqual([r["title"] for r in rows], ["The Good Shepherd"])
+        rows = self.client.get(MESSAGES_URL, {"branch": "chilanga", "q": "EPHESIANS"}).data["messages"]
+        self.assertEqual([r["title"] for r in rows], ["Grace"])
+        rows = self.client.get(MESSAGES_URL, {"branch": "chilanga", "q": "nothing matches this"}).data["messages"]
+        self.assertEqual(rows, [])
+
+    def test_limit_is_capped(self):
+        for i in range(250):
+            make_message(self.minister, self.today - timedelta(days=i), title=f"M{i:03d}")
+        self.assertEqual(len(self.client.get(MESSAGES_URL, {"branch": "chilanga"}).data["messages"]), 100)
+        self.assertEqual(
+            len(self.client.get(MESSAGES_URL, {"branch": "chilanga", "limit": "500"}).data["messages"]), 200,
+        )
+
+
+class AppMessageDetailTests(APITestCase):
+    def setUp(self):
+        self.branch = make_branch("chilanga")
+        self.other = make_branch("kanyama")
+        self.minister = make_minister(self.branch)
+        self.today = timezone.localdate()
+
+    def test_full_message_for_its_branch_only(self):
+        msg = make_message(self.minister, self.today, title="Peace")
+        response = self.client.get(detail_url(msg.pk), {"branch": "chilanga"})
+        data = response.data
+        self.assertEqual(data["title"], "Peace")
+        self.assertEqual(data["message"], "Body of Peace.")
+        self.assertEqual(data["verse_text"], "For God so loved the world")
+        self.assertEqual(data["minister_name"], "Rev Test")
+        self.assertEqual(response.json()["date"], self.today.isoformat())
+
+    def test_other_branch_unpublished_and_future_messages_are_not_found(self):
+        mine = make_message(self.minister, self.today)
+        theirs = make_message(make_minister(self.other), self.today)
+        draft = make_message(self.minister, self.today, status="pending_review")
+        future = make_message(self.minister, self.today + timedelta(days=1))
+        for msg in (theirs, draft, future):
+            self.assertEqual(self.client.get(detail_url(msg.pk), {"branch": "chilanga"}).status_code, 404)
+        self.assertEqual(self.client.get(detail_url(mine.pk), {"branch": "kanyama"}).status_code, 404)
+        self.assertEqual(self.client.get(detail_url(mine.pk)).status_code, 400)
+        self.assertEqual(self.client.get(detail_url(999999), {"branch": "chilanga"}).status_code, 404)
+
+
+class LiveDetectionScheduleTests(APITestCase):
+    def test_the_beat_sync_runs_every_five_minutes_so_live_is_picked_up_quickly(self):
+        from django.conf import settings
+        entry = settings.CELERY_BEAT_SCHEDULE["sync-youtube-sermons"]
+        self.assertEqual(entry["task"], "church_erp.content.tasks.sync_youtube_sermons")
+        self.assertLessEqual(float(entry["schedule"]), 300.0)

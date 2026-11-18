@@ -1,7 +1,8 @@
 import Notice from "../components/Notice.jsx";
 import HomeTab from "./Home.jsx";
+import SermonsTab from "./Sermons.jsx";
 
-export { HomeTab };
+export { HomeTab, SermonsTab };
 
 function Intro({ overline, title, children }) {
   return (
@@ -43,17 +44,6 @@ export function EventsTab({ profile, onOpenProfile }) {
       {!profile?.branchSlug
         ? <NoBranch what="your branch's events and reminders" onChoose={onOpenProfile} />
         : <Coming lines={["Upcoming and past events", "Details and photos in one tap", "Add to your calendar, with reminders"]} />}
-    </>
-  );
-}
-
-export function SermonsTab({ profile, onOpenProfile }) {
-  return (
-    <>
-      <Intro title="Sermons">Watch again, and read past daily messages.</Intro>
-      {!profile?.branchSlug
-        ? <NoBranch what="your branch's sermons and daily messages" onChoose={onOpenProfile} />
-        : <Coming lines={["Sermon videos from your branch", "The library of daily messages", "Live services, the moment they start"]} />}
     </>
   );
 }
