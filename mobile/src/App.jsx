@@ -235,15 +235,26 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
   const open = useCallback((page) => setNav((current) => openPage(current, page)), []);
   const close = useCallback(() => setNav((current) => back(current).nav), []);
 
-  if (stage === "loading") return <div className="app" aria-busy="true" />;
-  if (stage === MODES.opening) return <Opening quick={gate.seenOpening} onDone={finishOpening} />;
-  if (stage === MODES.firstRun) return <FirstRun onDone={finishFirstRun} />;
-
   const page = nav.stack.at(-1);
   const covered = Boolean(page);
 
   return (
-    <div className="app">
+    <AnimatePresence mode="wait">
+      {stage === "loading" && (
+        <motion.div key="loading" className="app" aria-busy="true"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
+      )}
+      {stage === MODES.opening && (
+        <Opening key="opening" quick={gate.seenOpening} onDone={finishOpening} />
+      )}
+      {stage === MODES.firstRun && (
+        <FirstRun key="first-run" onDone={finishFirstRun} />
+      )}
+      {stage === MODES.app && (
+    <motion.div key="app" className="app"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+    >
       <motion.div
         className="tabs-layer"
         animate={reduced ? { opacity: covered ? 0.6 : 1 } : { x: covered ? "-22%" : 0, opacity: covered ? 0.85 : 1 }}
@@ -289,6 +300,8 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
       <Sheet open={Boolean(announcement)} onClose={() => setAnnouncement(null)} title={announcement?.title ?? "Announcement"}>
         {announcement && <AnnouncementBody announcement={announcement} />}
       </Sheet>
-    </div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

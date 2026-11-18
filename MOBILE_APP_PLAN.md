@@ -205,6 +205,14 @@ Standing rules carry over from the website: no real passwords or keys entered in
 
 ---
 
+## Review log
+
+**Full review and test, 2026-11-18** (after Phase 5; critics: the `apple-design` skill plus Vercel's Web Interface Guidelines and Writing Guidelines, applied against `mobile/DESIGN.md`). Suites: app 79/79 tests, eslint clean, `vite build` clean, backend 898 tests OK, APK workflow green on every push. Static security pass: every network call is a GET to the one API base through `fetchJSON` (public, branch-scoped reads only), no HTML sinks (`dangerouslySetInnerHTML`/`innerHTML`/`eval` nowhere), profile and email never leave the phone, no secrets in the diff, external links are `encodeURIComponent`-built YouTube watch URLs and the env-set privacy URL opened with `_system`/`_blank noopener`.
+
+Findings fixed the same day: (1) light `--ink-3` failed WCAG AA (3.62:1 on paper) — darkened to `#64686f` (5.05:1); (2) dark-mode accent badges (white on `#ea6b61`, 3.10:1) now use a new `--on-accent` token (dark text at night, 6.14:1); (3) the refresh button was a 40 px target — now the full 48 px; (4) `.button` and `.segment` had no press-in feedback — added (apple-design: respond on pointer-down); (5) skeleton shimmer used a gradient, against the flat-colour design — replaced with a flat opacity pulse; (6) the opening screen cut out abruptly — stage changes now cross-fade through `AnimatePresence`; (7) event photos got explicit `width`/`height` (no layout shift); (8) `touch-action: manipulation` on buttons, `text-wrap: balance` on display type, `break-word` on body text. Guard added: `tests/tokens.test.mjs` recomputes WCAG contrast for the palette in both themes, checks the DESIGN.md colours are in the tokens, and fails on any gradient in the stylesheets.
+
+Accepted as-is: lists up to 100 rows are not virtualised (they are short in practice and rows are plain); the tab bar was already checked at 360 px in Phase 0.
+
 ## 5. Out of scope for version 1
 
 No staff features or editing inside the app, no passwords or accounts, no workspace (meetings, deliverables, documents), no server push notifications, no payments or giving, no in-app comments, and no languages other than English for the app's own wording. These can be planned as version 2.

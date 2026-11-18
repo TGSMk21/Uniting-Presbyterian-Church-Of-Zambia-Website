@@ -41,6 +41,7 @@ export default function FirstRun({ onDone }) {
       className="first-run"
       initial={reduced ? { opacity: 0 } : { opacity: 0, y: 16 }}
       animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      exit={reduced ? { opacity: 0 } : { opacity: 0, y: 16 }}
       transition={reduced ? FADE : SPRING}
     >
       <header className="screen-intro">

@@ -79,7 +79,7 @@ export function EventBody({ event }) {
       {event.photos?.length > 0 && (
         <div className="photo-row" aria-label="Photos">
           {event.photos.map((photo) => (
-            <img key={photo.id} className="event-photo" src={photo.url} alt="" loading="lazy" />
+            <img key={photo.id} className="event-photo" src={photo.url} alt="" width={256} height={168} loading="lazy" />
           ))}
         </div>
       )}
