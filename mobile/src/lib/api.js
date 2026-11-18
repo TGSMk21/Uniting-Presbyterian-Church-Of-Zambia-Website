@@ -36,9 +36,11 @@ export async function loadBranches({ prefs, fetchImpl = globalThis.fetch?.bind(g
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let expire;
     const expired = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("timeout")), timeoutMs);
+      expire = reject;
     });
+    const expiredTimer = setTimeout(() => expire(new Error("timeout")), timeoutMs);
     try {
       const res = await Promise.race([
         fetchImpl(`${API_BASE}/branches/`, { signal: controller.signal, headers: { accept: "application/json" } }),
@@ -51,6 +53,7 @@ export async function loadBranches({ prefs, fetchImpl = globalThis.fetch?.bind(g
       return { branches, source: "api" };
     } finally {
       clearTimeout(timer);
+      clearTimeout(expiredTimer);
     }
   } catch {
     const cached = await readJSON(prefs, KEYS.branches, null);

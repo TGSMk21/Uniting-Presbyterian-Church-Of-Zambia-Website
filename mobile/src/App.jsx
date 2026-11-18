@@ -109,18 +109,19 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
   }, []);
 
   const finishOpening = useCallback(async () => {
-    const prefs = getPrefs();
     const next = completeOpening(gate);
-    await writeFlag(prefs, KEYS.seenOpening, true);
+    await writeFlag(getPrefs(), KEYS.seenOpening, true).catch(() => {});
     setGate(next);
     setStage(initialMode(next));
   }, [gate]);
 
   const finishFirstRun = useCallback(async (saved) => {
-    const prefs = getPrefs();
     const next = completeFirstRun(gate, saved);
-    await writeFlag(prefs, KEYS.firstRunDone, true);
-    await writeJSON(prefs, KEYS.profile, saved);
+    const prefs = getPrefs();
+    await Promise.all([
+      writeFlag(prefs, KEYS.firstRunDone, true),
+      writeJSON(prefs, KEYS.profile, saved),
+    ]).catch(() => {});
     setGate(next);
     setProfile(saved);
     setProfileVersion((v) => v + 1);
@@ -128,17 +129,18 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
   }, [gate]);
 
   const saveProfile = useCallback(async (saved) => {
-    const prefs = getPrefs();
-    await writeJSON(prefs, KEYS.profile, saved);
+    await writeJSON(getPrefs(), KEYS.profile, saved).catch(() => {});
     setProfile(saved);
     setProfileVersion((v) => v + 1);
   }, []);
 
   const deleteMyInfo = useCallback(async () => {
     const prefs = getPrefs();
-    await removeKey(prefs, KEYS.profile);
-    await removeKey(prefs, KEYS.branches);
-    await writeFlag(prefs, KEYS.firstRunDone, false);
+    await Promise.all([
+      removeKey(prefs, KEYS.profile),
+      removeKey(prefs, KEYS.branches),
+      writeFlag(prefs, KEYS.firstRunDone, false),
+    ]).catch(() => {});
     setGate((current) => ({ ...current, firstRunDone: false }));
     setProfile(emptyProfile());
     setNav(initialNav());
