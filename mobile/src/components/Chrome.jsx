@@ -35,18 +35,22 @@ export function TopBar({ title, scrolled, initial, onProfile, onFavourites, onSe
   );
 }
 
-export function TabBar({ active, onSelect }) {
+export function TabBar({ active, onSelect, badges = {} }) {
   return (
     <nav className="tab-bar" aria-label="Main">
       {TABS.map(({ id, label }) => {
         const Icon = TAB_ICONS[id];
         const on = id === active;
+        const count = badges[id] ?? 0;
         return (
           <button key={id} type="button" className="tab" aria-current={on ? "page" : undefined}
             onClick={() => onSelect(id)}>
             <span className="tab-icon">
               {on && <motion.span layoutId="tab-pill" className="tab-pill" transition={SPRING_TAB} />}
               <Icon size={24} weight={on ? "fill" : "regular"} />
+              {count > 0 && (
+                <span className="tab-badge" aria-label={`${count} new`}>{count > 9 ? "9+" : count}</span>
+              )}
             </span>
             <span className="tab-label">{label}</span>
           </button>

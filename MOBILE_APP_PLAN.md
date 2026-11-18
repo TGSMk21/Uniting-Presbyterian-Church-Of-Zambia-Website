@@ -149,10 +149,10 @@ Standing rules carry over from the website: no real passwords or keys entered in
 
 **Goal:** the branch's announcements in the app. *Delivers: the simplest list screen, finished and polished.*
 
-- [ ] **Announcements screen (spec 14):** a list with pinned ones first. Each item opens a **bottom sheet** (the same smooth component as Events) with the full text.
-- [ ] A small "New" marker for announcements the person hasn't opened, and a count on the tab.
-- [ ] Empty state written in plain words.
-- [ ] Phase review and owner sign-off.
+- [x] **Announcements screen (spec 14):** a list with pinned ones first. Each item opens a **bottom sheet** (the same smooth component as Events) with the full text. **[rev] Done (2026-11-18):** `src/screens/Announcements.jsx` — pinned first (pin icon), then newest; the shared draggable `Sheet` shows the full text with the date. New lean endpoint `GET /api/app/announcements/?branch=` (current ones only, pinned first; `app_content.py`), 2 tests + an expired-announcement mutation caught; suite 898 OK.**
+- [x] A small "New" marker for announcements the person hasn't opened, and a count on the tab. **[rev] Done (2026-11-18):** opened announcements are marked read on the phone (`upcz.readAnnouncements`, `src/lib/marks.js`); unread rows get a red "New" badge and the Announcements tab shows a red count badge (9+ past nine).**
+- [x] Empty state written in plain words. **[rev] Done (2026-11-18):** "No announcements right now. News from your branch appears here when it's posted." (and the offline variant), plus skeleton and offline-saved states.**
+- [ ] Phase review and owner sign-off. **[rev] Built (2026-11-18):** 74 app tests (3 new: loader, sort, read-marks), 3 deliberate breakages caught (non-idempotent mark, pinned not first, everything unread); lint and `vite build` clean.**
 
 ## Phase 6: Hymns
 

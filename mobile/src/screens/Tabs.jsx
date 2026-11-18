@@ -2,8 +2,9 @@ import Notice from "../components/Notice.jsx";
 import HomeTab from "./Home.jsx";
 import SermonsTab from "./Sermons.jsx";
 import EventsTab from "./Events.jsx";
+import AnnouncementsTab from "./Announcements.jsx";
 
-export { HomeTab, SermonsTab, EventsTab };
+export { HomeTab, SermonsTab, EventsTab, AnnouncementsTab };
 
 function Intro({ overline, title, children }) {
   return (
@@ -49,13 +50,3 @@ export function HymnsTab({ profile, onOpenProfile }) {
   );
 }
 
-export function AnnouncementsTab({ profile, onOpenProfile }) {
-  return (
-    <>
-      <Intro title="Announcements">News from your branch.</Intro>
-      {!profile?.branchSlug
-        ? <NoBranch what="your branch's announcements" onChoose={onOpenProfile} />
-        : <Coming lines={["Pinned announcements first", "The full message in one tap"]} />}
-    </>
-  );
-}

@@ -517,3 +517,34 @@
 .cal-dot-added { outline: 2px solid var(--accent); outline-offset: 1px; }
 .cal-day-list { margin-top: var(--s-4); }
 .battery-guide { margin-top: var(--s-2); }
+
+/* ----- Phase 5: announcements ----- */
+.tab-badge {
+  position: absolute;
+  top: -2px;
+  right: 2px;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 4px;
+  border-radius: var(--r-round);
+  background: var(--accent);
+  color: #fff;
+  font-size: var(--t-micro);
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+.new-badge {
+  display: inline-block;
+  margin-right: var(--s-2);
+  padding: 0 var(--s-2);
+  border-radius: var(--r-round);
+  background: var(--accent);
+  color: #fff;
+  font-size: var(--t-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 0.15em;
+}
+.pin-icon { color: var(--brand); margin-right: var(--s-1); vertical-align: -0.15em; }

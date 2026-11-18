@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from church_erp.ai_messages.models import DailyMessage
-from church_erp.content.models import Activity, Sermon
+from church_erp.content.models import Activity, Announcement, Sermon
 from church_erp.core.models import Branch
 
 SERMONS_DEFAULT_LIMIT = 20
@@ -98,6 +98,37 @@ class AppEventsView(APIView):
         return Response({
             "branch": {"slug": branch.slug, "name": branch.name},
             "events": [event_row(e) for e in events],
+        })
+
+
+class AppAnnouncementsView(APIView):
+    """Current announcements, pinned first (Phase 5). Same rules as the website's public list."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        branch, error = app_branch(request)
+        if error:
+            return error
+        today = timezone.localdate()
+        announcements = (
+            Announcement.objects.filter(
+                branch=branch, starts_on__lte=today,
+            )
+            .filter(Q(ends_on__isnull=True) | Q(ends_on__gte=today))
+            .order_by("-is_pinned", "-starts_on", "-created_at")
+        )
+        return Response({
+            "branch": {"slug": branch.slug, "name": branch.name},
+            "announcements": [
+                {
+                    "id": a.pk,
+                    "title": a.title,
+                    "body": a.body,
+                    "starts_on": a.starts_on,
+                    "is_pinned": a.is_pinned,
+                }
+                for a in announcements
+            ],
         })
 
 

@@ -39,6 +39,16 @@ export function loadSermons({ branchSlug, ...opts }) {
   });
 }
 
+export function loadAnnouncements({ branchSlug, ...opts }) {
+  return loadCached({
+    ...opts,
+    kind: "announcements",
+    branchSlug,
+    path: `/app/announcements/?branch=${encodeURIComponent(branchSlug)}`,
+    validate: (d) => d?.branch?.slug === branchSlug && Array.isArray(d.announcements),
+  });
+}
+
 export function loadMessages({ branchSlug, ...opts }) {
   return loadCached({
     ...opts,
