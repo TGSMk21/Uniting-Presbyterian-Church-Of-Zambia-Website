@@ -32,29 +32,33 @@ export function parseBranches(payload) {
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export async function loadBranches({ prefs, fetchImpl = globalThis.fetch?.bind(globalThis), timeoutMs = 8000, now = () => Date.now() }) {
+export async function fetchJSON(url, { fetchImpl = globalThis.fetch?.bind(globalThis), timeoutMs = 8000 } = {}) {
+  const controller = new AbortController();
+  const abortTimer = setTimeout(() => controller.abort(), timeoutMs);
+  let expire;
+  const expired = new Promise((_, reject) => {
+    expire = reject;
+  });
+  const expiredTimer = setTimeout(() => expire(new Error("timeout")), timeoutMs);
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    let expire;
-    const expired = new Promise((_, reject) => {
-      expire = reject;
-    });
-    const expiredTimer = setTimeout(() => expire(new Error("timeout")), timeoutMs);
-    try {
-      const res = await Promise.race([
-        fetchImpl(`${API_BASE}/branches/`, { signal: controller.signal, headers: { accept: "application/json" } }),
-        expired,
-      ]);
-      if (!res.ok) throw new Error(`http ${res.status}`);
-      const branches = parseBranches(await res.json());
-      if (!branches.length) throw new Error("empty list");
-      await writeJSON(prefs, KEYS.branches, { at: now(), list: branches });
-      return { branches, source: "api" };
-    } finally {
-      clearTimeout(timer);
-      clearTimeout(expiredTimer);
-    }
+    const res = await Promise.race([
+      fetchImpl(url, { signal: controller.signal, headers: { accept: "application/json" } }),
+      expired,
+    ]);
+    if (!res.ok) throw new Error(`http ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(abortTimer);
+    clearTimeout(expiredTimer);
+  }
+}
+
+export async function loadBranches({ prefs, fetchImpl, timeoutMs = 8000, now = () => Date.now() }) {
+  try {
+    const branches = parseBranches(await fetchJSON(`${API_BASE}/branches/`, { fetchImpl, timeoutMs }));
+    if (!branches.length) throw new Error("empty list");
+    await writeJSON(prefs, KEYS.branches, { at: now(), list: branches });
+    return { branches, source: "api" };
   } catch {
     const cached = await readJSON(prefs, KEYS.branches, null);
     if (cached?.list?.length) return { branches: parseBranches(cached.list), source: "cache" };

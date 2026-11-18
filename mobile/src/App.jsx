@@ -2,12 +2,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/react";
 import { App as NativeApp } from "@capacitor/app";
 import { SplashScreen } from "@capacitor/splash-screen";
+import { ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
 import { TabBar, TopBar } from "./components/Chrome.jsx";
 import { AnnouncementsTab, EventsTab, HomeTab, HymnsTab, SermonsTab } from "./screens/Tabs.jsx";
 import { FavouritesPage, ProfilePage, SettingsPage } from "./screens/Pages.jsx";
 import MotionLab from "./screens/MotionLab.jsx";
 import Opening from "./screens/Opening.jsx";
 import FirstRun from "./screens/FirstRun.jsx";
+import MessagePage from "./screens/MessagePage.jsx";
+import { useHome } from "./lib/useHome.js";
 import { TABS, back, initialNav, openPage, selectTab } from "./lib/navigation.js";
 import { useTheme } from "./lib/useTheme.js";
 import { useReduceMotion } from "./lib/useSettings.js";
@@ -21,10 +24,12 @@ const TAB_SCREENS = {
   home: HomeTab, events: EventsTab, sermons: SermonsTab, hymns: HymnsTab, announcements: AnnouncementsTab,
 };
 
-function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfile }) {
+function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfile, home, onOpenMessage, onSelectTab, onPullRefresh, refreshing }) {
   const ref = useRef(null);
   const Screen = TAB_SCREENS[id];
   const reduced = useReducedMotion();
+  const [pull, setPull] = useState(0);
+  const touchY = useRef(null);
 
   useEffect(() => {
     if (active && scrollTopTick) ref.current?.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
@@ -34,6 +39,21 @@ function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfi
     if (active) onScrolled((ref.current?.scrollTop ?? 0) > 24);
   }, [active, onScrolled]);
 
+  const onTouchStart = (event) => {
+    if (onPullRefresh && ref.current?.scrollTop === 0) touchY.current = event.touches[0].clientY;
+  };
+  const onTouchMove = (event) => {
+    if (touchY.current == null) return;
+    const delta = event.touches[0].clientY - touchY.current;
+    if (delta > 0 && (ref.current?.scrollTop ?? 0) <= 0) setPull(Math.min(delta, 96));
+    else setPull(0);
+  };
+  const onTouchEnd = () => {
+    if (touchY.current != null && pull > 72) onPullRefresh?.();
+    touchY.current = null;
+    setPull(0);
+  };
+
   return (
     <motion.main
       ref={ref}
@@ -41,11 +61,20 @@ function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfi
       hidden={!active}
       aria-label={TABS.find((t) => t.id === id).label}
       onScroll={(event) => active && onScrolled(event.currentTarget.scrollTop > 24)}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
       initial={false}
       animate={active ? TAB_ENTER.animate : TAB_ENTER.initial}
       transition={active ? TAB_ENTER_TRANSITION : { duration: 0 }}
     >
-      <Screen profile={profile} onOpenProfile={onOpenProfile} />
+      {onPullRefresh && (
+        <div className="pull-indicator" style={{ height: pull > 4 ? 40 : 0, opacity: Math.min(pull / 72, 1) }} aria-hidden="true">
+          <ArrowsClockwise size={18} className={refreshing ? "spin" : ""} />
+        </div>
+      )}
+      <Screen profile={profile} onOpenProfile={onOpenProfile} home={home}
+        onOpenMessage={onOpenMessage} onSelectTab={onSelectTab} />
     </motion.main>
   );
 }
@@ -67,10 +96,14 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
   const [profileVersion, setProfileVersion] = useState(0);
   const [nav, setNav] = useState(initialNav);
   const [scrolled, setScrolled] = useState(false);
+  const [message, setMessage] = useState(null);
+  const home = useHome(profile.branchSlug);
   const navRef = useRef(nav);
   const stageRef = useRef(stage);
+  const messageRef = useRef(message);
   useEffect(() => { navRef.current = nav; }, [nav]);
   useEffect(() => { stageRef.current = stage; }, [stage]);
+  useEffect(() => { messageRef.current = message; }, [message]);
   const reduced = useReducedMotion();
 
   useEffect(() => {
@@ -99,6 +132,10 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
     const listener = NativeApp.addListener("backButton", () => {
       if (stageRef.current !== MODES.app) {
         NativeApp.minimizeApp();
+        return;
+      }
+      if (messageRef.current) {
+        setMessage(null);
         return;
       }
       const step = back(navRef.current);
@@ -172,7 +209,10 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
         {nav.visited.map((id) => (
           <TabScreen key={`${id}-${profileVersion}`} id={id} active={id === nav.tab}
             scrollTopTick={id === nav.tab ? nav.scrollTopTick : 0}
-            onScrolled={setScrolled} profile={profile} onOpenProfile={() => open("profile")} />
+            onScrolled={setScrolled} profile={profile} onOpenProfile={() => open("profile")}
+            home={home} onOpenMessage={setMessage} onSelectTab={choose}
+            onPullRefresh={id === "home" ? home.pullRefresh : undefined}
+            refreshing={id === "home" && home.status === "refreshing"} />
         ))}
         <TopBar
           title={TABS.find((t) => t.id === nav.tab).label}
@@ -194,6 +234,7 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
             onDeleteMyInfo={deleteMyInfo} />
         )}
         {page === "motion-lab" && <MotionLab key="motion-lab" onBack={close} />}
+        {message && <MessagePage key="message" message={message} onBack={() => setMessage(null)} />}
       </AnimatePresence>
     </div>
   );

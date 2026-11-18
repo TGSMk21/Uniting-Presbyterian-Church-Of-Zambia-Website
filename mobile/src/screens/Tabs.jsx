@@ -1,5 +1,7 @@
 import Notice from "../components/Notice.jsx";
-import { partOfDay } from "../lib/greeting.js";
+import HomeTab from "./Home.jsx";
+
+export { HomeTab };
 
 function Intro({ overline, title, children }) {
   return (
@@ -31,27 +33,6 @@ function NoBranch({ what, onChoose }) {
     }>
       Choose your branch and the app will show {what}.
     </Notice>
-  );
-}
-
-const today = () => new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
-
-export function HomeTab({ profile, onOpenProfile }) {
-  const first = profile?.name?.trim().split(/\s+/)[0] ?? "";
-  if (!profile?.branchSlug) {
-    return (
-      <>
-        <Intro overline={today()} title={`Good ${partOfDay(new Date())}.`} />
-        <NoBranch what="your church's daily message, sermons and events" onChoose={onOpenProfile} />
-      </>
-    );
-  }
-  return (
-    <>
-      <Intro overline={today()} title={`Good ${partOfDay(new Date())}${first ? `, ${first}` : ""}.`} />
-      <Coming lines={["Today's verse, set to be read slowly", "The daily message from your minister",
-        "The latest sermons", "What's coming up at your branch"]} />
-    </>
   );
 }
 

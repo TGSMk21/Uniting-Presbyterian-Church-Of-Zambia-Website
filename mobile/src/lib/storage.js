@@ -9,6 +9,7 @@ export const KEYS = {
   firstRunDone: "upcz.firstrun",
   branches: "upcz.branches",
   reduceMotion: "upcz.reduceMotion",
+  greeting: "upcz.greeting",
 };
 
 function localStore() {
