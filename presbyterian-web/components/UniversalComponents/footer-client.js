@@ -47,6 +47,7 @@ export default function FooterClient({ brand, links, contact }) {
             <ul className="footer-links">
               <li><Link href={brand.href}>Home</Link></li>
               <li><Link href="/find-a-branch">Find a Branch</Link></li>
+              <li><Link href="/privacy">Privacy</Link></li>
               <li><a href="#">Give</a></li>
             </ul>
           </div>

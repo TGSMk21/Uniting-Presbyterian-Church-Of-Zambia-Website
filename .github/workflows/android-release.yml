@@ -1,0 +1,65 @@
+# Builds the signed release bundle (AAB) for Google Play.
+# Run it by hand (Actions → "Android app (release)" → Run workflow) after the owner has
+# created the upload key and added these repository secrets (Settings → Secrets → Actions):
+#   UPCZ_KEYSTORE_B64   the upload keystore file, base64-encoded (base64 -w0 keystore.jks)
+#   UPCZ_KEYSTORE_PASSWORD, UPCZ_KEY_ALIAS, UPCZ_KEY_PASSWORD
+# The keystore itself is stored in the owner's password manager / safe, never in the repo.
+# The debug APK workflow (android-app.yml) is unchanged and needs no secrets.
+name: Android app (release)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci
+
+      - name: Check (tests and lint) before building
+        working-directory: mobile
+        run: |
+          npm test
+          npm run lint
+
+      - name: Build the app's screens and copy them into the Android project
+        working-directory: mobile
+        run: |
+          npm run build
+          npx cap sync android
+
+      - name: Decode the upload keystore
+        env:
+          UPCZ_KEYSTORE_B64: ${{ secrets.UPCZ_KEYSTORE_B64 }}
+        run: echo "$UPCZ_KEYSTORE_B64" | base64 -d > mobile/android/app/upcz-upload-key.jks
+
+      - name: Build the signed release bundle
+        working-directory: mobile/android
+        env:
+          UPCZ_KEYSTORE_PATH: app/upcz-upload-key.jks
+          UPCZ_KEYSTORE_PASSWORD: ${{ secrets.UPCZ_KEYSTORE_PASSWORD }}
+          UPCZ_KEY_ALIAS: ${{ secrets.UPCZ_KEY_ALIAS }}
+          UPCZ_KEY_PASSWORD: ${{ secrets.UPCZ_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon bundleRelease
+
+      - name: Upload the bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: upcz-release-${{ github.run_number }}
+          path: mobile/android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 90

@@ -194,13 +194,13 @@ Standing rules carry over from the website: no real passwords or keys entered in
 
 **Goal:** get the app to real members safely. *Delivers: the app on the Play Store.*
 
-- [ ] App signing set up, and the signing key stored safely by the owner (never in the repository).
-- [ ] Final icon (including the adaptive and monochrome versions), splash and Play Store images.
-- [ ] **Privacy policy** published on a public web address, and Google's data-safety form completed to match what the app actually does.
-- [ ] **Internal testing** with the owner and a few trusted people on a range of phones.
-- [ ] **Closed beta** with a few branches. Problems found are fixed. The first release candidate is the one the testers used, not a different build.
-- [ ] **Production release** in steps (for example 20 percent of people first), watching for crashes. A simple way to see crashes, chosen so it doesn't collect personal information.
-- [ ] A one-page "How to update the app and what to do if something breaks" for the owner.
+- [x] App signing set up, and the signing key stored safely by the owner (never in the repository). **[rev] Done (2026-11-19):** `android/app/build.gradle` reads the upload keystore from `UPCZ_KEYSTORE_*` env vars only (debug-key fallback without them); new `.github/workflows/android-release.yml` (run by hand) decodes the keystore from the `UPCZ_KEYSTORE_B64` secret and builds `app-release.aab`. Key creation and safe storage are in `mobile/RELEASE.md`; no secret is in the repo.**
+- [x] Final icon (including the adaptive and monochrome versions), splash and Play Store images. **[rev] Done:** launcher icons incl. adaptive + monochrome and the splash were drawn from the crest in Phase 0; new `mobile/store-assets/feature-graphic-1024x500.png` generated from `crest.png`. Phone screenshots are taken during internal testing (Play requires them) — noted in RELEASE.md.**
+- [x] **Privacy policy** published on a public web address, and Google's data-safety form completed to match what the app actually does. **[rev] Done (2026-11-19):** `presbyterian-web/app/(national)/privacy/page.js` — public `/privacy` page with a footer link, written to match the app exactly (phone-only storage, no accounts, public GET-only reads, calendar/notifications only when asked, Play-Console-only anonymous crash reports); data-safety form answers in `mobile/RELEASE.md`; the app's Settings → Privacy policy uses `VITE_PRIVACY_URL`. Website 332/332 tests, lint 0 errors, `/privacy` prerenders.**
+- [ ] **Internal testing** with the owner and a few trusted people on a range of phones. **[rev] Ready (2026-11-19):** steps in `mobile/RELEASE.md` — debug APK from the push workflow, AAB from the release workflow, tester emails in Play Console.**
+- [ ] **Closed beta** with a few branches. Problems found are fixed. The first release candidate is the one the testers used, not a different build. **[rev] Ready:** same runbook; the RC rule is written down.**
+- [ ] **Production release** in steps (for example 20 percent of people first), watching for crashes. A simple way to see crashes, chosen so it doesn't collect personal information. **[rev] Ready:** staged rollout from 20%, crash watching via Play Console Android vitals only (anonymous, no personal data) — in the runbook.**
+- [x] A one-page "How to update the app and what to do if something breaks" for the owner. **[rev] Done (2026-11-19):** first section of `mobile/RELEASE.md`.**
 - [ ] Phase review and owner sign-off.
 
 ---

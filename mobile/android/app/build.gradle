@@ -22,6 +22,23 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    // Release signing reads the keystore from environment variables only — the keystore
+    // and its passwords are GitHub secrets / the owner's safe, never this repository
+    // (MOBILE_APP_PLAN.md, Phase 9). With no keystore in the environment, release falls
+    // back to the debug key, which Google Play refuses; the release workflow always sets them.
+    def keystorePath = System.getenv("UPCZ_KEYSTORE_PATH")
+    if (keystorePath) {
+        signingConfigs {
+            release {
+                storeFile file(keystorePath)
+                storePassword System.getenv("UPCZ_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("UPCZ_KEY_ALIAS")
+                keyPassword System.getenv("UPCZ_KEY_PASSWORD")
+            }
+        }
+        buildTypes.release.signingConfig = signingConfigs.release
+    }
 }
 
 repositories {
