@@ -9,6 +9,8 @@ import { useContentData } from "../lib/useContent.js";
 import { getPrefs, readJSON, writeJSON } from "../lib/storage.js";
 import { useKeepAwake } from "../lib/keepAwake.js";
 import { SPRING_SNAPPY } from "../lib/motion.js";
+import HeartButton from "../components/HeartButton.jsx";
+import { hymnFavItem, isFaved } from "../lib/favourites.js";
 
 const TEXT_SCALES = [0.9, 1, 1.15, 1.3];
 const TEXT_SIZE_KEY = "upcz.textSize";
@@ -90,7 +92,7 @@ export function HymnCollectionPage({ collection, label, onBack, onOpenHymn }) {
   );
 }
 
-export function HymnPage({ hymn, onBack }) {
+export function HymnPage({ hymn, onBack, favs, onToggleFav, collectionLabel }) {
   const [prefs] = useState(() => getPrefs());
   const [sizeIndex, setSizeIndex] = useState(1);
   useEffect(() => {
@@ -117,7 +119,10 @@ export function HymnPage({ hymn, onBack }) {
         <button type="button" className="icon-button text-size-button" aria-label="Larger text" onClick={() => changeSize(1)} disabled={sizeIndex === TEXT_SCALES.length - 1}>A+</button>
       </div>
       <article className="hymn-reader selectable" style={{ fontSize: `calc(1.25rem * ${scale})` }}>
-        <h2 className="t-title hymn-title">{hymn.title}</h2>
+        <div className="card-head">
+          <h2 className="t-title hymn-title">{hymn.title}</h2>
+          <HeartButton active={isFaved(favs, "hymns", hymn.id)} onToggle={() => onToggleFav("hymns", hymnFavItem(hymn, collectionLabel))} label="Save this hymn" />
+        </div>
         {hymn.notes && <p className="t-caption">{hymn.notes}</p>}
         {(hymn.verses ?? []).map((verse, i) => (
           <div key={i} className="hymn-verse">

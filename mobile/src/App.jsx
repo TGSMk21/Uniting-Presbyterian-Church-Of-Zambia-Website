@@ -19,6 +19,7 @@ import { useHome } from "./lib/useHome.js";
 import { useContentData } from "./lib/useContent.js";
 import { loadAnnouncements } from "./lib/content.js";
 import { READ_ANNOUNCEMENTS, markRead, readMarks as readStoredMarks, unreadCount } from "./lib/marks.js";
+import { emptyFavs, readFavs, toggleFav } from "./lib/favourites.js";
 import { TABS, back, initialNav, openPage, selectTab } from "./lib/navigation.js";
 import { useTheme } from "./lib/useTheme.js";
 import { useReduceMotion } from "./lib/useSettings.js";
@@ -32,7 +33,7 @@ const TAB_SCREENS = {
   home: HomeTab, events: EventsTab, sermons: SermonsTab, hymns: HymnsTab, announcements: AnnouncementsTab,
 };
 
-function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfile, home, onOpenMessage, onOpenSermon, onOpenEvent, announcements, readMarks, onOpenAnnouncement, onOpenCollection, onSelectTab, onPullRefresh, refreshing }) {
+function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfile, home, onOpenMessage, onOpenSermon, onOpenEvent, announcements, readMarks, onOpenAnnouncement, onOpenCollection, favs, onToggleFav, onSelectTab, onPullRefresh, refreshing }) {
   const ref = useRef(null);
   const Screen = TAB_SCREENS[id];
   const reduced = useReducedMotion();
@@ -86,7 +87,8 @@ function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfi
         data={id === "announcements" ? announcements.data : undefined}
         status={id === "announcements" ? announcements.status : undefined}
         source={id === "announcements" ? announcements.source : undefined}
-        readMarks={readMarks} onOpenAnnouncement={onOpenAnnouncement} onOpenCollection={onOpenCollection} onSelectTab={onSelectTab} />
+        readMarks={readMarks} onOpenAnnouncement={onOpenAnnouncement} onOpenCollection={onOpenCollection}
+        favs={favs} onToggleFav={onToggleFav} onSelectTab={onSelectTab} />
     </motion.main>
   );
 }
@@ -114,6 +116,8 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
   const [announcement, setAnnouncement] = useState(null);
   const [collection, setCollection] = useState(null);
   const [hymn, setHymn] = useState(null);
+  const [verseFav, setVerseFav] = useState(null);
+  const [favs, setFavs] = useState(emptyFavs());
   const home = useHome(profile.branchSlug);
   const loadAnnouncementsCb = useCallback((opts) => loadAnnouncements(opts), []);
   const announcements = useContentData(loadAnnouncementsCb, profile.branchSlug);
@@ -143,6 +147,15 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
   useEffect(() => { announcementRef.current = announcement; }, [announcement]);
   useEffect(() => { collectionRef.current = collection; }, [collection]);
   useEffect(() => { hymnRef.current = hymn; }, [hymn]);
+  useEffect(() => {
+    readFavs(marksPrefs).then(setFavs);
+  }, [marksPrefs, profile.branchSlug]);
+  const toggleFavHandler = useCallback(async (kind, item) => {
+    const result = await toggleFav(marksPrefs, kind, item);
+    setFavs(result.favs);
+  }, [marksPrefs]);
+  const verseFavRef = useRef(verseFav);
+  useEffect(() => { verseFavRef.current = verseFav; }, [verseFav]);
   const reduced = useReducedMotion();
 
   useEffect(() => {
@@ -195,6 +208,10 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
       }
       if (collectionRef.current) {
         setCollection(null);
+        return;
+      }
+      if (verseFavRef.current) {
+        setVerseFav(null);
         return;
       }
       const step = back(navRef.current);
@@ -281,7 +298,8 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
             scrollTopTick={id === nav.tab ? nav.scrollTopTick : 0}
             onScrolled={setScrolled} profile={profile} onOpenProfile={() => open("profile")}
             home={home} onOpenMessage={setMessage} onOpenSermon={setSermon} onOpenEvent={setEvent}
-            announcements={announcements} readMarks={readMarks} onOpenAnnouncement={openAnnouncement} onOpenCollection={setCollection} onSelectTab={choose}
+            announcements={announcements} readMarks={readMarks} onOpenAnnouncement={openAnnouncement} onOpenCollection={setCollection}
+            favs={favs} onToggleFav={toggleFavHandler} onSelectTab={choose}
             onPullRefresh={id === "home" ? home.pullRefresh : undefined}
             refreshing={id === "home" && home.status === "refreshing"} />
         ))}
@@ -298,7 +316,11 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
 
       <AnimatePresence>
         {page === "profile" && <ProfilePage key="profile" onBack={close} profile={profile} onSave={saveProfile} />}
-        {page === "favourites" && <FavouritesPage key="favourites" onBack={close} />}
+        {page === "favourites" && (
+          <FavouritesPage key="favourites" onBack={close} favs={favs} onToggleFav={toggleFavHandler}
+            branchSlug={profile.branchSlug} onOpenMessage={setMessage} onOpenSermon={setSermon}
+            onOpenHymn={setHymn} onOpenVerse={setVerseFav} />
+        )}
         {page === "settings" && (
           <SettingsPage key="settings" onBack={close} theme={theme} onOpen={open}
             reduceMotion={reduceMotion} onToggleReduceMotion={onToggleReduceMotion}
@@ -306,12 +328,12 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
         )}
         {page === "motion-lab" && <MotionLab key="motion-lab" onBack={close} />}
         {message && <MessagePage key="message" message={message} onBack={() => setMessage(null)} />}
-        {sermon && <SermonPage key="sermon" sermon={sermon} onBack={() => setSermon(null)} />}
+        {sermon && <SermonPage key="sermon" sermon={sermon} onBack={() => setSermon(null)} favs={favs} onToggleFav={toggleFavHandler} />}
         {collection && (
           <HymnCollectionPage key="hymn-collection" collection={collection.key} label={collection.label}
             onBack={() => setCollection(null)} onOpenHymn={setHymn} />
         )}
-        {hymn && <HymnPage key="hymn" hymn={hymn} onBack={() => setHymn(null)} />}
+        {hymn && <HymnPage key="hymn" hymn={hymn} onBack={() => setHymn(null)} favs={favs} onToggleFav={toggleFavHandler} collectionLabel={collection?.label} />}
       </AnimatePresence>
 
       <Sheet open={Boolean(event)} onClose={() => setEvent(null)} title={event?.title ?? "Event"}>
@@ -319,6 +341,14 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
       </Sheet>
       <Sheet open={Boolean(announcement)} onClose={() => setAnnouncement(null)} title={announcement?.title ?? "Announcement"}>
         {announcement && <AnnouncementBody announcement={announcement} />}
+      </Sheet>
+      <Sheet open={Boolean(verseFav)} onClose={() => setVerseFav(null)} title={verseFav?.ref || "Daily verse"}>
+        {verseFav && (
+          <article className="message-article selectable">
+            <p className="t-body">{verseFav.text}</p>
+            <p className="t-caption message-ref">{verseFav.ref}</p>
+          </article>
+        )}
       </Sheet>
     </motion.div>
       )}

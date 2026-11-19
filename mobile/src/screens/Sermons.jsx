@@ -7,6 +7,8 @@ import { filterMessages, loadMessageDetail, loadMessages, loadSermons } from "..
 import { useContentData } from "../lib/useContent.js";
 import { getPrefs } from "../lib/storage.js";
 import { SPRING_SNAPPY } from "../lib/motion.js";
+import HeartButton from "../components/HeartButton.jsx";
+import { isFaved, sermonFavItem } from "../lib/favourites.js";
 
 const dayLabel = (iso) =>
   new Date(`${String(iso).slice(0, 10)}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
@@ -33,9 +35,9 @@ function SubTabs({ value, onChange }) {
   );
 }
 
-function SermonRow({ sermon, onOpen }) {
+function SermonRow({ sermon, onOpen, faved, onToggleFav }) {
   return (
-    <li>
+    <li className="sermon-row-wrap">
       <button type="button" className="list-row sermon-row" onClick={() => onOpen(sermon)}>
         <span className="grow">
           <span className="t-body block">
@@ -50,6 +52,7 @@ function SermonRow({ sermon, onOpen }) {
         </span>
         <PlayCircle size={22} className="chev" />
       </button>
+      <HeartButton active={faved} onToggle={onToggleFav} label="Save this sermon" />
     </li>
   );
 }
@@ -67,7 +70,7 @@ function MessageRow({ row, onOpen }) {
   );
 }
 
-export default function SermonsTab({ profile, onOpenProfile, onOpenSermon, onOpenMessage }) {
+export default function SermonsTab({ profile, onOpenProfile, onOpenSermon, onOpenMessage, favs, onToggleFav }) {
   const branchSlug = profile?.branchSlug ?? "";
   const [tab, setTab] = useState("sermons");
   const [q, setQ] = useState("");
@@ -118,7 +121,10 @@ export default function SermonsTab({ profile, onOpenProfile, onOpenSermon, onOpe
           )}
           {!loading && sermonRows.length > 0 && (
             <ul className="list sermon-list">
-              {sermonRows.map((s) => <SermonRow key={s.video_id || s.title} sermon={s} onOpen={onOpenSermon} />)}
+              {sermonRows.map((s) => (
+                <SermonRow key={s.video_id || s.title} sermon={s} onOpen={onOpenSermon}
+                  faved={isFaved(favs, "sermons", s.video_id)} onToggleFav={() => onToggleFav("sermons", sermonFavItem(s))} />
+              ))}
             </ul>
           )}
         </>

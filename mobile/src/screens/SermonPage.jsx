@@ -4,11 +4,13 @@ import { ShareNetwork } from "@phosphor-icons/react/dist/csr/ShareNetwork";
 import Page from "./Page.jsx";
 import { openExternally, youtubeWatchUrl } from "../lib/links.js";
 import { shareText } from "../lib/share.js";
+import HeartButton from "../components/HeartButton.jsx";
+import { isFaved, sermonFavItem } from "../lib/favourites.js";
 
 const dayLabel = (iso) =>
   new Date(`${String(iso).slice(0, 10)}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
-export default function SermonPage({ sermon, onBack }) {
+export default function SermonPage({ sermon, onBack, favs, onToggleFav }) {
   const [shared, setShared] = useState(false);
   const onShare = async () => {
     const result = await shareText({
@@ -25,7 +27,10 @@ export default function SermonPage({ sermon, onBack }) {
   return (
     <Page title="Sermon" onBack={onBack}>
       <article className="message-article selectable">
-        {sermon.is_live && <p className="t-overline live-overline">Live now</p>}
+        <div className="card-head">
+          <p className={`t-overline${sermon.is_live ? " live-overline" : ""}`}>{sermon.is_live ? "Live now" : "Sermon"}</p>
+          <HeartButton active={isFaved(favs, "sermons", sermon.video_id)} onToggle={() => onToggleFav("sermons", sermonFavItem(sermon))} label="Save this sermon" />
+        </div>
         <h2 className="t-title">{sermon.title}</h2>
         <p className="t-caption">
           {[sermon.minister_name, dayLabel(sermon.preached_at), sermon.reference_verse].filter(Boolean).join(" · ")}

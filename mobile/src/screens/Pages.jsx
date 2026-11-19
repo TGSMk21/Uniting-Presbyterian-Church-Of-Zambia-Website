@@ -17,6 +17,9 @@ import { openExternally } from "../lib/links.js";
 import { isNative } from "../lib/device.js";
 import { notificationPermission } from "../lib/reminders.js";
 import { BATTERY_GUIDE, needsBatteryGuide } from "../lib/phoneMake.js";
+import { KINDS, markStale, sectionLabel, writeFavs } from "../lib/favourites.js";
+import { loadMessages, loadSermons } from "../lib/content.js";
+import HeartButton from "../components/HeartButton.jsx";
 import pkg from "../../package.json";
 
 export const PRIVACY_POLICY_URL = import.meta.env?.VITE_PRIVACY_URL || "";
@@ -97,15 +100,81 @@ export function ProfilePage({ onBack, profile, onSave }) {
   );
 }
 
-export function FavouritesPage({ onBack }) {
+export function FavouritesPage({ onBack, favs, onToggleFav, branchSlug, onOpenMessage, onOpenSermon, onOpenHymn, onOpenVerse }) {
+  const [prefs] = useState(() => getPrefs());
+  const [marked, setMarked] = useState(favs);
+
+  // When a fresh server list is available, flag favourites the branch no longer lists.
+  // The snapshot still opens them offline; they're just marked as no longer current.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const load = async (loader, key) => {
+        const result = await loader({ prefs, branchSlug, timeoutMs: 6000 });
+        return result.data ? result.data[key] : null;
+      };
+      const [sermons, messages] = await Promise.all([
+        load(loadSermons, "sermons"),
+        load(loadMessages, "messages"),
+      ]);
+      if (!alive) return;
+      setMarked((current) => {
+        let next = current;
+        if (sermons) next = markStale(next, "sermons", sermons.map((s) => s.video_id));
+        if (messages) next = markStale(next, "messages", messages.map((m) => m.id));
+        if (next !== current) writeFavs(prefs, next);
+        return next;
+      });
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [prefs, branchSlug]);
+
+  const openers = {
+    messages: (item) => onOpenMessage(item.snapshot ?? item),
+    verses: (item) => onOpenVerse(item.snapshot ?? item),
+    sermons: (item) => onOpenSermon(item.snapshot ?? item),
+    hymns: (item) => onOpenHymn(item.snapshot ?? item),
+  };
+  const emptyWords = {
+    messages: "Tap the heart on today's message to keep it here.",
+    verses: "Tap the heart on the daily verse to keep it here.",
+    sermons: "Tap the heart on any sermon to keep it here.",
+    hymns: "Tap the heart on any hymn to keep it here.",
+  };
+
   return (
     <Page title="Favourites" onBack={onBack}>
-      {["Daily messages", "Daily verses", "Sermons", "Hymns"].map((section) => (
-        <section key={section} aria-label={section}>
-          <h2 className="t-overline section-label">{section}</h2>
-          <div className="card empty-card"><p className="t-callout">Tap the heart on any {section.toLowerCase().replace(/s$/, "")} to keep it here.</p></div>
-        </section>
-      ))}
+      <p className="t-callout screen-lede">What you've kept. Favourites are saved on this phone only — they work offline.</p>
+      {KINDS.map((kind) => {
+        const items = marked[kind] ?? [];
+        return (
+          <section key={kind} aria-label={sectionLabel(kind)}>
+            <h2 className="t-overline section-label">{sectionLabel(kind)}</h2>
+            {items.length === 0 ? (
+              <div className="card empty-card"><p className="t-callout">{emptyWords[kind]}</p></div>
+            ) : (
+              <ul className="list">
+                {items.map((item) => (
+                  <li key={`${kind}-${item.id}`} className="sermon-row-wrap">
+                    <button type="button" className="list-row" onClick={() => openers[kind](item)}>
+                      <span className="grow">
+                        <span className="t-body block">{item.title}</span>
+                        <span className="t-caption block">
+                          {item.sub}{item.stale ? " · No longer listed by your branch" : ""}
+                        </span>
+                      </span>
+                      <CaretRight size={18} className="chev" />
+                    </button>
+                    <HeartButton active onToggle={() => onToggleFav(kind, item)} label={`Remove ${item.title}`} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        );
+      })}
     </Page>
   );
 }

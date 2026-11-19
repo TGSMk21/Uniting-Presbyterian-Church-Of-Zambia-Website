@@ -595,3 +595,25 @@
 }
 .hymn-chorus p { margin: 0; }
 .hymn-chorus .t-overline { margin-bottom: var(--s-1); }
+
+/* ----- Phase 7: favourites ----- */
+.heart-button {
+  flex: none;
+  width: var(--touch);
+  height: var(--touch);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  color: var(--ink-3);
+}
+.heart-button:active { background: var(--brand-wash); }
+.heart-button .heart-icon { display: grid; place-items: center; }
+.heart-button.heart-on { color: var(--accent); }
+
+.message-card-wrap, .sermon-row-wrap { position: relative; }
+.message-card-wrap .heart-button, .sermon-row-wrap .heart-button {
+  position: absolute;
+  top: var(--s-2);
+  right: var(--s-2);
+}
+.verse-card .card-head { display: flex; align-items: center; justify-content: space-between; }

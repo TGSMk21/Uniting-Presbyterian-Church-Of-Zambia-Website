@@ -170,11 +170,11 @@ Standing rules carry over from the website: no real passwords or keys entered in
 
 **Goal:** keep what matters. *Delivers: favourites across the whole app.*
 
-- [ ] **Heart button** on daily messages, daily verses, sermons and hymns, with a small, satisfying animation and a light vibration (if the phone allows).
-- [ ] **Favourites screen (spec 8):** from the top-bar icon, with four sections: Daily messages, Daily verses, Sermons and Hymns, each separate, with an empty state that tells the person how to add one.
-- [ ] Saved on the phone, kept offline (a favourite still opens without internet), and shown in plain words that they stay on this phone only.
-- [ ] A favourite whose content was removed on the server is handled gracefully.
-- [ ] Phase review and owner sign-off.
+- [x] **Heart button** on daily messages, daily verses, sermons and hymns, with a small, satisfying animation and a light vibration (if the phone allows). **[rev] Done (2026-11-19):** `src/components/HeartButton.jsx` — heart fills red with a scale pop and a light haptic on the phone; hearts on the home verse and message cards, sermon rows and sermon page, and the hymn reader.**
+- [x] **Favourites screen (spec 8):** from the top-bar icon, with four sections: Daily messages, Daily verses, Sermons and Hymns, each separate, with an empty state that tells the person how to add one. **[rev] Done (2026-11-19):** `FavouritesPage` in `Pages.jsx` — four labelled sections, each row opens the saved item (verses open in a sheet), each has a heart to remove it, and each empty section says in plain words how to add one.**
+- [x] Saved on the phone, kept offline (a favourite still opens without internet), and shown in plain words that they stay on this phone only. **[rev] Done (2026-11-19):** `src/lib/favourites.js` stores each favourite with its full snapshot under `upcz.favs`, so items open with no signal; the page says "saved on this phone only — they work offline".**
+- [x] A favourite whose content was removed on the server is handled gracefully. **[rev] Done (2026-11-19):** when fresh sermon/message lists load, favourites no longer listed are flagged stale (`markStale`) and shown as "No longer listed by your branch" — the snapshot still opens.**
+- [ ] Phase review and owner sign-off. **[rev] Built (2026-11-19):** 88 app tests (5 new for the favourites store), 3 deliberate breakages caught (stale never marked, toggle never removes, malformed stored entries kept — the last needed a new test); lint and `vite build` clean.**
 
 ## Phase 8: Polish, speed and accessibility
 

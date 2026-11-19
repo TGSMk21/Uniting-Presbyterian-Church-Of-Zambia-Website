@@ -8,6 +8,8 @@ import { homeSlots, timeAgo } from "../lib/home.js";
 import { shareText } from "../lib/share.js";
 import { eventsOnDate, formatTime, loadEvents, pastEvents, todayIso } from "../lib/events.js";
 import { useContentData } from "../lib/useContent.js";
+import HeartButton from "../components/HeartButton.jsx";
+import { isFaved, messageFavItem, verseFavItem } from "../lib/favourites.js";
 
 const dayLabel = (iso) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
@@ -49,10 +51,13 @@ function ShareButton({ title, text }) {
   );
 }
 
-function VerseCard({ verse }) {
+function VerseCard({ verse, faved, onToggleFav }) {
   return (
     <section className="card home-card verse-card" aria-label="Today's verse">
-      <p className="t-overline">Today's verse</p>
+      <div className="card-head">
+        <p className="t-overline">Today's verse</p>
+        <HeartButton active={faved} onToggle={onToggleFav} label="Save this verse" />
+      </div>
       <blockquote className="verse-text selectable">{verse.text}</blockquote>
       <div className="card-foot">
         <span className="t-caption verse-ref">{verse.ref}</span>
@@ -86,14 +91,17 @@ function LiveCard({ live, onOpen }) {
   );
 }
 
-function MessageCard({ message, onOpen }) {
+function MessageCard({ message, onOpen, faved, onToggleFav }) {
   return (
-    <button type="button" className="card home-card message-card" onClick={() => onOpen(message)}>
-      <p className="t-overline">Daily message</p>
-      <span className="t-headline">{message.title}</span>
-      {message.reference_verse && <span className="t-caption block">{message.reference_verse}</span>}
-      <span className="t-callout read-more">Read the message <ArrowRight size={14} className="chev" /></span>
-    </button>
+    <div className="card home-card message-card-wrap">
+      <button type="button" className="card home-card message-card" onClick={() => onOpen(message)}>
+        <p className="t-overline">Daily message</p>
+        <span className="t-headline">{message.title}</span>
+        {message.reference_verse && <span className="t-caption block">{message.reference_verse}</span>}
+        <span className="t-callout read-more">Read the message <ArrowRight size={14} className="chev" /></span>
+      </button>
+      <HeartButton active={faved} onToggle={onToggleFav} label="Save this message" />
+    </div>
   );
 }
 
@@ -124,7 +132,7 @@ function Skeletons() {
   );
 }
 
-export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, onOpenSermon, onOpenEvent, onSelectTab }) {
+export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, onOpenSermon, onOpenEvent, onSelectTab, favs, onToggleFav }) {
   const [now] = useState(() => new Date());
   const first = profile?.name?.trim().split(/\s+/)[0] ?? "";
   const part = partOfDay(now);
@@ -191,8 +199,8 @@ export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, o
         if (slot === "greeting") return null;
         if (slot === "today-event") return <TodayCard key={slot} events={data.events} today={data.date} onOpen={onOpenEvent} />;
         if (slot === "live") return <LiveCard key={slot} live={data.live} onOpen={onOpenSermon} />;
-        if (slot === "verse") return <VerseCard key={slot} verse={data.verse} />;
-        if (slot === "message") return <MessageCard key={slot} message={data.daily_message} onOpen={onOpenMessage} />;
+        if (slot === "verse") return <VerseCard key={slot} verse={data.verse} faved={isFaved(favs, "verses", data.date)} onToggleFav={() => onToggleFav("verses", verseFavItem({ ...data.verse, date: data.date }))} />;
+        if (slot === "message") return <MessageCard key={slot} message={data.daily_message} onOpen={onOpenMessage} faved={isFaved(favs, "messages", data.daily_message?.id)} onToggleFav={() => onToggleFav("messages", messageFavItem(data.daily_message))} />;
         if (slot === "sermons") {
           return (
             <PreviewCard key={slot} overline="Latest sermons" allLabel="See all" onAll={() => onSelectTab("sermons")}
