@@ -11,6 +11,7 @@ from church_erp.accounts.staff_people import StaffPeopleViewSet
 from church_erp.accounts.access_requests import RequestAccessView, StaffRequestViewSet
 from church_erp.core.staff_branches import StaffBranchViewSet
 from church_erp.core.changes import StaffChangeViewSet
+from church_erp.content.staff_hymns import StaffHymnViewSet
 from church_erp.core.staff_overview import StaffOverviewView
 from church_erp.core.staff_presbyteries import StaffPresbyteryViewSet
 from church_erp.workspace.deliverables import AttentionView, DeliverableViewSet, TemplateViewSet
@@ -22,7 +23,8 @@ from church_erp.finance.views import GivingRecordViewSet
 from church_erp.api.views import backup_database, generate_daily_messages, sync_youtube
 from church_erp.api.app_home import AppHomeView
 from church_erp.api.app_content import (
-    AppAnnouncementsView, AppEventsView, AppMessageDetailView, AppMessagesView, AppSermonsView,
+    AppAnnouncementsView, AppEventsView, AppHymnCollectionsView, AppHymnsView,
+    AppMessageDetailView, AppMessagesView, AppSermonsView,
 )
 from church_erp.content.page_content_views import PageContentPageView, PageContentView, PageImageView
 from church_erp.content.staff_content import (
@@ -58,6 +60,7 @@ staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/messages', StaffMessageV
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/writings', StaffWritingViewSet, basename='staff-writings')
 staff_router.register(r'staff/(?P<scope>[-a-zA-Z0-9_]+)/media', StaffMediaViewSet, basename='staff-media')
 staff_router.register(r'staff-people', StaffPeopleViewSet, basename='staff-people')
+staff_router.register(r'staff-hymns', StaffHymnViewSet, basename='staff-hymns')
 staff_router.register(r'staff-requests', StaffRequestViewSet, basename='staff-requests')
 staff_router.register(r'staff-branches', StaffBranchViewSet, basename='staff-branches')
 staff_router.register(r'staff-changes', StaffChangeViewSet, basename='staff-changes')
@@ -84,6 +87,8 @@ urlpatterns = [
     path('app/sermons/', AppSermonsView.as_view(), name='app-sermons'),
     path('app/events/', AppEventsView.as_view(), name='app-events'),
     path('app/announcements/', AppAnnouncementsView.as_view(), name='app-announcements'),
+    path('app/hymns/collections/', AppHymnCollectionsView.as_view(), name='app-hymn-collections'),
+    path('app/hymns/', AppHymnsView.as_view(), name='app-hymns'),
     path('app/messages/', AppMessagesView.as_view(), name='app-messages'),
     path('app/messages/<int:pk>/', AppMessageDetailView.as_view(), name='app-message-detail'),
     path('workspace/me/', WorkspaceMeView.as_view(), name='workspace-me'),

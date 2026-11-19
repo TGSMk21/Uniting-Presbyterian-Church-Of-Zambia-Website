@@ -1,6 +1,7 @@
 """Lean public addresses for the mobile app's sermon archive and daily-message library
 (MOBILE_APP_PLAN.md, Phase 3). Same rules as /api/app/home/: public, read-only, one
 active branch per request, never hidden sermons, never unpublished messages."""
+from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import permissions
@@ -8,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from church_erp.ai_messages.models import DailyMessage
-from church_erp.content.models import Activity, Announcement, Sermon
+from church_erp.content.models import Activity, Announcement, Hymn, Sermon
 from church_erp.core.models import Branch
 
 SERMONS_DEFAULT_LIMIT = 20
@@ -128,6 +129,42 @@ class AppAnnouncementsView(APIView):
                     "is_pinned": a.is_pinned,
                 }
                 for a in announcements
+            ],
+        })
+
+
+class AppHymnCollectionsView(APIView):
+    """The three hymn collections with their counts (Phase 6). Church-wide, so no branch."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        counts = dict(Hymn.objects.values_list("collection").annotate(total=models.Count("id")).order_by())
+        return Response({
+            "collections": [
+                {"collection": key, "label": label, "count": counts.get(key, 0)}
+                for key, label in Hymn.COLLECTIONS
+            ],
+        })
+
+
+class AppHymnsView(APIView):
+    """Every hymn of one collection, by number, full text for offline download (Phase 6)."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        collection = request.query_params.get("collection", "").strip()
+        valid = {key for key, _label in Hymn.COLLECTIONS}
+        if collection not in valid:
+            return Response({"error": "A collection is required: ?collection=tumbuka|chewa|english"}, status=400)
+        hymns = Hymn.objects.filter(collection=collection).order_by("number", "pk")
+        return Response({
+            "collection": collection,
+            "hymns": [
+                {
+                    "id": h.pk, "collection": h.collection, "number": h.number, "title": h.title,
+                    "verses": h.verses, "chorus": h.chorus, "notes": h.notes,
+                }
+                for h in hymns
             ],
         })
 

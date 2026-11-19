@@ -31,8 +31,9 @@ POST_EXTRAS = {"upload"}
 PEOPLE_ACTIONS = ["suspend", "restore", "reset-password", "reset-two-factor"]
 # Access requests (Task 7.2): superusers, and Branch Admins for their own branch's staff.
 REQUEST_ACTIONS = ["approve", "turn-down"]
-# Branch admins manage staff; only superusers manage branches and read the history.
-SUPERUSER_ONLY = ["staff-branches", "staff-changes", "staff-presbyteries"]
+# Branch admins manage staff; only superusers manage branches, the hymns and the history.
+SUPERUSER_ONLY = ["staff-branches", "staff-changes", "staff-presbyteries", "staff-hymns"]
+HYMN_ACTIONS = ["import"]
 
 
 def staff_url_names():
@@ -138,6 +139,13 @@ class AccessMatrixTests(APITestCase):
         yield "get", reverse("staff-branches-detail", args=["beta"])
         yield "patch", reverse("staff-branches-detail", args=["beta"])
         yield "get", reverse("staff-changes-list")
+        # Hymns are church-wide and superuser-only (MOBILE_APP_PLAN.md, Phase 6).
+        yield "get", reverse("staff-hymns-list")
+        yield "post", reverse("staff-hymns-list")
+        yield "get", reverse("staff-hymns-detail", args=[1])
+        yield "patch", reverse("staff-hymns-detail", args=[1])
+        yield "delete", reverse("staff-hymns-detail", args=[1])
+        yield "post", reverse("staff-hymns-import")
 
     def refused(self, user, addresses, allowed_statuses):
         self.client.force_authenticate(user)
@@ -156,6 +164,7 @@ class AccessMatrixTests(APITestCase):
         listed |= {f"staff-people-{name}" for name in PEOPLE_ACTIONS}
         listed |= {"staff-requests-list", "staff-requests-detail"} | {f"staff-requests-{name}" for name in REQUEST_ACTIONS}
         listed |= {f"{name}-{kind}" for name in SUPERUSER_ONLY for kind in ("list", "detail")}
+        listed |= {f"staff-hymns-{name}" for name in HYMN_ACTIONS}
         self.assertEqual(staff_url_names() - listed, set(), "Add new staff addresses to this file.")
 
     def test_signed_out_people_are_refused_everywhere(self):

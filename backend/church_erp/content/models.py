@@ -135,3 +135,36 @@ class Announcement(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Hymn(models.Model):
+    """One hymn in a church-wide collection (MOBILE_APP_PLAN.md, Phase 6).
+
+    Collections are national, not per branch. Texts are entered through the
+    dashboard only, once the church has the right to publish them (Decision 1)."""
+    TUMBUKA = 'tumbuka'
+    CHEWA = 'chewa'
+    ENGLISH = 'english'
+    COLLECTIONS = [
+        (TUMBUKA, 'Tumbuka Hymns'),
+        (CHEWA, 'Chewa Hymns'),
+        (ENGLISH, 'English Hymns'),
+    ]
+
+    collection = models.CharField(max_length=20, choices=COLLECTIONS)
+    number = models.PositiveIntegerField()
+    title = models.CharField(max_length=300)
+    verses = models.JSONField(default=list, help_text="List of verse texts, in order")
+    chorus = models.TextField(blank=True)
+    notes = models.TextField(blank=True, help_text="Optional note, e.g. the year or author")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['collection', 'number']
+        constraints = [
+            models.UniqueConstraint(fields=['collection', 'number'], name='unique_hymn_per_collection'),
+        ]
+
+    def __str__(self):
+        return f"{self.get_collection_display()} {self.number}: {self.title}"
