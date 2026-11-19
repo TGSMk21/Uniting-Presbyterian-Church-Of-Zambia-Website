@@ -550,3 +550,48 @@
   vertical-align: 0.15em;
 }
 .pin-icon { color: var(--brand); margin-right: var(--s-1); vertical-align: -0.15em; }
+
+/* ----- Phase 6: hymns ----- */
+.collection-cards { display: grid; gap: var(--s-3); margin-top: var(--s-2); }
+.collection-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: var(--s-2);
+  text-align: left;
+  padding: var(--s-5);
+  min-height: 6.5rem;
+}
+.collection-card .t-headline { grid-column: 1; }
+.collection-card .t-caption { grid-column: 1; }
+.collection-card .chev { grid-column: 2; grid-row: 1 / span 2; color: var(--brand); }
+
+.hymn-number {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--brand-wash);
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.reader-tools { display: flex; align-items: center; gap: var(--s-1); justify-content: flex-end; margin-bottom: var(--s-2); }
+.text-size-button { width: var(--touch); height: var(--touch); font-weight: 700; }
+.hymn-reader { line-height: 1.65; }
+.hymn-title { margin-bottom: var(--s-2); }
+.hymn-verse { display: grid; grid-template-columns: 1.75rem 1fr; gap: var(--s-2); margin: var(--s-3) 0; }
+.hymn-verse p { margin: 0; }
+.hymn-verse-number { color: var(--accent); font-weight: 700; font-size: 0.85em; padding-top: 0.2em; }
+.hymn-chorus {
+  margin-top: var(--s-5);
+  padding: var(--s-3) var(--s-4);
+  border-left: 3px solid var(--accent);
+  background: var(--accent-tint);
+  border-radius: 0 var(--r-m) var(--r-m) 0;
+}
+.hymn-chorus p { margin: 0; }
+.hymn-chorus .t-overline { margin-bottom: var(--s-1); }

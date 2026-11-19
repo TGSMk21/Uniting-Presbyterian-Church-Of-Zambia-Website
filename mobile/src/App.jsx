@@ -4,7 +4,7 @@ import { App as NativeApp } from "@capacitor/app";
 import { SplashScreen } from "@capacitor/splash-screen";
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
 import { TabBar, TopBar } from "./components/Chrome.jsx";
-import { AnnouncementsTab, EventsTab, HomeTab, HymnsTab, SermonsTab } from "./screens/Tabs.jsx";
+import { AnnouncementsTab, EventsTab, HomeTab, SermonsTab } from "./screens/Tabs.jsx";
 import { FavouritesPage, ProfilePage, SettingsPage } from "./screens/Pages.jsx";
 import MotionLab from "./screens/MotionLab.jsx";
 import Opening from "./screens/Opening.jsx";
@@ -14,6 +14,7 @@ import SermonPage from "./screens/SermonPage.jsx";
 import Sheet from "./components/Sheet.jsx";
 import { EventBody } from "./screens/Events.jsx";
 import { AnnouncementBody } from "./screens/Announcements.jsx";
+import HymnsTab, { HymnCollectionPage, HymnPage } from "./screens/Hymns.jsx";
 import { useHome } from "./lib/useHome.js";
 import { useContentData } from "./lib/useContent.js";
 import { loadAnnouncements } from "./lib/content.js";
@@ -31,7 +32,7 @@ const TAB_SCREENS = {
   home: HomeTab, events: EventsTab, sermons: SermonsTab, hymns: HymnsTab, announcements: AnnouncementsTab,
 };
 
-function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfile, home, onOpenMessage, onOpenSermon, onOpenEvent, announcements, readMarks, onOpenAnnouncement, onSelectTab, onPullRefresh, refreshing }) {
+function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfile, home, onOpenMessage, onOpenSermon, onOpenEvent, announcements, readMarks, onOpenAnnouncement, onOpenCollection, onSelectTab, onPullRefresh, refreshing }) {
   const ref = useRef(null);
   const Screen = TAB_SCREENS[id];
   const reduced = useReducedMotion();
@@ -85,7 +86,7 @@ function TabScreen({ id, active, scrollTopTick, onScrolled, profile, onOpenProfi
         data={id === "announcements" ? announcements.data : undefined}
         status={id === "announcements" ? announcements.status : undefined}
         source={id === "announcements" ? announcements.source : undefined}
-        readMarks={readMarks} onOpenAnnouncement={onOpenAnnouncement} onSelectTab={onSelectTab} />
+        readMarks={readMarks} onOpenAnnouncement={onOpenAnnouncement} onOpenCollection={onOpenCollection} onSelectTab={onSelectTab} />
     </motion.main>
   );
 }
@@ -111,6 +112,8 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
   const [sermon, setSermon] = useState(null);
   const [event, setEvent] = useState(null);
   const [announcement, setAnnouncement] = useState(null);
+  const [collection, setCollection] = useState(null);
+  const [hymn, setHymn] = useState(null);
   const home = useHome(profile.branchSlug);
   const loadAnnouncementsCb = useCallback((opts) => loadAnnouncements(opts), []);
   const announcements = useContentData(loadAnnouncementsCb, profile.branchSlug);
@@ -130,12 +133,16 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
   const sermonRef = useRef(sermon);
   const eventRef = useRef(event);
   const announcementRef = useRef(announcement);
+  const collectionRef = useRef(collection);
+  const hymnRef = useRef(hymn);
   useEffect(() => { navRef.current = nav; }, [nav]);
   useEffect(() => { stageRef.current = stage; }, [stage]);
   useEffect(() => { messageRef.current = message; }, [message]);
   useEffect(() => { sermonRef.current = sermon; }, [sermon]);
   useEffect(() => { eventRef.current = event; }, [event]);
   useEffect(() => { announcementRef.current = announcement; }, [announcement]);
+  useEffect(() => { collectionRef.current = collection; }, [collection]);
+  useEffect(() => { hymnRef.current = hymn; }, [hymn]);
   const reduced = useReducedMotion();
 
   useEffect(() => {
@@ -180,6 +187,14 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
       }
       if (announcementRef.current) {
         setAnnouncement(null);
+        return;
+      }
+      if (hymnRef.current) {
+        setHymn(null);
+        return;
+      }
+      if (collectionRef.current) {
+        setCollection(null);
         return;
       }
       const step = back(navRef.current);
@@ -266,7 +281,7 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
             scrollTopTick={id === nav.tab ? nav.scrollTopTick : 0}
             onScrolled={setScrolled} profile={profile} onOpenProfile={() => open("profile")}
             home={home} onOpenMessage={setMessage} onOpenSermon={setSermon} onOpenEvent={setEvent}
-            announcements={announcements} readMarks={readMarks} onOpenAnnouncement={openAnnouncement} onSelectTab={choose}
+            announcements={announcements} readMarks={readMarks} onOpenAnnouncement={openAnnouncement} onOpenCollection={setCollection} onSelectTab={choose}
             onPullRefresh={id === "home" ? home.pullRefresh : undefined}
             refreshing={id === "home" && home.status === "refreshing"} />
         ))}
@@ -292,6 +307,11 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
         {page === "motion-lab" && <MotionLab key="motion-lab" onBack={close} />}
         {message && <MessagePage key="message" message={message} onBack={() => setMessage(null)} />}
         {sermon && <SermonPage key="sermon" sermon={sermon} onBack={() => setSermon(null)} />}
+        {collection && (
+          <HymnCollectionPage key="hymn-collection" collection={collection.key} label={collection.label}
+            onBack={() => setCollection(null)} onOpenHymn={setHymn} />
+        )}
+        {hymn && <HymnPage key="hymn" hymn={hymn} onBack={() => setHymn(null)} />}
       </AnimatePresence>
 
       <Sheet open={Boolean(event)} onClose={() => setEvent(null)} title={event?.title ?? "Event"}>

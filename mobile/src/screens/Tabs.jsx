@@ -3,8 +3,9 @@ import HomeTab from "./Home.jsx";
 import SermonsTab from "./Sermons.jsx";
 import EventsTab from "./Events.jsx";
 import AnnouncementsTab from "./Announcements.jsx";
+import HymnsTab from "./Hymns.jsx";
 
-export { HomeTab, SermonsTab, EventsTab, AnnouncementsTab };
+export { HomeTab, SermonsTab, EventsTab, AnnouncementsTab, HymnsTab };
 
 function Intro({ overline, title, children }) {
   return (
@@ -39,14 +40,4 @@ function NoBranch({ what, onChoose }) {
   );
 }
 
-export function HymnsTab({ profile, onOpenProfile }) {
-  return (
-    <>
-      <Intro title="Hymns">Sing along in Tumbuka, Chewa and English.</Intro>
-      {!profile?.branchSlug
-        ? <NoBranch what="the hymn books" onChoose={onOpenProfile} />
-        : <Coming lines={["Tumbuka Hymns", "Chewa Hymns", "English Hymns"]} />}
-    </>
-  );
-}
 

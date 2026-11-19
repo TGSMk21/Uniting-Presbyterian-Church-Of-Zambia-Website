@@ -13,9 +13,9 @@ export function filterMessages(messages, q) {
   );
 }
 
-export async function loadCached({ prefs, kind, branchSlug, path, fetchImpl, timeoutMs, now = () => Date.now(), validate }) {
-  if (!branchSlug) return { data: null, source: "none", fetchedAt: null };
-  const key = contentKey(kind, branchSlug);
+export async function loadCached({ prefs, kind, branchSlug, global = false, path, fetchImpl, timeoutMs, now = () => Date.now(), validate }) {
+  if (!branchSlug && !global) return { data: null, source: "none", fetchedAt: null };
+  const key = global ? `upcz.${kind}` : contentKey(kind, branchSlug);
   try {
     const data = await fetchJSON(`${API_BASE}${path}`, { fetchImpl, timeoutMs });
     if (!validate(data)) throw new Error("unexpected payload");

@@ -158,12 +158,12 @@ Standing rules carry over from the website: no real passwords or keys entered in
 
 **Goal:** the three hymn collections. *Delivers: hymns in Tumbuka, Chewa and English.* **Starts only when the hymn texts and permission are confirmed (Decision 1).**
 
-- [ ] **Backend:** a `Hymn` model (collection, number, title, verses and chorus, optional notes), a public read-only address, migrations, and tests.
-- [ ] **Dashboard:** a Hymns section for superusers to add, edit and bulk-import hymns, with the change history recording each change.
-- [ ] **Hymns screen (spec 13):** three large cards: **Tumbuka Hymns**, **Chewa Hymns**, **English Hymns**, with a calm hover/press motion and the number of hymns on each.
-- [ ] **Hymn list:** by number or title, with fast search, opening to the hymn.
-- [ ] **Hymn reader:** comfortable large text, verses and chorus clearly set apart, text size control, and a screen that stays on while reading.
-- [ ] Works offline: hymns are downloaded the first time so they open without internet.
+- [x] **Backend:** a `Hymn` model (collection, number, title, verses and chorus, optional notes), a public read-only address, migrations, and tests. **[rev] Done (2026-11-18):** `Hymn` in `content/models.py` (unique per collection+number) + migration `0009_hymn.py`; public read-only `GET /api/app/hymns/collections/` (labels + counts) and `GET /api/app/hymns/?collection=` (full text, by number — 400 on a bad collection). 8 tests written first; 3 mutation checks caught (no history recorded, bad collection silently accepted, non-superuser access); the access-matrix guard lists the new routes; suite 906 OK.**
+- [x] **Dashboard:** a Hymns section for superusers to add, edit and bulk-import hymns, with the change history recording each change. **[rev] Done (2026-11-18):** `presbyterian-web/app/dashboard/(staff)/hymns/` — list with collection filter + search, new/edit form, all-or-nothing JSON bulk import (upsert by collection+number), delete with confirm; nav entry for superusers; "Hymns" added to the change-history sections. Staff API `staff-hymns` (list/create/patch/delete + `import`) is superuser-only and records every write via `core.changes.record`. Website tests 332/332, lint 0 errors, `next build` clean. Texts themselves still wait for the owner's permission (Decision 1) — the forms are ready.**
+- [x] **Hymns screen (spec 13):** three large cards: **Tumbuka Hymns**, **Chewa Hymns**, **English Hymns**, with a calm hover/press motion and the number of hymns on each. **[rev] Done (2026-11-18):** `src/screens/Hymns.jsx` — three large cards with counts and a spring press (`whileTap`), church-wide so no branch needed.**
+- [x] **Hymn list:** by number or title, with fast search, opening to the hymn. **[rev] Done (2026-11-18):** collection page with number badges, verse/chorus counts, search by title or number (`filterHymns`), newest-first-safe sort by number then title.**
+- [x] **Hymn reader:** comfortable large text, verses and chorus clearly set apart, text size control, and a screen that stays on while reading. **[rev] Done (2026-11-18):** serif reader at 1.25 rem base, numbered verses (red numerals), chorus set apart in a red-edged block, A−/A+ text size (persisted on the phone), and the screen stays on via the Wake Lock API (`useKeepAwake`).**
+- [x] Works offline: hymns are downloaded the first time so they open without internet. **[rev] Done (2026-11-18):** collections cached globally (`upcz.hymnCollections`), each collection cached whole on first open (`upcz.hymns.<collection>`); offline serves the cache with a plain note. 3 new app tests (loads/cache/search/sort), 2 mutation checks caught; 82/82, lint and build clean.**
 - [ ] Phase review and owner sign-off.
 
 ## Phase 7: Favourites
