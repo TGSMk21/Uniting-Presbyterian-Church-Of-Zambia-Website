@@ -38,6 +38,7 @@ export function navGroups(staff) {
   const site = staff.is_superuser
     ? [
         { href: "/dashboard/branches", label: "Branches", icon: "branches" },
+        { href: "/dashboard/hymns", label: "Hymns", icon: "hymns" },
         { href: "/dashboard/history", label: "Change history", icon: "history" },
       ]
     : [];

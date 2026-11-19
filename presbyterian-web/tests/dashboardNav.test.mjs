@@ -31,7 +31,7 @@ test("a minister also manages staff and their branch's requests", () => {
 test("superusers get every branch's lists and the site-wide sections", () => {
   assert.deepEqual(hrefs(superuser), [
     "/dashboard", "/dashboard/content", "/dashboard/pages",
-    "/dashboard/staff", "/dashboard/requests", "/dashboard/branches", "/dashboard/history",
+    "/dashboard/staff", "/dashboard/requests", "/dashboard/branches", "/dashboard/hymns", "/dashboard/history",
   ]);
 });
 

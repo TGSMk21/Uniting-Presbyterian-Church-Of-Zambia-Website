@@ -26,6 +26,7 @@ export const HISTORY_SECTIONS = [
   { value: "media", label: "Media library", noun: "the file" },
   { value: "people", label: "Staff", noun: "the account" },
   { value: "branches", label: "Branches", noun: "the branch" },
+  { value: "hymns", label: "Hymns", noun: "the hymn" },
 ];
 
 export function canManageStaff(staff) {
