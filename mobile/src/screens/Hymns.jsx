@@ -11,6 +11,9 @@ import { useKeepAwake } from "../lib/keepAwake.js";
 import { SPRING_SNAPPY } from "../lib/motion.js";
 import HeartButton from "../components/HeartButton.jsx";
 import { hymnFavItem, isFaved } from "../lib/favourites.js";
+import { useDeviceTilt } from "../lib/tilt.js";
+import { isLowEnd } from "../lib/device.js";
+import { useReducedMotion } from "motion/react";
 
 const TEXT_SCALES = [0.9, 1, 1.15, 1.3];
 const TEXT_SIZE_KEY = "upcz.textSize";
@@ -18,6 +21,8 @@ const TEXT_SIZE_KEY = "upcz.textSize";
 export default function HymnsTab({ onOpenCollection }) {
   const loadCb = useCallback((opts) => loadHymnCollections(opts), []);
   const collections = useContentData(loadCb, undefined);
+  const reduced = useReducedMotion();
+  const tilt = useDeviceTilt(!reduced && !isLowEnd());
   const rows = collections.data?.collections ?? [];
   const loading = collections.status === "loading" && !collections.data;
 
@@ -38,6 +43,7 @@ export default function HymnsTab({ onOpenCollection }) {
         {rows.map(({ collection, label, count }) => (
           <motion.button key={collection} type="button" className="card collection-card"
             whileTap={{ scale: 0.97 }} transition={SPRING_SNAPPY}
+            style={tilt ? { rotateX: tilt.rotateX, rotateY: tilt.rotateY, transformPerspective: 900 } : undefined}
             onClick={() => onOpenCollection({ key: collection, label, count })}>
             <span className="t-headline">{label}</span>
             <span className="t-caption">{count === 0 ? "No hymns yet" : `${count} hymn${count === 1 ? "" : "s"}`}</span>
@@ -74,17 +80,18 @@ export function HymnCollectionPage({ collection, label, onBack, onOpenHymn }) {
       )}
       {!loading && rows.length > 0 && (
         <ul className="list">
-          {rows.map((hymn) => (
-            <li key={hymn.id}>
+          {rows.map((hymn, i) => (
+            <motion.li key={hymn.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ ...SPRING_SNAPPY, delay: Math.min(i * 0.04, 0.3) }}>
               <button type="button" className="list-row" onClick={() => onOpenHymn(hymn)}>
                 <span className="hymn-number t-caption" aria-hidden="true">{hymn.number}</span>
                 <span className="grow">
-                  <span className="t-body block">{hymn.title}</span>
+                  <motion.span layoutId={`hymn-title-${hymn.id}`} className="t-body block">{hymn.title}</motion.span>
                   <span className="t-caption block">{(hymn.verses ?? []).length} verse{(hymn.verses ?? []).length === 1 ? "" : "s"}{hymn.chorus ? " · chorus" : ""}</span>
                 </span>
                 <CaretRight size={18} className="chev" />
               </button>
-            </li>
+            </motion.li>
           ))}
         </ul>
       )}
@@ -120,7 +127,7 @@ export function HymnPage({ hymn, onBack, favs, onToggleFav, collectionLabel }) {
       </div>
       <article className="hymn-reader selectable" style={{ fontSize: `calc(1.25rem * ${scale})` }}>
         <div className="card-head">
-          <h2 className="t-title hymn-title">{hymn.title}</h2>
+          <motion.h2 layoutId={`hymn-title-${hymn.id}`} className="t-title hymn-title">{hymn.title}</motion.h2>
           <HeartButton active={isFaved(favs, "hymns", hymn.id)} onToggle={() => onToggleFav("hymns", hymnFavItem(hymn, collectionLabel))} label="Save this hymn" />
         </div>
         {hymn.notes && <p className="t-caption">{hymn.notes}</p>}

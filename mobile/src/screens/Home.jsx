@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { motion } from "motion/react";
 import { ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
 import { ShareNetwork } from "@phosphor-icons/react/dist/csr/ShareNetwork";
@@ -96,7 +97,7 @@ function MessageCard({ message, onOpen, faved, onToggleFav }) {
     <div className="card home-card message-card-wrap">
       <button type="button" className="card home-card message-card" onClick={() => onOpen(message)}>
         <p className="t-overline">Daily message</p>
-        <span className="t-headline">{message.title}</span>
+        <motion.span layoutId={`message-title-${message.id}`} className="t-headline">{message.title}</motion.span>
         {message.reference_verse && <span className="t-caption block">{message.reference_verse}</span>}
         <span className="t-callout read-more">Read the message <ArrowRight size={14} className="chev" /></span>
       </button>

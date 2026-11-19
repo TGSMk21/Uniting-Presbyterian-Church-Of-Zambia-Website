@@ -1,4 +1,6 @@
+import { motion } from "motion/react";
 import Notice from "../components/Notice.jsx";
+import { SPRING_SNAPPY } from "../lib/motion.js";
 import { PushPin } from "@phosphor-icons/react/dist/csr/PushPin";
 import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { sortAnnouncements } from "../lib/announcements.js";
@@ -52,20 +54,21 @@ export default function AnnouncementsTab({ profile, onOpenProfile, data, status,
       )}
       {!loading && rows.length > 0 && (
         <ul className="list">
-          {rows.map((a) => (
-            <li key={a.id}>
+          {rows.map((a, i) => (
+            <motion.li key={a.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ ...SPRING_SNAPPY, delay: Math.min(i * 0.04, 0.3) }}>
               <button type="button" className="list-row" onClick={() => onOpenAnnouncement(a)}>
                 <span className="grow">
-                  <span className="t-body block">
+                  <motion.span layoutId={`announcement-title-${a.id}`} className="t-body block">
                     {a.is_pinned && <PushPin size={14} className="pin-icon" aria-label="Pinned" />}
                     {unread.has(String(a.id)) && <span className="new-badge">New</span>}
                     {a.title}
-                  </span>
+                  </motion.span>
                   <span className="t-caption block">{new Date(`${String(a.starts_on).slice(0, 10)}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}</span>
                 </span>
                 <CaretRight size={18} className="chev" />
               </button>
-            </li>
+            </motion.li>
           ))}
         </ul>
       )}

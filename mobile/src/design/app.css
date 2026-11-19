@@ -617,3 +617,18 @@
   right: var(--s-2);
 }
 .verse-card .card-head { display: flex; align-items: center; justify-content: space-between; }
+
+/* ----- Phase 8: landscape and large screens ----- */
+@media (orientation: landscape) {
+  .tab-bar { height: 3.5rem; }
+  .tab-icon svg { width: 22px; height: 22px; }
+  .screen { padding-top: calc(var(--top-bar) + var(--s-3)); }
+  .home-cards { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
+  .sheet { max-height: 100dvh; }
+  .collection-cards { grid-template-columns: repeat(3, 1fr); }
+  .opening { gap: var(--s-3); }
+}
+@media (min-width: 720px) {
+  .screen { max-width: 44rem; margin: 0 auto; }
+  .collection-cards { grid-template-columns: repeat(3, 1fr); }
+}

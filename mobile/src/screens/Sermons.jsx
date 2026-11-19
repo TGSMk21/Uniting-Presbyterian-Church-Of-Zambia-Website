@@ -40,10 +40,10 @@ function SermonRow({ sermon, onOpen, faved, onToggleFav }) {
     <li className="sermon-row-wrap">
       <button type="button" className="list-row sermon-row" onClick={() => onOpen(sermon)}>
         <span className="grow">
-          <span className="t-body block">
+          <motion.span layoutId={`sermon-title-${sermon.video_id}`} className="t-body block">
             {sermon.is_live && <span className="live-badge">Live</span>}
             {sermon.title}
-          </span>
+          </motion.span>
           <span className="t-caption block">
             {dayLabel(sermon.preached_at)}
             {sermon.reference_verse ? ` · ${sermon.reference_verse}` : ""}
@@ -121,9 +121,12 @@ export default function SermonsTab({ profile, onOpenProfile, onOpenSermon, onOpe
           )}
           {!loading && sermonRows.length > 0 && (
             <ul className="list sermon-list">
-              {sermonRows.map((s) => (
-                <SermonRow key={s.video_id || s.title} sermon={s} onOpen={onOpenSermon}
-                  faved={isFaved(favs, "sermons", s.video_id)} onToggleFav={() => onToggleFav("sermons", sermonFavItem(s))} />
+              {sermonRows.map((s, i) => (
+                <motion.li key={s.video_id || s.title} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ ...SPRING_SNAPPY, delay: Math.min(i * 0.04, 0.3) }}>
+                  <SermonRow sermon={s} onOpen={onOpenSermon}
+                    faved={isFaved(favs, "sermons", s.video_id)} onToggleFav={() => onToggleFav("sermons", sermonFavItem(s))} />
+                </motion.li>
               ))}
             </ul>
           )}

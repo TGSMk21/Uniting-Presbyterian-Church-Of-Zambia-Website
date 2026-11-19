@@ -1,20 +1,30 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/react";
 import { App as NativeApp } from "@capacitor/app";
 import { SplashScreen } from "@capacitor/splash-screen";
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
 import { TabBar, TopBar } from "./components/Chrome.jsx";
-import { AnnouncementsTab, EventsTab, HomeTab, SermonsTab } from "./screens/Tabs.jsx";
-import { FavouritesPage, ProfilePage, SettingsPage } from "./screens/Pages.jsx";
-import MotionLab from "./screens/MotionLab.jsx";
-import Opening from "./screens/Opening.jsx";
-import FirstRun from "./screens/FirstRun.jsx";
-import MessagePage from "./screens/MessagePage.jsx";
-import SermonPage from "./screens/SermonPage.jsx";
 import Sheet from "./components/Sheet.jsx";
-import { EventBody } from "./screens/Events.jsx";
-import { AnnouncementBody } from "./screens/Announcements.jsx";
-import HymnsTab, { HymnCollectionPage, HymnPage } from "./screens/Hymns.jsx";
+
+// Screens load on first use, so the app starts fast on low-end phones.
+const HomeTab = lazy(() => import("./screens/Home.jsx"));
+const EventsTab = lazy(() => import("./screens/Events.jsx"));
+const SermonsTab = lazy(() => import("./screens/Sermons.jsx"));
+const HymnsTab = lazy(() => import("./screens/Hymns.jsx").then((m) => ({ default: m.default })));
+const AnnouncementsTab = lazy(() => import("./screens/Announcements.jsx"));
+const { HymnCollectionPage, HymnPage } = { HymnCollectionPage: lazy(() => import("./screens/Hymns.jsx").then((m) => ({ default: m.HymnCollectionPage }))), HymnPage: lazy(() => import("./screens/Hymns.jsx").then((m) => ({ default: m.HymnPage }))) };
+const { FavouritesPage, ProfilePage, SettingsPage } = {
+  FavouritesPage: lazy(() => import("./screens/Pages.jsx").then((m) => ({ default: m.FavouritesPage }))),
+  ProfilePage: lazy(() => import("./screens/Pages.jsx").then((m) => ({ default: m.ProfilePage }))),
+  SettingsPage: lazy(() => import("./screens/Pages.jsx").then((m) => ({ default: m.SettingsPage }))),
+};
+const MotionLab = lazy(() => import("./screens/MotionLab.jsx"));
+const Opening = lazy(() => import("./screens/Opening.jsx"));
+const FirstRun = lazy(() => import("./screens/FirstRun.jsx"));
+const MessagePage = lazy(() => import("./screens/MessagePage.jsx"));
+const SermonPage = lazy(() => import("./screens/SermonPage.jsx"));
+const EventBody = lazy(() => import("./screens/Events.jsx").then((m) => ({ default: m.EventBody })));
+const AnnouncementBody = lazy(() => import("./screens/Announcements.jsx").then((m) => ({ default: m.AnnouncementBody })));
 import { useHome } from "./lib/useHome.js";
 import { useContentData } from "./lib/useContent.js";
 import { loadAnnouncements } from "./lib/content.js";
@@ -271,6 +281,7 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
   const covered = Boolean(page);
 
   return (
+    <Suspense fallback={<div className="app" aria-busy="true" />}>
     <AnimatePresence mode="wait">
       {stage === "loading" && (
         <motion.div key="loading" className="app" aria-busy="true"
@@ -287,6 +298,7 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
     >
+      <Suspense fallback={null}>
       <motion.div
         className="tabs-layer"
         animate={reduced ? { opacity: covered ? 0.6 : 1 } : { x: covered ? "-22%" : 0, opacity: covered ? 0.85 : 1 }}
@@ -336,10 +348,10 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
         {hymn && <HymnPage key="hymn" hymn={hymn} onBack={() => setHymn(null)} favs={favs} onToggleFav={toggleFavHandler} collectionLabel={collection?.label} />}
       </AnimatePresence>
 
-      <Sheet open={Boolean(event)} onClose={() => setEvent(null)} title={event?.title ?? "Event"}>
+      <Sheet open={Boolean(event)} onClose={() => setEvent(null)} title={event?.title ?? "Event"} titleLayoutId={event ? `event-title-${event.id}` : undefined}>
         {event && <EventBody event={event} />}
       </Sheet>
-      <Sheet open={Boolean(announcement)} onClose={() => setAnnouncement(null)} title={announcement?.title ?? "Announcement"}>
+      <Sheet open={Boolean(announcement)} onClose={() => setAnnouncement(null)} title={announcement?.title ?? "Announcement"} titleLayoutId={announcement ? `announcement-title-${announcement.id}` : undefined}>
         {announcement && <AnnouncementBody announcement={announcement} />}
       </Sheet>
       <Sheet open={Boolean(verseFav)} onClose={() => setVerseFav(null)} title={verseFav?.ref || "Daily verse"}>
@@ -350,8 +362,10 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
           </article>
         )}
       </Sheet>
+      </Suspense>
     </motion.div>
       )}
     </AnimatePresence>
+    </Suspense>
   );
 }

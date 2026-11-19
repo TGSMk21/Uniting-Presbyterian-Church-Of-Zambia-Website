@@ -7,7 +7,7 @@ import { sheetShouldClose } from "../lib/gestures.js";
 import { FADE, SPRING_SHEET } from "../lib/motion.js";
 import { tap } from "../lib/device.js";
 
-export default function Sheet({ open, onClose, title, children }) {
+export default function Sheet({ open, onClose, title, titleLayoutId, children }) {
   const titleId = useId();
   const reduced = useReducedMotion();
   const y = useMotionValue(0);
@@ -61,7 +61,11 @@ export default function Sheet({ open, onClose, title, children }) {
             }}
           >
             <div className="sheet-grip" aria-hidden="true" />
-            <h2 id={titleId} className="t-title sheet-title">{title}</h2>
+            {titleLayoutId ? (
+              <motion.h2 id={titleId} layoutId={titleLayoutId} className="t-title sheet-title">{title}</motion.h2>
+            ) : (
+              <h2 id={titleId} className="t-title sheet-title">{title}</h2>
+            )}
             <div className="sheet-body selectable">{children}</div>
           </motion.section>
         </div>

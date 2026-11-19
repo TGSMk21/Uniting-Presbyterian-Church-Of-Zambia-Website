@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "motion/react";
 import { Play } from "@phosphor-icons/react/dist/csr/Play";
 import { ShareNetwork } from "@phosphor-icons/react/dist/csr/ShareNetwork";
 import Page from "./Page.jsx";
@@ -31,7 +32,7 @@ export default function SermonPage({ sermon, onBack, favs, onToggleFav }) {
           <p className={`t-overline${sermon.is_live ? " live-overline" : ""}`}>{sermon.is_live ? "Live now" : "Sermon"}</p>
           <HeartButton active={isFaved(favs, "sermons", sermon.video_id)} onToggle={() => onToggleFav("sermons", sermonFavItem(sermon))} label="Save this sermon" />
         </div>
-        <h2 className="t-title">{sermon.title}</h2>
+        <motion.h2 layoutId={`sermon-title-${sermon.video_id}`} className="t-title">{sermon.title}</motion.h2>
         <p className="t-caption">
           {[sermon.minister_name, dayLabel(sermon.preached_at), sermon.reference_verse].filter(Boolean).join(" · ")}
         </p>

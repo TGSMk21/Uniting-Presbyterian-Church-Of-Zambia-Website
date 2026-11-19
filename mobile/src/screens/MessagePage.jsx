@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "motion/react";
 import { ShareNetwork } from "@phosphor-icons/react/dist/csr/ShareNetwork";
 import Page from "./Page.jsx";
 import { shareText } from "../lib/share.js";
@@ -20,7 +21,7 @@ export default function MessagePage({ message, onBack }) {
   return (
     <Page title="Daily message" onBack={onBack}>
       <article className="message-article selectable">
-        <h2 className="t-title">{message.title}</h2>
+        <motion.h2 layoutId={`message-title-${message.id}`} className="t-title">{message.title}</motion.h2>
         {message.reference_verse && <p className="t-caption message-ref">{message.reference_verse}</p>}
         {paragraphs.map((p, i) => (
           <p key={i} className="t-body message-para">{p}</p>

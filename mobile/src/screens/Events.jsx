@@ -230,14 +230,15 @@ export default function EventsTab({ profile, onOpenProfile, onOpenEvent }) {
           )}
           {!loading && rows.length > 0 && (
             <ul className="list">
-              {rows.map((event) => (
-                <li key={event.id}>
+              {rows.map((event, i) => (
+                <motion.li key={event.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ ...SPRING_SNAPPY, delay: Math.min(i * 0.04, 0.3) }}>
                   <button type="button" className="list-row" onClick={() => onOpenEvent(event)}>
                     <span className="grow">
-                      <span className="t-body block">
+                      <motion.span layoutId={`event-title-${event.id}`} className="t-body block">
                         {event.date === today && <span className="today-badge">Today</span>}
                         {event.title}
-                      </span>
+                      </motion.span>
                       <span className="t-caption block">
                         {eventLabel(event, today)} · {formatTime(event.start_time)} · {event.location}
                         {added.includes(String(event.id)) ? " · Added" : ""}
@@ -245,7 +246,7 @@ export default function EventsTab({ profile, onOpenProfile, onOpenEvent }) {
                     </span>
                     <CaretRight size={18} className="chev" />
                   </button>
-                </li>
+                </motion.li>
               ))}
             </ul>
           )}
