@@ -107,3 +107,21 @@ No other deviations: only the four named backend files were changed, plus this r
 ## Things I could not verify
 - Real-device effect of the new cache headers (no phone/emulator here); header presence/absence is covered by `AppCacheHeaderTests`.
 - Whether the reviewer wants the two exact-set assertions updated for the additive `id` field (flagged above, not done).
+
+## Fix round 1
+
+Authorised by the reviewer: the two exact-key-set assertions were updated to include the added fields (nothing removed):
+
+- `backend/church_erp/api/tests/test_app_content.py` (`test_newest_first_lean_fields_hidden_and_other_branches_excluded`): expected set is now `{"id", "video_id", "title", "reference_verse", "preached_at", "duration", "is_live", "minister_name"}`.
+- `backend/church_erp/api/tests/test_app_home.py` (`test_latest_sermons_newest_first_at_most_five_hidden_and_other_branches_left_out`): expected set is now `{"id", "video_id", "title", "reference_verse", "preached_at", "duration", "is_live", "minister_name"}` (home rows use the shared `sermon_row`, so they also gain `is_live`/`minister_name`).
+
+Checks after the edits:
+
+```
+$ cd backend && python manage.py test --settings=church_erp.settings.test
+Ran 921 tests in 51.680s
+OK
+
+$ python manage.py makemigrations --check --dry-run --settings=church_erp.settings.test
+No changes detected
+```

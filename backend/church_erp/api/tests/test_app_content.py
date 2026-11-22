@@ -67,7 +67,7 @@ class AppSermonsTests(APITestCase):
         rows = data["sermons"]
         self.assertEqual([r["title"] for r in rows], ["New", "Old"])
         self.assertEqual(set(rows[0]), {
-            "video_id", "title", "reference_verse", "preached_at", "duration", "is_live", "minister_name",
+            "id", "video_id", "title", "reference_verse", "preached_at", "duration", "is_live", "minister_name",
         })
         self.assertTrue(rows[0]["is_live"])
         self.assertEqual(rows[0]["minister_name"], "Rev Test")
