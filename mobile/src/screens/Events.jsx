@@ -40,6 +40,7 @@ export function EventBody({ event }) {
   const [prefs] = useState(() => getPrefs());
   const [added, setAdded] = useState(false);
   const [remindersOn, setRemindersOn] = useState(false);
+  const [phoneCal, setPhoneCal] = useState(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -53,11 +54,12 @@ export function EventBody({ event }) {
     const nowAdded = list.includes(String(event.id));
     setAdded(nowAdded);
     if (!wasAdded && nowAdded) {
-      await addToPhoneCalendar(event, prefs);
+      setPhoneCal(await addToPhoneCalendar(event, prefs));
       const perm = await notificationPermission();
       setRemindersOn(perm === "granted" && (await scheduleEventReminders(event)));
     } else if (wasAdded && !nowAdded) {
       await removeFromPhoneCalendar(event, prefs);
+      setPhoneCal(null);
       await cancelEventReminders(event.id);
       setRemindersOn(false);
     }
@@ -89,9 +91,14 @@ export function EventBody({ event }) {
       </button>
       <p className="t-caption setting-note">
         {added
-          ? (remindersOn
-            ? "Reminders are set: the evening before and the morning of the event."
-            : "Saved to your calendar. Reminders are off — allow notifications in Settings to get them the day before and the morning of.")
+          ? <>
+              {phoneCal === "added" && "In your phone's calendar. "}
+              {phoneCal === "denied" && "Not put in your phone's calendar, because calendar access is off. You can allow it in your phone's settings. "}
+              {phoneCal === "failed" && "Your phone's calendar couldn't be updated. The event is still saved in this app. "}
+              {remindersOn
+                ? "Reminders are set for the evening before and the morning of."
+                : "Reminders are off. Allow notifications in Settings to get them."}
+            </>
           : "Adding it puts it in your phone's calendar and sets a reminder the evening before and the morning of. We'll ask your phone's permission first."}
       </p>
     </>
