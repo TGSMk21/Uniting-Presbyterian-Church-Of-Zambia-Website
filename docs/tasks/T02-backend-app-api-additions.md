@@ -78,7 +78,7 @@ In `backend/church_erp/api/tests/test_app_content.py` (or a new `test_app_favour
 
 1. The new tests pass, and the full backend suite passes.
 2. `makemigrations --check`: no changes (this task adds no model fields).
-3. The existing app tests still pass **unchanged**. If one needs editing, explain why in the report: that's a compatibility break, which is not allowed.
+3. The existing app tests still pass. The only allowed edits are adding new field names to exact-field-list assertions (see the README rule on existing tests).
 
 ## Out of scope
 

@@ -30,6 +30,7 @@ These tasks fix the findings in [`docs/review/MOBILE_APP_REVIEW_2026-11-22.md`](
 - **Don't fake results.** If a command can't run on your machine, say so and paste the error. A report that says "passed" for something that wasn't run is the worst possible outcome.
 - Keep the existing style: plain English in user-facing text, second person, no jargon, no exclamation marks. Use the existing CSS classes and tokens, with no new colours and no gradients.
 - Keep diffs small. Don't reformat or "tidy" code you weren't asked to touch.
+- **Existing tests:** never weaken or delete one. A test that checks an exact list of fields (`set(row) == {...}`) may gain the fields a task adds, as long as every old field stays in it. Say so under "Deviations" in the report.
 
 ## Always-run checks (paste the last lines of each into the report)
 
