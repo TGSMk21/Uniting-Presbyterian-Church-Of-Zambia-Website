@@ -87,6 +87,8 @@ On Render's free plan there is no shell, so run it from your own machine against
    - `YOUTUBE_API_KEY`: the key the old frontend used.
    - `FRONTEND_URL`: your Vercel URL. If you don't have it yet, enter `https://example.com` and update it after deploying the frontend.
 
+   The Android app (in `mobile/`) talks to this API from its WebView, so it needs its own CORS allowance: `APP_CORS_ORIGINS` is optional and defaults to `https://localhost,capacitor://localhost`. Those origins are only ever allowed public reads of `/api/app/` and `/api/branches/` — staff addresses stay limited to `FRONTEND_URL`.
+
    Render generates `DJANGO_SECRET_KEY` and `SYNC_TOKEN` itself.
 3. **First deploy.** Render installs, collects static files, then runs `migrate` and `setup_roles` on start, so there are no one-off commands to run. When it's live, `https://<service>.onrender.com/api/branches/` should return JSON.
 4. **Superuser.** The free plan has no shell, so create it from your own machine against the same database:
