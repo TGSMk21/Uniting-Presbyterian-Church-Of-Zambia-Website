@@ -40,6 +40,7 @@ def clamp_limit(request, default, cap):
 
 def sermon_row(sermon):
     return {
+        "id": sermon.pk,
         "video_id": sermon.video_id,
         "title": sermon.title,
         "reference_verse": sermon.reference_verse,
@@ -50,7 +51,18 @@ def sermon_row(sermon):
     }
 
 
-class AppSermonsView(APIView):
+class AppCacheMixin:
+    """Short public caching for the app's reads: phones and proxies may reuse an answer for a minute."""
+    cache_seconds = 60
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        response = super().finalize_response(request, response, *args, **kwargs)
+        if request.method == "GET" and response.status_code == 200:
+            response["Cache-Control"] = f"public, max-age={self.cache_seconds}"
+        return response
+
+
+class AppSermonsView(AppCacheMixin, APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
@@ -82,7 +94,7 @@ def event_row(activity):
     }
 
 
-class AppEventsView(APIView):
+class AppEventsView(AppCacheMixin, APIView):
     """Upcoming and past events, most recent first, with photos (Phase 4)."""
     permission_classes = [permissions.AllowAny]
 
@@ -102,7 +114,7 @@ class AppEventsView(APIView):
         })
 
 
-class AppAnnouncementsView(APIView):
+class AppAnnouncementsView(AppCacheMixin, APIView):
     """Current announcements, pinned first (Phase 5). Same rules as the website's public list."""
     permission_classes = [permissions.AllowAny]
 
@@ -133,9 +145,10 @@ class AppAnnouncementsView(APIView):
         })
 
 
-class AppHymnCollectionsView(APIView):
+class AppHymnCollectionsView(AppCacheMixin, APIView):
     """The three hymn collections with their counts (Phase 6). Church-wide, so no branch."""
     permission_classes = [permissions.AllowAny]
+    cache_seconds = 3600
 
     def get(self, request):
         counts = dict(Hymn.objects.values_list("collection").annotate(total=models.Count("id")).order_by())
@@ -147,9 +160,10 @@ class AppHymnCollectionsView(APIView):
         })
 
 
-class AppHymnsView(APIView):
+class AppHymnsView(AppCacheMixin, APIView):
     """Every hymn of one collection, by number, full text for offline download (Phase 6)."""
     permission_classes = [permissions.AllowAny]
+    cache_seconds = 3600
 
     def get(self, request):
         collection = request.query_params.get("collection", "").strip()
@@ -169,7 +183,7 @@ class AppHymnsView(APIView):
         })
 
 
-class AppMessagesView(APIView):
+class AppMessagesView(AppCacheMixin, APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
@@ -200,7 +214,7 @@ class AppMessagesView(APIView):
         })
 
 
-class AppMessageDetailView(APIView):
+class AppMessageDetailView(AppCacheMixin, APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, pk):
@@ -225,3 +239,43 @@ class AppMessageDetailView(APIView):
             "date": message.date,
             "minister_name": message.minister.name,
         })
+
+
+class AppFavouritesCheckView(AppCacheMixin, APIView):
+    """Do these ids still exist? GET /api/app/favourites/check/?branch=<slug>&sermons=4,9&messages=12
+
+    The app asks this so a favourite whose content was removed is flagged instead of
+    wrongly kept. Ids only — never any content. Junk is ignored, at most 200 per list."""
+    permission_classes = [permissions.AllowAny]
+
+    MAX_IDS = 200
+
+    def get(self, request):
+        branch, error = app_branch(request)
+        if error:
+            return error
+        today = timezone.localdate()
+        sermon_ids = self._ids(request, "sermons")
+        message_ids = self._ids(request, "messages")
+        sermons = sorted(
+            Sermon.objects.filter(branch=branch, is_hidden=False, pk__in=sermon_ids)
+            .values_list("pk", flat=True)
+        )
+        messages = sorted(
+            DailyMessage.objects.filter(
+                minister__branch=branch, status="published", date__lte=today, pk__in=message_ids,
+            ).values_list("pk", flat=True)
+        )
+        return Response({
+            "branch": {"slug": branch.slug, "name": branch.name},
+            "sermons": sermons,
+            "messages": messages,
+        })
+
+    def _ids(self, request, name):
+        ids = []
+        for part in request.query_params.get(name, "").split(","):
+            part = part.strip()
+            if part.isascii() and part.isdigit() and int(part) > 0:
+                ids.append(int(part))
+        return ids[: self.MAX_IDS]

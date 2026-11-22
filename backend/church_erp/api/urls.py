@@ -23,7 +23,7 @@ from church_erp.finance.views import GivingRecordViewSet
 from church_erp.api.views import backup_database, generate_daily_messages, sync_youtube
 from church_erp.api.app_home import AppHomeView
 from church_erp.api.app_content import (
-    AppAnnouncementsView, AppEventsView, AppHymnCollectionsView, AppHymnsView,
+    AppAnnouncementsView, AppEventsView, AppFavouritesCheckView, AppHymnCollectionsView, AppHymnsView,
     AppMessageDetailView, AppMessagesView, AppSermonsView,
 )
 from church_erp.content.page_content_views import PageContentPageView, PageContentView, PageImageView
@@ -89,6 +89,7 @@ urlpatterns = [
     path('app/announcements/', AppAnnouncementsView.as_view(), name='app-announcements'),
     path('app/hymns/collections/', AppHymnCollectionsView.as_view(), name='app-hymn-collections'),
     path('app/hymns/', AppHymnsView.as_view(), name='app-hymns'),
+    path('app/favourites/check/', AppFavouritesCheckView.as_view(), name='app-favourites-check'),
     path('app/messages/', AppMessagesView.as_view(), name='app-messages'),
     path('app/messages/<int:pk>/', AppMessageDetailView.as_view(), name='app-message-detail'),
     path('workspace/me/', WorkspaceMeView.as_view(), name='workspace-me'),

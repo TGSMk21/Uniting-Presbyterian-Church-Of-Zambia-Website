@@ -132,7 +132,7 @@ class AppHomeTests(APITestCase):
         self.assertEqual(rows[-1]["title"], "S4")
         self.assertNotIn("Hidden", [r["title"] for r in rows])
         for row in rows:
-            self.assertEqual(set(row), {"video_id", "title", "reference_verse", "preached_at", "duration"})
+            self.assertEqual(set(row), {"id", "video_id", "title", "reference_verse", "preached_at", "duration", "is_live", "minister_name"})
 
     def test_upcoming_events_soonest_first_at_most_five(self):
         make_activity(self.branch, "Yesterday", self.today - timedelta(days=1))

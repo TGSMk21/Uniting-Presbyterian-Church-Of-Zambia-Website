@@ -67,7 +67,7 @@ class AppSermonsTests(APITestCase):
         rows = data["sermons"]
         self.assertEqual([r["title"] for r in rows], ["New", "Old"])
         self.assertEqual(set(rows[0]), {
-            "video_id", "title", "reference_verse", "preached_at", "duration", "is_live", "minister_name",
+            "id", "video_id", "title", "reference_verse", "preached_at", "duration", "is_live", "minister_name",
         })
         self.assertTrue(rows[0]["is_live"])
         self.assertEqual(rows[0]["minister_name"], "Rev Test")
@@ -162,3 +162,167 @@ class LiveDetectionScheduleTests(APITestCase):
         entry = settings.CELERY_BEAT_SCHEDULE["sync-youtube-sermons"]
         self.assertEqual(entry["task"], "church_erp.content.tasks.sync_youtube_sermons")
         self.assertLessEqual(float(entry["schedule"]), 300.0)
+
+
+# --- T02: app API additions (ids, recent events, favourites check, cache headers) ---
+from datetime import time as _time  # noqa: E402
+
+from church_erp.api.tests.test_app_home import URL as HOME_URL  # noqa: E402
+from church_erp.content.models import Activity  # noqa: E402
+
+FAVOURITES_URL = "/api/app/favourites/check/"
+HYMNS_COLLECTIONS_URL = "/api/app/hymns/collections/"
+
+
+def make_activity(branch, title, day, start=_time(9)):
+    return Activity.objects.create(
+        branch=branch, title=title, date=day, start_time=start, end_time=_time(10),
+        details="d", location="Hall",
+    )
+
+
+class AppSermonIdTests(APITestCase):
+    def setUp(self):
+        self.branch = make_branch("chilanga")
+        self.minister = make_minister(self.branch)
+        self.today = timezone.localdate()
+
+    def test_sermon_rows_have_id(self):
+        now = timezone.now()
+        s1 = make_sermon(self.branch, "One", now - timedelta(hours=2))
+        s2 = make_sermon(self.branch, "Two", now - timedelta(hours=1), is_live=True)
+        rows = self.client.get(SERMONS_URL, {"branch": "chilanga"}).data["sermons"]
+        self.assertEqual({r["id"] for r in rows}, {s1.pk, s2.pk})
+        self.assertEqual(rows[0]["id"], s2.pk)
+        self.assertEqual(rows[0]["video_id"], s2.video_id)  # old field kept
+
+        data = self.client.get(HOME_URL, {"branch": "chilanga"}).data
+        self.assertEqual(data["live"]["id"], s2.pk)
+        self.assertEqual([r["id"] for r in data["sermons"]], [s2.pk, s1.pk])
+        # home's daily_message gains date and verse_text (additive only)
+        msg = make_message(self.minister, self.today, title="Peace")
+        data = self.client.get(HOME_URL, {"branch": "chilanga"}).data
+        self.assertEqual(data["daily_message"]["id"], msg.pk)
+        self.assertEqual(data["daily_message"]["date"], self.today)  # date object in response.data
+        self.assertEqual(data["daily_message"]["verse_text"], "For God so loved the world")
+
+
+class AppHomeRecentEventsTests(APITestCase):
+    def setUp(self):
+        self.branch = make_branch("chilanga")
+        self.today = timezone.localdate()
+
+    def test_home_recent_events_when_nothing_upcoming(self):
+        make_activity(self.branch, "Three days ago", self.today - timedelta(days=3))
+        make_activity(self.branch, "Yesterday late", self.today - timedelta(days=1), start=_time(18))
+        make_activity(self.branch, "Yesterday early", self.today - timedelta(days=1), start=_time(8))
+        make_activity(self.branch, "Last week", self.today - timedelta(days=7))
+        make_activity(make_branch("kanyama"), "Elsewhere", self.today - timedelta(days=1))
+        data = self.client.get(HOME_URL, {"branch": "chilanga"}).data
+        self.assertEqual(data["events"], [])
+        recent = data["recent_events"]
+        self.assertEqual(len(recent), 3)
+        self.assertEqual(
+            [r["title"] for r in recent],
+            ["Yesterday late", "Yesterday early", "Three days ago"],
+        )
+        self.assertEqual(set(recent[0]), {"id", "title", "date", "start_time", "end_time", "location"})
+
+    def test_home_recent_events_empty_when_upcoming_exist(self):
+        make_activity(self.branch, "Past", self.today - timedelta(days=1))
+        make_activity(self.branch, "Soon", self.today + timedelta(days=2))
+        data = self.client.get(HOME_URL, {"branch": "chilanga"}).data
+        self.assertEqual(len(data["events"]), 1)
+        self.assertEqual(data["recent_events"], [])
+
+
+class AppFavouritesCheckTests(APITestCase):
+    def setUp(self):
+        self.branch = make_branch("chilanga")
+        self.other = make_branch("kanyama")
+        self.minister = make_minister(self.branch)
+        self.today = timezone.localdate()
+
+    def test_favourites_check_returns_existing_ids_only(self):
+        now = timezone.now()
+        good = make_sermon(self.branch, "Good", now)
+        hidden = make_sermon(self.branch, "Hidden", now, is_hidden=True)
+        other = make_sermon(self.other, "Elsewhere", now)
+        response = self.client.get(FAVOURITES_URL, {
+            "branch": "chilanga",
+            "sermons": f"{good.pk},{hidden.pk},{other.pk},999999",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["branch"], {"slug": "chilanga", "name": "Chilanga"})
+        self.assertEqual(response.data["sermons"], [good.pk])
+        self.assertEqual(response.data["messages"], [])
+
+        published = make_message(self.minister, self.today, title="Live one")
+        draft = make_message(self.minister, self.today, status="pending_review", title="Draft")
+        future = make_message(self.minister, self.today + timedelta(days=1), title="Future")
+        other_msg = make_message(make_minister(self.other), self.today, title="Kanyama")
+        response = self.client.get(FAVOURITES_URL, {
+            "branch": "chilanga",
+            "messages": f"{published.pk},{draft.pk},{future.pk},{other_msg.pk}",
+        })
+        self.assertEqual(response.data["messages"], [published.pk])
+        # ids come back sorted ascending
+        m2 = make_message(self.minister, self.today - timedelta(days=1), title="Older")
+        response = self.client.get(FAVOURITES_URL, {
+            "branch": "chilanga", "messages": f"{published.pk},{m2.pk}",
+        })
+        self.assertEqual(response.data["messages"], sorted([published.pk, m2.pk]))
+
+    def test_favourites_check_ignores_junk_and_caps_at_200(self):
+        now = timezone.now()
+        good = make_sermon(self.branch, "Good", now)
+        # junk mixed in; must not error and only valid positive integers are considered
+        response = self.client.get(FAVOURITES_URL, {
+            "branch": "chilanga", "sermons": f"abc,-1,0,,{good.pk},2.5",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["sermons"], [good.pk])
+        # more than 200 ids: the rest are ignored (this id sits past the cap)
+        filler = ",".join(str(i) for i in range(1_000_000, 1_000_200))  # ids that cannot exist
+        response = self.client.get(FAVOURITES_URL, {
+            "branch": "chilanga", "sermons": f"{filler},{good.pk}",
+        })
+        self.assertEqual(response.data["sermons"], [])
+        response = self.client.get(FAVOURITES_URL, {
+            "branch": "chilanga", "sermons": f"{good.pk},{filler}",
+        })
+        self.assertEqual(response.data["sermons"], [good.pk])
+
+    def test_favourites_check_requires_branch(self):
+        self.assertEqual(self.client.get(FAVOURITES_URL).status_code, 400)
+        self.assertEqual(self.client.get(FAVOURITES_URL, {"branch": "nowhere"}).status_code, 404)
+
+
+class AppCacheHeaderTests(APITestCase):
+    def setUp(self):
+        self.branch = make_branch("chilanga")
+
+    def test_app_answers_are_cacheable(self):
+        response = self.client.get(HOME_URL, {"branch": "chilanga"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers.get("Cache-Control"), "public, max-age=60")
+        response = self.client.get(HYMNS_COLLECTIONS_URL)
+        self.assertEqual(response.headers.get("Cache-Control"), "public, max-age=3600")
+        # a 400 answer is not cacheable
+        response = self.client.get(HOME_URL)
+        self.assertEqual(response.status_code, 400)
+        self.assertNotIn("public", response.headers.get("Cache-Control", ""))
+
+
+class AppHomeQueryCountTests(APITestCase):
+    def setUp(self):
+        self.branch = make_branch("chilanga")
+        self.today = timezone.localdate()
+
+    def test_home_query_count(self):
+        now = timezone.now()
+        for i in range(5):
+            make_sermon(self.branch, f"S{i}", now - timedelta(hours=i))
+        with self.assertNumQueries(7):  # observed: 7 queries (branch, message, live, sermons, events, recent events, home-page verse)
+            response = self.client.get(HOME_URL, {"branch": "chilanga"})
+        self.assertEqual(response.status_code, 200)
