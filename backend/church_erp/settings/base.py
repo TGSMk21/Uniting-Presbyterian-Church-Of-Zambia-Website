@@ -143,6 +143,14 @@ CORS_ALLOWED_ORIGINS = [
     os.environ.get("FRONTEND_URL", "http://localhost:3000"),
 ]
 
+# The Android app (mobile/) runs in a WebView at these origins. They may only make
+# public reads of /api/app/ and /api/branches/; see church_erp/api/cors.py.
+APP_CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("APP_CORS_ORIGINS", "https://localhost,capacitor://localhost").split(",")
+    if origin.strip()
+]
+
 # --- Two-step login ---
 # Superusers and branch admins must use it; see accounts/two_factor.py.
 REQUIRE_TWO_FACTOR = True
