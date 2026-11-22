@@ -40,7 +40,19 @@ export async function notificationPermission() {
   }
 }
 
-export async function scheduleEventReminders(event) {
+// Read-only status: never shows the permission prompt. Only notificationPermission() asks.
+// "granted" | "denied" | "prompt" | "unavailable" | "web"
+export async function notificationStatus() {
+  if (!isNative()) return "web";
+  try {
+    const { display } = await LocalNotifications.checkPermissions();
+    return display === "prompt-with-rationale" ? "prompt" : display;
+  } catch {
+    return "unavailable";
+  }
+}
+
+export async function scheduleEventReminders(event, { branchSlug } = {}) {
   if (!isNative()) return false;
   if ((await notificationPermission()) !== "granted") return false;
   await cancelEventReminders(event.id);
@@ -52,8 +64,10 @@ export async function scheduleEventReminders(event) {
         id: hashId(p.id),
         title: p.title,
         body: p.body,
-        schedule: { at: p.at },
-        extra: { eventId: String(event.id) },
+        schedule: { at: p.at, allowWhileIdle: true },
+        smallIcon: "ic_stat_upcz",
+        iconColor: "#1b2a6b",
+        extra: { eventId: String(event.id), branchSlug, date: event.date, start_time: event.start_time ?? "" },
       })),
     });
     return true;
@@ -73,14 +87,45 @@ export async function cancelEventReminders(eventId) {
   }
 }
 
-export async function removeStaleReminders(keptEventIds) {
+// Pure: decides what to cancel and what to reschedule, for ONE branch only.
+// pending: [{ id, extra }] from getPending(). events: that branch's current list.
+// Reminders of other branches, or with no extra, are never touched.
+export function reconcileReminders(pending, events, branchSlug) {
+  const cancel = [];
+  const reschedule = [];
+  const seen = new Set();
+  const byId = new Map(events.map((e) => [String(e.id), e]));
+  for (const n of pending) {
+    const extra = n.extra;
+    if (!extra || extra.branchSlug !== branchSlug || extra.eventId == null) continue;
+    const event = byId.get(String(extra.eventId));
+    if (!event) {
+      cancel.push(n.id);
+    } else if (String(extra.date) !== String(event.date) || String(extra.start_time) !== String(event.start_time ?? "")) {
+      if (!seen.has(String(event.id))) {
+        seen.add(String(event.id));
+        reschedule.push(event);
+      }
+    }
+  }
+  return { cancel, reschedule };
+}
+
+// Cancels reminders of this branch whose event is gone, and reschedules changed events
+// that are still marked added. Runs on the phone only.
+export async function syncReminders(events, branchSlug, addedIds) {
   if (!isNative()) return;
   try {
     const pending = await LocalNotifications.getPending();
-    const keep = new Set(keptEventIds.flatMap(reminderIds).map(hashId));
-    const stale = pending.notifications.filter((n) => !keep.has(n.id));
-    if (stale.length) {
-      await LocalNotifications.cancel({ notifications: stale.map((n) => ({ id: n.id })) });
+    const { cancel, reschedule } = reconcileReminders(pending.notifications, events, branchSlug);
+    if (cancel.length) {
+      await LocalNotifications.cancel({ notifications: cancel.map((id) => ({ id })) });
+    }
+    const added = new Set((addedIds ?? []).map(String));
+    for (const event of reschedule) {
+      if (added.has(String(event.id))) {
+        await scheduleEventReminders(event, { branchSlug });
+      }
     }
   } catch {
     // Pending list unavailable.
