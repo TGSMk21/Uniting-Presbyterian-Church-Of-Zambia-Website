@@ -1,8 +1,6 @@
-import * as capgoCalendar from "@capgo/capacitor-calendar";
+import { CapacitorCalendar, CalendarPermissionScope } from "@capgo/capacitor-calendar";
 import { isNative } from "./device.js";
 import { readJSON, writeJSON } from "./storage.js";
-
-const Calendar = capgoCalendar.Calendar;
 
 export const ADDED_KEY = "upcz.addedEvents";
 
@@ -26,45 +24,54 @@ export async function toggleAdded(prefs, id) {
   return next;
 }
 
-function eventTimes(event) {
-  const start = `${event.date}T${String(event.start_time ?? "09:00:00").slice(0, 8)}`;
-  const end = `${event.date}T${String(event.end_time ?? "10:00:00").slice(0, 8)}`;
-  return { start: new Date(start), end: new Date(end) };
+export const ZAMBIA_OFFSET = "+02:00";
+const calKey = (eventId) => `upcz.cal.${eventId}`;
+
+// Start and end in milliseconds, read as Zambian time (UTC+02:00 all year, no daylight saving).
+export function eventTimes(event) {
+  const start = Date.parse(`${event.date}T${String(event.start_time || "09:00:00").slice(0, 8)}${ZAMBIA_OFFSET}`);
+  let end = event.end_time ? Date.parse(`${event.date}T${String(event.end_time).slice(0, 8)}${ZAMBIA_OFFSET}`) : NaN;
+  if (!Number.isFinite(end) || end <= start) end = start + 60 * 60 * 1000;
+  return { start, end };
 }
 
-export async function addToPhoneCalendar(event, prefs) {
-  if (!isNative()) return false;
+// Puts the event in the phone's own calendar. Returns "added" | "denied" | "failed" | "unavailable".
+export async function addToPhoneCalendar(event, prefs, { plugin = CapacitorCalendar, native = isNative() } = {}) {
+  if (!native) return "unavailable";
   try {
-    const current = await Calendar.checkPermissions();
-    const granted = current?.calendar === "granted" ? current : await Calendar.requestPermissions();
-    if (granted?.calendar !== "granted") return false;
+    let { result } = await plugin.checkPermission({ scope: CalendarPermissionScope.WRITE_CALENDAR });
+    if (result !== "granted") {
+      ({ result } = await plugin.requestFullCalendarAccess());
+    }
+    if (result !== "granted") return "denied";
     const { start, end } = eventTimes(event);
-    const result = await Calendar.createEvent({
+    const { id } = await plugin.createEvent({
       title: event.title,
-      startDate: start.toISOString(),
-      endDate: end.toISOString(),
-      location: event.location ?? "",
-      notes: event.details ?? "",
+      startDate: start,
+      endDate: end,
+      location: event.location || "",
+      description: event.details || "",
+      isAllDay: false,
     });
-    const calendarEventId = result?.id ?? result?.eventId;
-    if (calendarEventId != null) {
-      await writeJSON(prefs, `upcz.cal.${event.id}`, String(calendarEventId));
+    if (id) {
+      await writeJSON(prefs, calKey(event.id), String(id));
     }
-    return true;
+    return "added";
   } catch {
-    return false;
+    return "failed";
   }
 }
 
-export async function removeFromPhoneCalendar(event, prefs) {
-  if (!isNative()) return;
-  try {
-    const stored = await readJSON(prefs, `upcz.cal.${event.id}`, null);
-    if (stored != null) {
-      await Calendar.deleteEvent({ id: String(stored) });
-      await prefs.remove(`upcz.cal.${event.id}`);
+// Removes the phone-calendar entry this app made, if any. Always forgets the stored id.
+export async function removeFromPhoneCalendar(event, prefs, { plugin = CapacitorCalendar, native = isNative() } = {}) {
+  if (!native) return;
+  const stored = await readJSON(prefs, calKey(event.id), null);
+  if (stored != null) {
+    try {
+      await plugin.deleteEvent({ id: String(stored) });
+    } catch {
+      // The person may have deleted it from their calendar already.
     }
-  } catch {
-    // Already gone from the phone's calendar.
   }
+  await prefs.remove(calKey(event.id));
 }

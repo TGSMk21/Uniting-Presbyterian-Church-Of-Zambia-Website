@@ -22,7 +22,7 @@ One page for the owner, then the full steps. Everything here matches what the ap
 4. **Privacy policy URL** in Play Console: `https://<the church's website>/privacy` (page added in this branch). In the app, Settings → Privacy policy links there via the `VITE_PRIVACY_URL` build variable; set it in the release workflow environment or leave the default once the site is live.
 5. **Data safety form** — answer to match the policy page:
    - Data collected: **none**. No personal or sensitive data is collected, shared, or sold.
-   - Data safety: app does not request access to photos, media, files, camera, microphone, or precise location. Calendar permission is requested only when you tap "Add to calendar"; notification permission only before reminders.
+   - Data safety: app does not request access to photos, media, files, camera, microphone, or precise location. Calendar access is asked for only when you tap "Add to calendar"; the app writes that one event and reads nothing else. Notification permission is asked for only before reminders.
    - Data deletion: everything is stored on the phone; deleting the app or using Settings → "Delete my info" removes it.
    - Security: data is not transmitted from the phone except public, non-personal reads of church content (branch name only); HTTPS everywhere.
    - Crash reports: anonymous technical reports via Google Play only.
