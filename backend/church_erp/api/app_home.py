@@ -8,21 +8,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from church_erp.ai_messages.models import DailyMessage
+from church_erp.api.app_content import AppCacheMixin, sermon_row
 from church_erp.content.models import Activity, PageContent, Sermon
 from church_erp.core.models import Branch
 
 SERMONS_LIMIT = 5
 EVENTS_LIMIT = 5
-
-
-def sermon_row(sermon):
-    return {
-        "video_id": sermon.video_id,
-        "title": sermon.title,
-        "reference_verse": sermon.reference_verse,
-        "preached_at": sermon.preached_at,
-        "duration": sermon.duration,
-    }
+RECENT_EVENTS_LIMIT = 3
 
 
 def event_row(activity):
@@ -50,7 +42,7 @@ def home_verse(branch, message):
     return None
 
 
-class AppHomeView(APIView):
+class AppHomeView(AppCacheMixin, APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
@@ -71,8 +63,23 @@ class AppHomeView(APIView):
         )
         live = (
             Sermon.objects.filter(branch=branch, is_live=True, is_hidden=False)
+            .select_related("minister")
             .order_by("-preached_at")
             .first()
+        )
+        events = list(
+            Activity.objects.filter(branch=branch, date__gte=today)
+            .order_by("date", "start_time", "pk")[:EVENTS_LIMIT]
+        )
+        # When nothing is upcoming, the home screen shows the most recent past events instead.
+        recent_events = (
+            []
+            if events
+            else [
+                event_row(a)
+                for a in Activity.objects.filter(branch=branch, date__lt=today)
+                .order_by("-date", "-start_time", "-pk")[:RECENT_EVENTS_LIMIT]
+            ]
         )
         return Response({
             "branch": {"slug": branch.slug, "name": branch.name},
@@ -83,16 +90,16 @@ class AppHomeView(APIView):
                 "title": message.title,
                 "message": message.message,
                 "reference_verse": message.reference_verse,
+                "date": message.date,
+                "verse_text": message.verse_text,
             },
             "live": None if live is None else sermon_row(live),
             "sermons": [
                 sermon_row(s)
                 for s in Sermon.objects.filter(branch=branch, is_hidden=False)
+                .select_related("minister")
                 .order_by("-preached_at")[:SERMONS_LIMIT]
             ],
-            "events": [
-                event_row(a)
-                for a in Activity.objects.filter(branch=branch, date__gte=today)
-                .order_by("date", "start_time", "pk")[:EVENTS_LIMIT]
-            ],
+            "events": [event_row(a) for a in events],
+            "recent_events": recent_events,
         })
