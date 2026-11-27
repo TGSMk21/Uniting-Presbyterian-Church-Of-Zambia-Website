@@ -14,8 +14,8 @@ import { initialOf, profileErrors, profileFromForm } from "../lib/profile.js";
 import { SPRING_SNAPPY } from "../lib/motion.js";
 import { getPrefs } from "../lib/storage.js";
 import { openExternally } from "../lib/links.js";
-import { isNative } from "../lib/device.js";
-import { notificationPermission } from "../lib/reminders.js";
+import { notificationPermission, notificationStatus } from "../lib/reminders.js";
+import { useForegroundRefresh } from "../lib/useContent.js";
 import { BATTERY_GUIDE, needsBatteryGuide } from "../lib/phoneMake.js";
 import { KINDS, markStale, sectionLabel, writeFavs } from "../lib/favourites.js";
 import { loadMessages, loadSermons } from "../lib/content.js";
@@ -185,21 +185,23 @@ const THEMES = [
   { value: "dark", label: "Dark", Icon: Moon },
 ];
 
-function notificationStatus() {
-  if (globalThis.Notification?.permission) return globalThis.Notification.permission;
-  return "unavailable";
-}
-
 const NOTIFICATION_WORDS = {
   granted: "Allowed",
-  denied: "Not allowed — you can change this in your phone's settings",
-  default: "Not asked yet",
-  unavailable: "Not available in this browser",
+  prompt: "Not asked yet. Tap to allow: you'll get a reminder the evening before and the morning of an event you add.",
+  denied: "Turned off. To get reminders, allow notifications for UPCZ in your phone's settings.",
+  web: "Reminders work in the app on your phone.",
+  unavailable: "Reminders work in the app on your phone.",
+  loading: "Checking...",
 };
 
 export function SettingsPage({ onBack, theme, reduceMotion, onToggleReduceMotion, onOpen, onDeleteMyInfo }) {
   const [confirming, setConfirming] = useState(false);
-  const [notif, setNotif] = useState(() => notificationStatus());
+  const [notif, setNotif] = useState("loading");
+  const refreshNotif = useCallback(() => {
+    notificationStatus().then(setNotif);
+  }, []);
+  useEffect(refreshNotif, [refreshNotif]);
+  useForegroundRefresh(refreshNotif);
 
   return (
     <Page title="Settings" onBack={onBack}>
@@ -238,17 +240,27 @@ export function SettingsPage({ onBack, theme, reduceMotion, onToggleReduceMotion
       <h2 className="t-overline section-label">Notifications</h2>
       <ul className="list">
         <li>
-          <button type="button" className="list-row" disabled={!isNative() || notif === "granted"}
-            onClick={async () => setNotif(await notificationPermission())}>
-            <Bell size={20} className="row-icon" aria-hidden="true" />
-            <span className="grow">
-              <span className="t-body">Event reminders</span>
-              <span className="t-caption block">
-                {NOTIFICATION_WORDS[notif] ?? notif}
-                {isNative() && notif !== "granted" ? ". Tap to allow — you'll get a reminder the evening before and the morning of an event." : ""}
+          {notif === "prompt" ? (
+            <button type="button" className="list-row"
+              onClick={async () => {
+                await notificationPermission();
+                setNotif(await notificationStatus());
+              }}>
+              <Bell size={20} className="row-icon" aria-hidden="true" />
+              <span className="grow">
+                <span className="t-body">Event reminders</span>
+                <span className="t-caption block">{NOTIFICATION_WORDS[notif] ?? notif}</span>
               </span>
-            </span>
-          </button>
+            </button>
+          ) : (
+            <div className="list-row static">
+              <Bell size={20} className="row-icon" aria-hidden="true" />
+              <span className="grow">
+                <span className="t-body">Event reminders</span>
+                <span className="t-caption block">{NOTIFICATION_WORDS[notif] ?? notif}</span>
+              </span>
+            </div>
+          )}
         </li>
       </ul>
       {needsBatteryGuide() && <p className="t-caption setting-note battery-guide">{BATTERY_GUIDE}</p>}

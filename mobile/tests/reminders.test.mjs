@@ -36,3 +36,48 @@ test("reminders already in the past are dropped", () => {
   const pastEvent = reminderPlan({ ...EVENT, date: "2026-11-10" }, new Date(2026, 10, 20, 9, 0, 0));
   assert.deepEqual(pastEvent, []);
 });
+
+// --- T04: reconcileReminders decides what to cancel / reschedule, per branch only ---
+import { reconcileReminders } from "../src/lib/reminders.js";
+
+const ev = (id, date = "2026-11-24", start_time = "10:00:00") => ({ id, title: `E${id}`, date, start_time });
+const notif = (id, extra) => ({ id, extra });
+
+test("reconcileReminders cancels a reminder whose event is gone (same branch)", () => {
+  const pending = [notif(11, { eventId: "7", branchSlug: "chilanga", date: "2026-11-24", start_time: "10:00:00" })];
+  const { cancel, reschedule } = reconcileReminders(pending, [ev(8)], "chilanga");
+  assert.deepEqual(cancel, [11]);
+  assert.deepEqual(reschedule, []);
+});
+
+test("reconcileReminders leaves other branches' reminders and extra-less ones alone", () => {
+  const pending = [
+    notif(21, { eventId: "7", branchSlug: "kanyama", date: "2026-11-24", start_time: "10:00:00" }),
+    notif(22, undefined),
+    notif(23, { branchSlug: "chilanga" }),
+  ];
+  const { cancel, reschedule } = reconcileReminders(pending, [], "chilanga");
+  assert.deepEqual(cancel, []);
+  assert.deepEqual(reschedule, []);
+});
+
+test("reconcileReminders reschedules a changed event once, even with two notifications", () => {
+  const pending = [
+    notif(31, { eventId: "7", branchSlug: "chilanga", date: "2026-11-24", start_time: "10:00:00" }),
+    notif(32, { eventId: "7", branchSlug: "chilanga", date: "2026-11-24", start_time: "10:00:00" }),
+  ];
+  const changed = ev(7, "2026-11-25", "10:00:00"); // date moved
+  const { cancel, reschedule } = reconcileReminders(pending, [changed], "chilanga");
+  assert.deepEqual(cancel, []);
+  assert.deepEqual(reschedule, [changed]);
+});
+
+test("reconcileReminders does nothing when everything matches", () => {
+  const pending = [
+    notif(41, { eventId: "7", branchSlug: "chilanga", date: "2026-11-24", start_time: "10:00:00" }),
+    notif(42, { eventId: "8", branchSlug: "chilanga", date: "2026-11-26", start_time: "09:00:00" }),
+  ];
+  const { cancel, reschedule } = reconcileReminders(pending, [ev(7), ev(8, "2026-11-26", "09:00:00")], "chilanga");
+  assert.deepEqual(cancel, []);
+  assert.deepEqual(reschedule, []);
+});

@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/react";
 import { App as NativeApp } from "@capacitor/app";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { SplashScreen } from "@capacitor/splash-screen";
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
 import { TabBar, TopBar } from "./components/Chrome.jsx";
@@ -189,6 +190,30 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
     if (isNative()) SplashScreen.hide({ fadeOutDuration: 200 }).catch(() => {});
   }, []);
 
+  // A tap on a reminder opens its event sheet (looked up in the branch's saved events).
+  const pendingNotifEventRef = useRef(null);
+  useEffect(() => {
+    if (stage === MODES.app && pendingNotifEventRef.current) {
+      setEvent(pendingNotifEventRef.current);
+      pendingNotifEventRef.current = null;
+    }
+  }, [stage]);
+
+  useEffect(() => {
+    if (!isNative()) return undefined;
+    const listener = LocalNotifications.addListener("localNotificationActionPerformed", (action) => {
+      const extra = action.notification?.extra ?? {};
+      if (extra.eventId == null || !extra.branchSlug) return;
+      readJSON(getPrefs(), `upcz.events.${extra.branchSlug}`, null).then((cached) => {
+        const found = cached?.data?.events?.find((e) => String(e.id) === String(extra.eventId));
+        if (!found) return;
+        if (stageRef.current !== MODES.app) pendingNotifEventRef.current = found;
+        else setEvent(found);
+      });
+    });
+    return () => { listener.then((handle) => handle.remove()); };
+  }, []);
+
   useEffect(() => {
     if (!isNative()) return undefined;
     const listener = NativeApp.addListener("backButton", () => {
@@ -349,7 +374,7 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
       </AnimatePresence>
 
       <Sheet open={Boolean(event)} onClose={() => setEvent(null)} title={event?.title ?? "Event"} titleLayoutId={event ? `event-title-${event.id}` : undefined}>
-        {event && <EventBody event={event} />}
+        {event && <EventBody event={event} branchSlug={profile.branchSlug} />}
       </Sheet>
       <Sheet open={Boolean(announcement)} onClose={() => setAnnouncement(null)} title={announcement?.title ?? "Announcement"} titleLayoutId={announcement ? `announcement-title-${announcement.id}` : undefined}>
         {announcement && <AnnouncementBody announcement={announcement} />}

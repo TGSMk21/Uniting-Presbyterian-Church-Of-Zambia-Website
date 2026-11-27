@@ -12,7 +12,7 @@ import { loadSermons } from "../lib/content.js";
 import { useContentData } from "../lib/useContent.js";
 import { getPrefs } from "../lib/storage.js";
 import { readAdded, toggleAdded, addToPhoneCalendar, removeFromPhoneCalendar } from "../lib/calendarStore.js";
-import { notificationPermission, scheduleEventReminders, cancelEventReminders, removeStaleReminders } from "../lib/reminders.js";
+import { notificationPermission, notificationStatus, scheduleEventReminders, cancelEventReminders, syncReminders } from "../lib/reminders.js";
 import { SPRING_SNAPPY } from "../lib/motion.js";
 
 const VIEWS = [
@@ -36,7 +36,7 @@ function ViewSwitch({ value, onChange }) {
   );
 }
 
-export function EventBody({ event }) {
+export function EventBody({ event, branchSlug }) {
   const [prefs] = useState(() => getPrefs());
   const [added, setAdded] = useState(false);
   const [remindersOn, setRemindersOn] = useState(false);
@@ -44,7 +44,11 @@ export function EventBody({ event }) {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    readAdded(prefs).then((list) => setAdded(list.includes(String(event.id))));
+    readAdded(prefs).then((list) => {
+      const isAdded = list.includes(String(event.id));
+      setAdded(isAdded);
+      if (isAdded) notificationStatus().then((status) => setRemindersOn(status === "granted"));
+    });
   }, [prefs, event.id]);
 
   const toggle = async () => {
@@ -56,7 +60,7 @@ export function EventBody({ event }) {
     if (!wasAdded && nowAdded) {
       setPhoneCal(await addToPhoneCalendar(event, prefs));
       const perm = await notificationPermission();
-      setRemindersOn(perm === "granted" && (await scheduleEventReminders(event)));
+      setRemindersOn(perm === "granted" && (await scheduleEventReminders(event, { branchSlug })));
     } else if (wasAdded && !nowAdded) {
       await removeFromPhoneCalendar(event, prefs);
       setPhoneCal(null);
@@ -198,8 +202,11 @@ export default function EventsTab({ profile, onOpenProfile, onOpenEvent }) {
   }, [prefs, branchSlug]);
 
   useEffect(() => {
-    if (events.data?.events) removeStaleReminders(events.data.events.map((e) => e.id));
-  }, [events.data]);
+    // Fresh answers only: never reconcile against the saved offline copy.
+    if (events.source === "api" && events.data?.events) {
+      syncReminders(events.data.events, branchSlug, added);
+    }
+  }, [events.source, events.data, branchSlug, added]);
 
   if (!branchSlug) {
     return (

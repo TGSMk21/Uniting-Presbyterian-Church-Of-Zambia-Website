@@ -15,6 +15,10 @@
       "launchAutoHide": false,
       "backgroundColor": "#f6f3ec",
       "showSpinner": false
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_upcz",
+      "iconColor": "#1b2a6b"
     }
   }
 }
