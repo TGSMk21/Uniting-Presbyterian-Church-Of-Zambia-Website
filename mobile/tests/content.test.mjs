@@ -1,12 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { memoryPrefs } from "../src/lib/storage.js";
-import {
-  contentKey, filterMessages, loadMessageDetail, loadMessages, loadSermons,
-} from "../src/lib/content.js";
-
-const okFetch = (payload) => () => Promise.resolve({ ok: true, json: () => Promise.resolve(payload) });
-const failFetch = () => () => Promise.reject(new Error("offline"));
+import { contentKey, filterMessages } from "../src/lib/content.js";
+import { messageResource, messagesResource, sermonsResource } from "../src/lib/resources.js";
 
 const SERMONS = {
   branch: { slug: "chilanga", name: "Chilanga" },
@@ -33,55 +28,31 @@ test("cache keys are per content kind and branch", () => {
   assert.notEqual(contentKey("sermons", "chilanga"), contentKey("sermons", "kanyama"));
 });
 
-test("sermons: api answer is cached under the branch; wrong-branch answer refused", async () => {
-  const prefs = memoryPrefs();
-  const result = await loadSermons({ prefs, branchSlug: "chilanga", fetchImpl: okFetch(SERMONS), timeoutMs: 50 });
-  assert.equal(result.source, "api");
-  assert.equal(result.data.sermons.length, 1);
-  assert.ok(JSON.parse(prefs.store[contentKey("sermons", "chilanga")]).data);
-  const wrong = await loadSermons({
-    prefs: memoryPrefs(), branchSlug: "chilanga", timeoutMs: 50,
-    fetchImpl: okFetch({ ...SERMONS, branch: { slug: "kanyama", name: "Kanyama" } }),
-  });
-  assert.equal(wrong.source, "offline");
-  assert.equal(wrong.data, null);
+test("sermonsResource: key, path and validate (wrong branch refused)", () => {
+  const r = sermonsResource("chilanga");
+  assert.equal(r.key, "sermons.chilanga");
+  assert.equal(r.path, "/app/sermons/?branch=chilanga");
+  assert.ok(r.maxAgeMs > 0);
+  assert.equal(r.validate(SERMONS), true);
+  assert.equal(r.validate({ ...SERMONS, branch: { slug: "kanyama", name: "Kanyama" } }), false);
+  assert.equal(r.validate({}), false);
+  assert.equal(r.validate(null), false);
 });
 
-test("sermons: offline serves the saved list; nothing saved means empty offline", async () => {
-  const prefs = memoryPrefs();
-  prefs.store[contentKey("sermons", "chilanga")] = JSON.stringify({ at: 42, data: SERMONS });
-  const cached = await loadSermons({ prefs, branchSlug: "chilanga", fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.equal(cached.source, "cache");
-  assert.equal(cached.fetchedAt, 42);
-  assert.equal(cached.data.sermons[0].title, "S1");
-  const empty = await loadSermons({ prefs: memoryPrefs(), branchSlug: "chilanga", fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.deepEqual(empty, { data: null, source: "offline", fetchedAt: null });
+test("messagesResource: key, path and validate (wrong branch refused)", () => {
+  const r = messagesResource("chilanga");
+  assert.equal(r.key, "messages.chilanga");
+  assert.equal(r.path, "/app/messages/?branch=chilanga");
+  assert.equal(r.validate(MESSAGES), true);
+  assert.equal(r.validate({ ...MESSAGES, branch: { slug: "kanyama", name: "Kanyama" } }), false);
+  assert.equal(r.validate({ branch: { slug: "chilanga" } }), false);
 });
 
-test("messages: api, cache and offline behave the same; no branch means no request", async () => {
-  let called = false;
-  const none = await loadMessages({
-    prefs: memoryPrefs(), branchSlug: "",
-    fetchImpl: () => { called = true; return Promise.reject(new Error("no")); }, timeoutMs: 20,
-  });
-  assert.equal(called, false);
-  assert.equal(none.source, "none");
-  const prefs = memoryPrefs();
-  const api = await loadMessages({ prefs, branchSlug: "chilanga", fetchImpl: okFetch(MESSAGES), timeoutMs: 50 });
-  assert.equal(api.source, "api");
-  assert.equal(api.data.messages.length, 2);
-  const cached = await loadMessages({ prefs, branchSlug: "chilanga", fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.equal(cached.source, "cache");
-  assert.equal(cached.data.messages[0].id, 2);
-});
-
-test("message detail: found, cached when offline, null when never seen", async () => {
-  const full = { id: 2, title: "The Good Shepherd", message: "Full body.", reference_verse: "Psalm 23:1", verse_text: "The Lord is my shepherd", date: "2026-11-18", minister_name: "Rev T" };
-  const prefs = memoryPrefs();
-  const got = await loadMessageDetail({ prefs, branchSlug: "chilanga", id: 2, fetchImpl: okFetch(full), timeoutMs: 50 });
-  assert.equal(got.message, "Full body.");
-  const cached = await loadMessageDetail({ prefs, branchSlug: "chilanga", id: 2, fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.equal(cached.title, "The Good Shepherd");
-  const missing = await loadMessageDetail({ prefs: memoryPrefs(), branchSlug: "chilanga", id: 9, fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.equal(missing, null);
+test("messageResource: key, path and validate (wrong id refused)", () => {
+  const r = messageResource("chilanga", 2);
+  assert.equal(r.key, "message.chilanga.2");
+  assert.equal(r.path, "/app/messages/2/?branch=chilanga");
+  assert.equal(r.validate({ id: 2, title: "The Good Shepherd" }), true);
+  assert.equal(r.validate({ id: 9 }), false);
+  assert.equal(r.validate({}), false);
 });

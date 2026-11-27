@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
@@ -7,8 +7,8 @@ import Notice from "../components/Notice.jsx";
 import { fillName, partOfDay, GREETINGS } from "../lib/greeting.js";
 import { homeSlots, timeAgo } from "../lib/home.js";
 import { shareText } from "../lib/share.js";
-import { eventsOnDate, formatTime, loadEvents, pastEvents, todayIso } from "../lib/events.js";
-import { useContentData } from "../lib/useContent.js";
+import { eventsOnDate, formatTime, todayIso } from "../lib/events.js";
+import SavedNote from "../components/SavedNote.jsx";
 import HeartButton from "../components/HeartButton.jsx";
 import { isFaved, messageFavItem, verseFavItem } from "../lib/favourites.js";
 
@@ -138,8 +138,6 @@ export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, o
   const first = profile?.name?.trim().split(/\s+/)[0] ?? "";
   const part = partOfDay(now);
   const todayIsoLocal = todayIso(now);
-  const loadEventsCb = useCallback((opts) => loadEvents(opts), []);
-  const eventsCache = useContentData(loadEventsCb, profile?.branchSlug ?? "");
   const { status, data, source, fetchedAt, greeting, chooseGreeting, pullRefresh } = home;
 
   useEffect(() => {
@@ -169,7 +167,7 @@ export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, o
   }
 
   const upcomingEvents = data?.events ?? [];
-  const recentPast = upcomingEvents.length ? [] : pastEvents(eventsCache.data?.events ?? [], data?.date ?? todayIsoLocal).slice(0, 3);
+  const recentPast = upcomingEvents.length ? [] : (data?.recent_events ?? []).slice(0, 3);
   const previewEvents = upcomingEvents.length ? upcomingEvents : recentPast;
   const previewRecent = !upcomingEvents.length && recentPast.length > 0;
   const slots = homeSlots(data ? { ...data, events: previewEvents } : data);
@@ -183,16 +181,7 @@ export default function HomeTab({ profile, home, onOpenProfile, onOpenMessage, o
       </header>
       <UpdatedRow fetchedAt={fetchedAt} source={source} onRefresh={pullRefresh} refreshing={status === "refreshing"} />
 
-      {source === "offline" && !data && (
-        <Notice kind="offline" action={
-          <button type="button" className="button button-quiet notice-action" onClick={pullRefresh}>Try again</button>
-        }>
-          No internet right now, and nothing saved for {profile.branchSlug} yet. The app will fill in when you're back online.
-        </Notice>
-      )}
-      {source === "cache" && (
-        <p className="t-caption offline-note">You're offline — showing what was saved on this phone.</p>
-      )}
+      <SavedNote entry={home} onRetry={pullRefresh} />
 
       {loading && <Skeletons />}
 

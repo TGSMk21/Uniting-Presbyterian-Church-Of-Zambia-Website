@@ -17,8 +17,7 @@ import { openExternally } from "../lib/links.js";
 import { notificationPermission, notificationStatus } from "../lib/reminders.js";
 import { useForegroundRefresh } from "../lib/useContent.js";
 import { BATTERY_GUIDE, needsBatteryGuide } from "../lib/phoneMake.js";
-import { KINDS, markStale, sectionLabel, writeFavs } from "../lib/favourites.js";
-import { loadMessages, loadSermons } from "../lib/content.js";
+import { KINDS, sectionLabel } from "../lib/favourites.js";
 import HeartButton from "../components/HeartButton.jsx";
 import pkg from "../../package.json";
 
@@ -100,36 +99,9 @@ export function ProfilePage({ onBack, profile, onSave }) {
   );
 }
 
-export function FavouritesPage({ onBack, favs, onToggleFav, branchSlug, onOpenMessage, onOpenSermon, onOpenHymn, onOpenVerse }) {
-  const [prefs] = useState(() => getPrefs());
-  const [marked, setMarked] = useState(favs);
-
-  // When a fresh server list is available, flag favourites the branch no longer lists.
-  // The snapshot still opens them offline; they're just marked as no longer current.
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const load = async (loader, key) => {
-        const result = await loader({ prefs, branchSlug, timeoutMs: 6000 });
-        return result.data ? result.data[key] : null;
-      };
-      const [sermons, messages] = await Promise.all([
-        load(loadSermons, "sermons"),
-        load(loadMessages, "messages"),
-      ]);
-      if (!alive) return;
-      setMarked((current) => {
-        let next = current;
-        if (sermons) next = markStale(next, "sermons", sermons.map((s) => s.video_id));
-        if (messages) next = markStale(next, "messages", messages.map((m) => m.id));
-        if (next !== current) writeFavs(prefs, next);
-        return next;
-      });
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [prefs, branchSlug]);
+export function FavouritesPage({ onBack, favs, onToggleFav, onOpenMessage, onOpenSermon, onOpenHymn, onOpenVerse }) {
+  // T06 rebuilds stale-marking properly against the shared store.
+  const marked = favs;
 
   const openers = {
     messages: (item) => onOpenMessage(item.snapshot ?? item),

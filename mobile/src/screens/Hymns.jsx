@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { TextAa } from "@phosphor-icons/react/dist/csr/TextAa";
 import Page from "./Page.jsx";
-import { filterHymns, loadHymnCollections, loadHymns, sortHymns } from "../lib/hymns.js";
-import { useContentData } from "../lib/useContent.js";
+import { filterHymns, sortHymns } from "../lib/hymns.js";
+import { useResource } from "../lib/useResource.js";
+import { hymnCollectionsResource, hymnsResource } from "../lib/resources.js";
+import SavedNote from "../components/SavedNote.jsx";
 import { getPrefs, readJSON, writeJSON } from "../lib/storage.js";
 import { useKeepAwake } from "../lib/keepAwake.js";
 import { SPRING_SNAPPY } from "../lib/motion.js";
@@ -19,8 +21,7 @@ const TEXT_SCALES = [0.9, 1, 1.15, 1.3];
 const TEXT_SIZE_KEY = "upcz.textSize";
 
 export default function HymnsTab({ onOpenCollection }) {
-  const loadCb = useCallback((opts) => loadHymnCollections(opts), []);
-  const collections = useContentData(loadCb, undefined);
+  const collections = useResource(hymnCollectionsResource());
   const reduced = useReducedMotion();
   const tilt = useDeviceTilt(!reduced && !isLowEnd());
   const rows = collections.data?.collections ?? [];
@@ -32,7 +33,7 @@ export default function HymnsTab({ onOpenCollection }) {
         <h1 className="t-display">Hymns</h1>
         <p className="t-callout screen-lede">The church's hymn collections. They download once and work offline.</p>
       </header>
-      {collections.source === "cache" && <p className="t-caption offline-note">You're offline — showing what was saved on this phone.</p>}
+      <SavedNote entry={collections} onRetry={collections.refresh} />
       {loading && <div className="card home-card skeleton sk-card" aria-hidden="true" />}
       {!loading && rows.length === 0 && (
         <div className="card empty-card">
@@ -57,8 +58,7 @@ export default function HymnsTab({ onOpenCollection }) {
 
 export function HymnCollectionPage({ collection, label, onBack, onOpenHymn }) {
   const [q, setQ] = useState("");
-  const loadCb = useCallback((opts) => loadHymns({ ...opts, collection }), [collection]);
-  const data = useContentData(loadCb, collection);
+  const data = useResource(hymnsResource(collection));
   const rows = sortHymns(filterHymns(data.data?.hymns ?? [], q));
   const loading = data.status === "loading" && !data.data;
 
@@ -71,7 +71,7 @@ export function HymnCollectionPage({ collection, label, onBack, onOpenHymn }) {
             value={q} onChange={(event) => setQ(event.target.value)} aria-label={`Search ${label}`} />
         </span>
       </label>
-      {data.source === "cache" && <p className="t-caption offline-note">You're offline — searching what was saved on this phone.</p>}
+      <SavedNote entry={data} onRetry={data.refresh} />
       {loading && <div className="card home-card skeleton sk-card" aria-hidden="true" />}
       {!loading && rows.length === 0 && (
         <div className="card empty-card">

@@ -1,11 +1,13 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { motion } from "motion/react";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { PlayCircle } from "@phosphor-icons/react/dist/csr/PlayCircle";
 import Notice from "../components/Notice.jsx";
-import { filterMessages, loadMessageDetail, loadMessages, loadSermons } from "../lib/content.js";
-import { useContentData } from "../lib/useContent.js";
-import { getPrefs } from "../lib/storage.js";
+import { filterMessages } from "../lib/content.js";
+import { useResource } from "../lib/useResource.js";
+import { messageResource, messagesResource, sermonsResource } from "../lib/resources.js";
+import { appStore } from "../lib/appStore.js";
+import SavedNote from "../components/SavedNote.jsx";
 import { SPRING_SNAPPY } from "../lib/motion.js";
 import HeartButton from "../components/HeartButton.jsx";
 import { isFaved, sermonFavItem } from "../lib/favourites.js";
@@ -74,15 +76,12 @@ export default function SermonsTab({ profile, onOpenProfile, onOpenSermon, onOpe
   const branchSlug = profile?.branchSlug ?? "";
   const [tab, setTab] = useState("sermons");
   const [q, setQ] = useState("");
-  const [prefs] = useState(() => getPrefs());
-  const loadSermonsCb = useCallback((opts) => loadSermons(opts), []);
-  const loadMessagesCb = useCallback((opts) => loadMessages(opts), []);
-  const sermons = useContentData(loadSermonsCb, branchSlug);
-  const messages = useContentData(loadMessagesCb, branchSlug);
+  const sermons = useResource(branchSlug ? sermonsResource(branchSlug) : null);
+  const messages = useResource(branchSlug ? messagesResource(branchSlug) : null);
 
   const openMessage = async (row) => {
-    const full = await loadMessageDetail({ prefs, branchSlug, id: row.id });
-    onOpenMessage(full ?? { ...row, message: "" });
+    const entry = await appStore.load(messageResource(branchSlug, row.id));
+    onOpenMessage(entry.data ?? { ...row, message: "" });
   };
 
   if (!branchSlug) {
@@ -112,7 +111,7 @@ export default function SermonsTab({ profile, onOpenProfile, onOpenSermon, onOpe
 
       {tab === "sermons" && (
         <>
-          {sermons.source === "cache" && <p className="t-caption offline-note">You're offline — showing what was saved on this phone.</p>}
+          <SavedNote entry={sermons} onRetry={sermons.refresh} />
           {loading && <div className="card home-card skeleton sk-card" aria-hidden="true" />}
           {!loading && sermonRows.length === 0 && (
             <div className="card empty-card">
@@ -142,7 +141,7 @@ export default function SermonsTab({ profile, onOpenProfile, onOpenSermon, onOpe
                 value={q} onChange={(event) => setQ(event.target.value)} aria-label="Search daily messages" />
             </span>
           </label>
-          {messages.source === "cache" && <p className="t-caption offline-note">You're offline — searching what was saved on this phone.</p>}
+          <SavedNote entry={messages} onRetry={messages.refresh} />
           {loading && <div className="card home-card skeleton sk-card" aria-hidden="true" />}
           {!loading && messageRows.length === 0 && (
             <div className="card empty-card">

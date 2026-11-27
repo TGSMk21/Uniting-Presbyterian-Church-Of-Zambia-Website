@@ -27,8 +27,11 @@ const SermonPage = lazy(() => import("./screens/SermonPage.jsx"));
 const EventBody = lazy(() => import("./screens/Events.jsx").then((m) => ({ default: m.EventBody })));
 const AnnouncementBody = lazy(() => import("./screens/Announcements.jsx").then((m) => ({ default: m.AnnouncementBody })));
 import { useHome } from "./lib/useHome.js";
-import { useContentData } from "./lib/useContent.js";
-import { loadAnnouncements } from "./lib/content.js";
+import { useResource } from "./lib/useResource.js";
+import { announcementsResource, eventsResource } from "./lib/resources.js";
+import { appStore } from "./lib/appStore.js";
+import { removeLegacyCaches } from "./lib/blobStore.js";
+import { useForegroundRefresh } from "./lib/useContent.js";
 import { READ_ANNOUNCEMENTS, markRead, readMarks as readStoredMarks, unreadCount } from "./lib/marks.js";
 import { emptyFavs, readFavs, toggleFav } from "./lib/favourites.js";
 import { TABS, back, initialNav, openPage, selectTab } from "./lib/navigation.js";
@@ -130,8 +133,10 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
   const [verseFav, setVerseFav] = useState(null);
   const [favs, setFavs] = useState(emptyFavs());
   const home = useHome(profile.branchSlug);
-  const loadAnnouncementsCb = useCallback((opts) => loadAnnouncements(opts), []);
-  const announcements = useContentData(loadAnnouncementsCb, profile.branchSlug);
+  const branch = profile.branchSlug || null;
+  const announcements = useResource(branch ? announcementsResource(branch) : null);
+  // One foreground listener for the whole app: refresh whatever screens are watching.
+  useForegroundRefresh(useCallback(() => appStore.refreshWatched(), []));
   const [marksPrefs] = useState(() => getPrefs());
   const [readMarks, setReadMarks] = useState([]);
   useEffect(() => {
@@ -190,6 +195,16 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
     if (isNative()) SplashScreen.hide({ fadeOutDuration: 200 }).catch(() => {});
   }, []);
 
+  // Once ever: drop the old content caches that used to live in Preferences/localStorage.
+  useEffect(() => {
+    const prefs = getPrefs();
+    readFlag(prefs, "upcz.cacheV2").then(async (done) => {
+      if (done) return;
+      await removeLegacyCaches().catch(() => {});
+      await writeFlag(prefs, "upcz.cacheV2", true).catch(() => {});
+    });
+  }, []);
+
   // A tap on a reminder opens its event sheet (looked up in the branch's saved events).
   const pendingNotifEventRef = useRef(null);
   useEffect(() => {
@@ -204,12 +219,13 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
     const listener = LocalNotifications.addListener("localNotificationActionPerformed", (action) => {
       const extra = action.notification?.extra ?? {};
       if (extra.eventId == null || !extra.branchSlug) return;
-      readJSON(getPrefs(), `upcz.events.${extra.branchSlug}`, null).then((cached) => {
-        const found = cached?.data?.events?.find((e) => String(e.id) === String(extra.eventId));
+      (async () => {
+        const entry = await appStore.load(eventsResource(extra.branchSlug));
+        const found = entry.data?.events?.find((e) => String(e.id) === String(extra.eventId));
         if (!found) return;
         if (stageRef.current !== MODES.app) pendingNotifEventRef.current = found;
         else setEvent(found);
-      });
+      })();
     });
     return () => { listener.then((handle) => handle.remove()); };
   }, []);
@@ -355,7 +371,7 @@ function Shell({ reduceMotion, onToggleReduceMotion }) {
         {page === "profile" && <ProfilePage key="profile" onBack={close} profile={profile} onSave={saveProfile} />}
         {page === "favourites" && (
           <FavouritesPage key="favourites" onBack={close} favs={favs} onToggleFav={toggleFavHandler}
-            branchSlug={profile.branchSlug} onOpenMessage={setMessage} onOpenSermon={setSermon}
+            onOpenMessage={setMessage} onOpenSermon={setSermon}
             onOpenHymn={setHymn} onOpenVerse={setVerseFav} />
         )}
         {page === "settings" && (

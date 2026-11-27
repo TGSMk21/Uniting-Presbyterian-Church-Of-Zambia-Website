@@ -1,15 +1,3 @@
-import { loadCached } from "./content.js";
-
-export function loadEvents({ branchSlug, ...opts }) {
-  return loadCached({
-    ...opts,
-    kind: "events",
-    branchSlug,
-    path: `/app/events/?branch=${encodeURIComponent(branchSlug)}`,
-    validate: (d) => d?.branch?.slug === branchSlug && Array.isArray(d.events),
-  });
-}
-
 export function localIso(date) {
   const pad = (n) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;

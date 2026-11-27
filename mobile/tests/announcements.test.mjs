@@ -1,12 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { memoryPrefs } from "../src/lib/storage.js";
-import { contentKey, loadAnnouncements } from "../src/lib/content.js";
 import { markRead, readMarks, unreadCount, unreadOf } from "../src/lib/marks.js";
 import { sortAnnouncements } from "../src/lib/announcements.js";
-
-const okFetch = (payload) => () => Promise.resolve({ ok: true, json: () => Promise.resolve(payload) });
-const failFetch = () => () => Promise.reject(new Error("offline"));
+import { announcementsResource } from "../src/lib/resources.js";
 
 const PAYLOAD = {
   branch: { slug: "chilanga", name: "Chilanga" },
@@ -16,21 +13,14 @@ const PAYLOAD = {
   ],
 };
 
-test("announcements load like the other content: api cached per branch, offline serves cache, wrong branch refused", async () => {
-  const prefs = memoryPrefs();
-  const api = await loadAnnouncements({ prefs, branchSlug: "chilanga", fetchImpl: okFetch(PAYLOAD), timeoutMs: 50 });
-  assert.equal(api.source, "api");
-  assert.equal(api.data.announcements.length, 2);
-  assert.ok(prefs.store[contentKey("announcements", "chilanga")]);
-  const cached = await loadAnnouncements({ prefs, branchSlug: "chilanga", fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.equal(cached.source, "cache");
-  const offline = await loadAnnouncements({ prefs: memoryPrefs(), branchSlug: "chilanga", fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.deepEqual(offline, { data: null, source: "offline", fetchedAt: null });
-  const wrong = await loadAnnouncements({
-    prefs: memoryPrefs(), branchSlug: "chilanga", timeoutMs: 20,
-    fetchImpl: okFetch({ ...PAYLOAD, branch: { slug: "kanyama", name: "Kanyama" } }),
-  });
-  assert.equal(wrong.source, "offline");
+test("announcementsResource: key, path and validate (wrong branch refused)", () => {
+  const r = announcementsResource("chilanga");
+  assert.equal(r.key, "announcements.chilanga");
+  assert.equal(r.path, "/app/announcements/?branch=chilanga");
+  assert.equal(r.maxAgeMs, 5 * 60_000);
+  assert.equal(r.validate(PAYLOAD), true);
+  assert.equal(r.validate({ ...PAYLOAD, branch: { slug: "kanyama", name: "Kanyama" } }), false);
+  assert.equal(r.validate({ branch: { slug: "chilanga" } }), false);
 });
 
 test("pinned first, then newest first — regardless of the order the API sent", () => {

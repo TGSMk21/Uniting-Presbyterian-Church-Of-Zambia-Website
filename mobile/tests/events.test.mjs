@@ -1,14 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { memoryPrefs } from "../src/lib/storage.js";
-import { contentKey } from "../src/lib/content.js";
 import {
-  dotsFor, eventLabel, eventsOnDate, formatTime, loadEvents, monthGrid, pastEvents,
+  dotsFor, eventLabel, eventsOnDate, formatTime, monthGrid, pastEvents,
   sortRecentFirst, todayIso, upcoming,
 } from "../src/lib/events.js";
-
-const okFetch = (payload) => () => Promise.resolve({ ok: true, json: () => Promise.resolve(payload) });
-const failFetch = () => () => Promise.reject(new Error("offline"));
+import { eventsResource } from "../src/lib/resources.js";
 
 const EVENTS = {
   branch: { slug: "chilanga", name: "Chilanga" },
@@ -22,22 +18,14 @@ const EVENTS = {
 
 const TODAY = "2026-11-18";
 
-test("events load like the other content: api cached per branch, offline serves cache, wrong branch refused", async () => {
-  const prefs = memoryPrefs();
-  const api = await loadEvents({ prefs, branchSlug: "chilanga", fetchImpl: okFetch(EVENTS), timeoutMs: 50 });
-  assert.equal(api.source, "api");
-  assert.equal(api.data.events.length, 4);
-  assert.ok(prefs.store[contentKey("events", "chilanga")]);
-  const cached = await loadEvents({ prefs, branchSlug: "chilanga", fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.equal(cached.source, "cache");
-  assert.equal(cached.data.events.length, 4);
-  const offline = await loadEvents({ prefs: memoryPrefs(), branchSlug: "chilanga", fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.deepEqual(offline, { data: null, source: "offline", fetchedAt: null });
-  const wrong = await loadEvents({
-    prefs: memoryPrefs(), branchSlug: "chilanga", timeoutMs: 20,
-    fetchImpl: okFetch({ ...EVENTS, branch: { slug: "kanyama", name: "Kanyama" } }),
-  });
-  assert.equal(wrong.source, "offline");
+test("eventsResource: key, path and validate (wrong branch refused)", () => {
+  const r = eventsResource("chilanga");
+  assert.equal(r.key, "events.chilanga");
+  assert.equal(r.path, "/app/events/?branch=chilanga");
+  assert.equal(r.maxAgeMs, 15 * 60_000);
+  assert.equal(r.validate(EVENTS), true);
+  assert.equal(r.validate({ ...EVENTS, branch: { slug: "kanyama", name: "Kanyama" } }), false);
+  assert.equal(r.validate({ branch: { slug: "chilanga" } }), false);
 });
 
 test("most recent first: date descending, then start time descending", () => {

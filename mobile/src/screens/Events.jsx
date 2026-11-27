@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { CalendarPlus } from "@phosphor-icons/react/dist/csr/CalendarPlus";
 import { CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
@@ -7,9 +7,10 @@ import { Check } from "@phosphor-icons/react/dist/csr/Check";
 import { Clock } from "@phosphor-icons/react/dist/csr/Clock";
 import { MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import Notice from "../components/Notice.jsx";
-import { loadEvents, eventsOnDate, eventLabel, formatTime, monthGrid, dotsFor, sortRecentFirst, todayIso } from "../lib/events.js";
-import { loadSermons } from "../lib/content.js";
-import { useContentData } from "../lib/useContent.js";
+import { eventsOnDate, eventLabel, formatTime, monthGrid, dotsFor, sortRecentFirst, todayIso } from "../lib/events.js";
+import { useResource } from "../lib/useResource.js";
+import { eventsResource, sermonsResource } from "../lib/resources.js";
+import SavedNote from "../components/SavedNote.jsx";
 import { getPrefs } from "../lib/storage.js";
 import { readAdded, toggleAdded, addToPhoneCalendar, removeFromPhoneCalendar } from "../lib/calendarStore.js";
 import { notificationPermission, notificationStatus, scheduleEventReminders, cancelEventReminders, syncReminders } from "../lib/reminders.js";
@@ -192,10 +193,8 @@ export default function EventsTab({ profile, onOpenProfile, onOpenEvent }) {
   const [added, setAdded] = useState([]);
   const [day, setDay] = useState(() => todayIso());
   const [prefs] = useState(() => getPrefs());
-  const loadEventsCb = useCallback((opts) => loadEvents(opts), []);
-  const loadSermonsCb = useCallback((opts) => loadSermons(opts), []);
-  const events = useContentData(loadEventsCb, branchSlug);
-  const sermons = useContentData(loadSermonsCb, branchSlug);
+  const events = useResource(branchSlug ? eventsResource(branchSlug) : null);
+  const sermons = useResource(branchSlug ? sermonsResource(branchSlug) : null);
 
   useEffect(() => {
     readAdded(prefs).then(setAdded);
@@ -235,7 +234,7 @@ export default function EventsTab({ profile, onOpenProfile, onOpenEvent }) {
 
       {view === "list" && (
         <>
-          {events.source === "cache" && <p className="t-caption offline-note">You're offline — showing what was saved on this phone.</p>}
+          <SavedNote entry={events} onRetry={events.refresh} />
           {loading && <div className="card home-card skeleton sk-card" aria-hidden="true" />}
           {!loading && rows.length === 0 && (
             <div className="card empty-card">

@@ -1,10 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { memoryPrefs } from "../src/lib/storage.js";
-import { homeKey, homeSlots, loadHome, timeAgo } from "../src/lib/home.js";
-
-const okFetch = (payload) => () => Promise.resolve({ ok: true, json: () => Promise.resolve(payload) });
-const failFetch = () => () => Promise.reject(new Error("offline"));
+import { homeKey, homeSlots, timeAgo } from "../src/lib/home.js";
+import { homeResource } from "../src/lib/resources.js";
 
 const HOME = {
   branch: { slug: "chilanga", name: "Chilanga" },
@@ -43,62 +40,16 @@ test("home cache is per branch", () => {
   assert.notEqual(homeKey("chilanga"), homeKey("kanyama"));
 });
 
-test("no branch means no request and no data", async () => {
-  let called = false;
-  const result = await loadHome({
-    prefs: memoryPrefs(), branchSlug: "",
-    fetchImpl: () => { called = true; return Promise.reject(new Error("no")); }, timeoutMs: 20,
-  });
-  assert.equal(called, false);
-  assert.deepEqual(result, { data: null, source: "none", fetchedAt: null });
+test("homeResource: key, path and validate (wrong branch refused)", () => {
+  const r = homeResource("chilanga");
+  assert.equal(r.key, "home.chilanga");
+  assert.equal(r.path, "/app/home/?branch=chilanga");
+  assert.equal(r.maxAgeMs, 5 * 60_000);
+  assert.equal(r.validate(HOME), true);
+  assert.equal(r.validate({ ...HOME, branch: { slug: "kanyama", name: "Kanyama" } }), false);
+  assert.equal(r.validate(null), false);
 });
 
-test("a good answer comes from the API and is cached under the branch", async () => {
-  const prefs = memoryPrefs();
-  const result = await loadHome({ prefs, branchSlug: "chilanga", fetchImpl: okFetch(HOME), timeoutMs: 50 });
-  assert.equal(result.source, "api");
-  assert.equal(result.data.branch.slug, "chilanga");
-  const cached = JSON.parse(prefs.store[homeKey("chilanga")]);
-  assert.deepEqual(cached.data, HOME);
-  assert.ok(cached.at > 0);
-});
-
-test("an answer for a different branch is refused", async () => {
-  const prefs = memoryPrefs();
-  const wrong = { ...HOME, branch: { slug: "kanyama", name: "Kanyama" } };
-  const result = await loadHome({ prefs, branchSlug: "chilanga", fetchImpl: okFetch(wrong), timeoutMs: 50 });
-  assert.equal(result.source, "offline");
-  assert.equal(result.data, null);
-});
-
-test("offline, the cached home of that branch is used; with nothing cached, source is offline", async () => {
-  const prefs = memoryPrefs();
-  prefs.store[homeKey("chilanga")] = JSON.stringify({ at: 123, data: HOME });
-  const cached = await loadHome({ prefs, branchSlug: "chilanga", fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.equal(cached.source, "cache");
-  assert.deepEqual(cached.data, HOME);
-  assert.equal(cached.fetchedAt, 123);
-  const empty = await loadHome({ prefs: memoryPrefs(), branchSlug: "kanyama", fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.deepEqual(empty, { data: null, source: "offline", fetchedAt: null });
-});
-
-test("a hanging request times out and falls back to the cache", async () => {
-  const prefs = memoryPrefs();
-  prefs.store[homeKey("chilanga")] = JSON.stringify({ at: 5, data: HOME });
-  const result = await loadHome({
-    prefs, branchSlug: "chilanga", timeoutMs: 25,
-    fetchImpl: () => new Promise(() => {}),
-  });
-  assert.equal(result.source, "cache");
-});
-
-test("a non-200 or malformed answer is a failure, not a crash", async () => {
-  for (const fetchImpl of [
-    () => Promise.resolve({ ok: false, status: 500, json: () => Promise.resolve({}) }),
-    () => Promise.resolve({ ok: true, json: () => Promise.reject(new Error("bad json")) }),
-    () => Promise.resolve({ ok: true, json: () => Promise.resolve(null) }),
-  ]) {
-    const result = await loadHome({ prefs: memoryPrefs(), branchSlug: "chilanga", fetchImpl, timeoutMs: 20 });
-    assert.equal(result.source, "offline");
-  }
+test("homeResource encodes the branch in the path", () => {
+  assert.equal(homeResource("st-columbus-kabwe").path, "/app/home/?branch=st-columbus-kabwe");
 });

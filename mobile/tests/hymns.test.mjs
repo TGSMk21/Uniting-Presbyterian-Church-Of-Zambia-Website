@@ -1,10 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { memoryPrefs } from "../src/lib/storage.js";
-import { filterHymns, loadHymnCollections, loadHymns, sortHymns } from "../src/lib/hymns.js";
-
-const okFetch = (payload) => () => Promise.resolve({ ok: true, json: () => Promise.resolve(payload) });
-const failFetch = () => () => Promise.reject(new Error("offline"));
+import { filterHymns, sortHymns } from "../src/lib/hymns.js";
+import { hymnCollectionsResource, hymnsResource } from "../src/lib/resources.js";
 
 const COLLECTIONS = {
   collections: [
@@ -21,36 +18,23 @@ const ENGLISH = {
   ],
 };
 
-test("collections load and cache globally (church-wide, no branch); bad payload refused", async () => {
-  const prefs = memoryPrefs();
-  const api = await loadHymnCollections({ prefs, fetchImpl: okFetch(COLLECTIONS), timeoutMs: 50 });
-  assert.equal(api.source, "api");
-  assert.equal(api.data.collections.length, 3);
-  assert.ok(prefs.store["upcz.hymnCollections"]);
-  const cached = await loadHymnCollections({ prefs, fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.equal(cached.source, "cache");
-  assert.equal(cached.data.collections[0].label, "Tumbuka Hymns");
-  const bad = await loadHymnCollections({ prefs: memoryPrefs(), fetchImpl: okFetch({ nope: 1 }), timeoutMs: 20 });
-  assert.equal(bad.source, "offline");
-  const empty = await loadHymnCollections({ prefs: memoryPrefs(), fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.deepEqual(empty, { data: null, source: "offline", fetchedAt: null });
+test("hymnCollectionsResource: key, path and validate (bad payload refused)", () => {
+  const r = hymnCollectionsResource();
+  assert.equal(r.key, "hymn-collections");
+  assert.equal(r.path, "/app/hymns/collections/");
+  assert.equal(r.maxAgeMs, 24 * 60 * 60_000);
+  assert.equal(r.validate(COLLECTIONS), true);
+  assert.equal(r.validate({ nope: 1 }), false);
+  assert.equal(r.validate(null), false);
 });
 
-test("a collection downloads fully for offline and caches per collection; wrong collection refused", async () => {
-  const prefs = memoryPrefs();
-  const api = await loadHymns({ prefs, collection: "english", fetchImpl: okFetch(ENGLISH), timeoutMs: 50 });
-  assert.equal(api.source, "api");
-  assert.equal(api.data.hymns.length, 2);
-  assert.ok(prefs.store["upcz.hymns.english"]);
-  assert.equal(prefs.store["upcz.hymns.tumbuka"], undefined);
-  const cached = await loadHymns({ prefs, collection: "english", fetchImpl: failFetch(), timeoutMs: 20 });
-  assert.equal(cached.source, "cache");
-  assert.equal(cached.data.hymns[0].title, "Rock of Ages");
-  const wrong = await loadHymns({
-    prefs: memoryPrefs(), collection: "english", timeoutMs: 20,
-    fetchImpl: okFetch({ ...ENGLISH, collection: "tumbuka" }),
-  });
-  assert.equal(wrong.source, "offline");
+test("hymnsResource: key, path and validate (wrong collection refused)", () => {
+  const r = hymnsResource("english");
+  assert.equal(r.key, "hymns.english");
+  assert.equal(r.path, "/app/hymns/?collection=english");
+  assert.equal(r.validate(ENGLISH), true);
+  assert.equal(r.validate({ ...ENGLISH, collection: "tumbuka" }), false);
+  assert.equal(r.validate({ collection: "english" }), false);
 });
 
 test("search matches title or number; list sorts by number then title", () => {

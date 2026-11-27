@@ -1,6 +1,3 @@
-import { API_BASE, fetchJSON } from "./api.js";
-import { readJSON, writeJSON } from "./storage.js";
-
 export function homeKey(branchSlug) {
   return `upcz.home.${branchSlug}`;
 }
@@ -27,20 +24,4 @@ export function homeSlots(data) {
   if (data?.sermons?.length) slots.push("sermons");
   if (data?.events?.length) slots.push("events");
   return slots;
-}
-
-export async function loadHome({ prefs, branchSlug, fetchImpl, timeoutMs = 8000, now = () => Date.now() }) {
-  if (!branchSlug) return { data: null, source: "none", fetchedAt: null };
-  const key = homeKey(branchSlug);
-  try {
-    const data = await fetchJSON(`${API_BASE}/app/home/?branch=${encodeURIComponent(branchSlug)}`, { fetchImpl, timeoutMs });
-    if (!data || data.branch?.slug !== branchSlug) throw new Error("wrong branch");
-    const fetchedAt = now();
-    await writeJSON(prefs, key, { at: fetchedAt, data });
-    return { data, source: "api", fetchedAt };
-  } catch {
-    const cached = await readJSON(prefs, key, null);
-    if (cached?.data) return { data: cached.data, source: "cache", fetchedAt: cached.at };
-    return { data: null, source: "offline", fetchedAt: null };
-  }
 }
