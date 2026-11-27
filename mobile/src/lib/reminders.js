@@ -115,6 +115,8 @@ export function reconcileReminders(pending, events, branchSlug) {
 // that are still marked added. Runs on the phone only.
 export async function syncReminders(events, branchSlug, addedIds) {
   if (!isNative()) return;
+  // A background sync must never show the permission prompt; without permission there is nothing to keep in step.
+  if ((await notificationStatus()) !== "granted") return;
   try {
     const pending = await LocalNotifications.getPending();
     const { cancel, reschedule } = reconcileReminders(pending.notifications, events, branchSlug);
